@@ -1,0 +1,58 @@
+"use client";
+
+import { useEffect } from "react";
+import Link from "next/link";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+
+export default function ErrorPage({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log safely on client console without exposing credentials
+    console.error("Application error encountered:", error.message);
+  }, [error]);
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#FCFCFB] px-4 text-center">
+      <div className="mx-auto max-w-md space-y-6">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 shadow-xs">
+          <AlertTriangle className="h-7 w-7" />
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[12px] font-bold uppercase tracking-widest text-rose-600">
+            Error
+          </p>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            Something went wrong
+          </h1>
+          <p className="text-[14px] leading-relaxed text-slate-500">
+            An unexpected issue occurred while processing your request. Please try again or return to the dashboard.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => reset()}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-[13.5px] font-medium text-white shadow-xs transition-colors hover:bg-blue-500"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try again
+          </button>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50"
+          >
+            <Home className="h-4 w-4" />
+            Dashboard
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

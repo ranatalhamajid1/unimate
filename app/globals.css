@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-manrope), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ─── Design tokens ─────────────────────────────────────────────────── */
+:root {
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-heading: var(--font-manrope), var(--font-inter), system-ui, sans-serif;
+
+  --color-bg: #fcfcfb;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+
+  /* Soft shadow tokens */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 1px 6px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 16px -4px rgba(15, 23, 42, 0.08),
+    0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 48px -16px rgba(15, 23, 42, 0.14),
+    0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 32px 64px -24px rgba(15, 23, 42, 0.18),
+    0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background-color: #2563eb22;
+  color: #1e293b;
+}
+
+/* ─── Animations ────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+.delay-400 {
+  animation-delay: 400ms;
+}
+.delay-500 {
+  animation-delay: 500ms;
+}
+.delay-600 {
+  animation-delay: 600ms;
+}
+.delay-700 {
+  animation-delay: 700ms;
+}
+
+/* ─── Reduced motion ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
