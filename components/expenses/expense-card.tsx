@@ -58,13 +58,13 @@ export function ExpenseCard({ expense, onEdit, onDelete }: ExpenseCardProps) {
   });
 
   return (
-    <div className="group flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)] transition-all duration-200 hover:border-slate-300 hover:shadow-sm sm:p-5">
+    <div className="group flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)] transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm sm:p-5">
       {/* Left info */}
       <div className="flex items-center gap-3.5 min-w-0">
         {/* Category Icon */}
         <div
           className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-colors"
-          style={{ backgroundColor: `${meta.barColor}15`, color: meta.barColor }}
+          style={{ backgroundColor: `${meta.barColor}20`, color: meta.barColor }}
         >
           <CategoryIcon name={meta.iconName} className="h-5 w-5" />
         </div>
@@ -77,9 +77,9 @@ export function ExpenseCard({ expense, onEdit, onDelete }: ExpenseCardProps) {
             >
               {meta.label}
             </span>
-            <span className="text-[12px] text-slate-400">{formattedDate}</span>
+            <span className="text-[12px] text-[var(--color-text-3)]">{formattedDate}</span>
           </div>
-          <p className="mt-1 text-[14px] font-medium text-slate-800 truncate">
+          <p className="mt-1 text-[14px] font-medium text-[var(--color-text)] truncate">
             {expense.description || "No description"}
           </p>
         </div>
@@ -87,7 +87,7 @@ export function ExpenseCard({ expense, onEdit, onDelete }: ExpenseCardProps) {
 
       {/* Right info & actions */}
       <div className="flex items-center gap-4 flex-shrink-0 ml-3">
-        <p className="text-[16px] font-bold text-slate-900 tracking-tight sm:text-[17px]">
+        <p className="text-[16px] font-bold text-[var(--color-text)] tracking-tight sm:text-[17px]">
           {formatPKR(expense.amount)}
         </p>
 
@@ -96,14 +96,14 @@ export function ExpenseCard({ expense, onEdit, onDelete }: ExpenseCardProps) {
           <button
             onClick={() => onEdit(expense)}
             title="Edit expense"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+            className="rounded-lg p-1.5 text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition"
           >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={() => onDelete(expense)}
             title="Delete expense"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+            className="rounded-lg p-1.5 text-[var(--color-text-3)] hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 transition"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>

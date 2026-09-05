@@ -5,24 +5,57 @@
   --font-heading: var(--font-manrope), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ─── Design tokens ─────────────────────────────────────────────────── */
+/* ─── Design tokens — Light mode ────────────────────────────────────── */
 :root {
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-heading: var(--font-manrope), var(--font-inter), system-ui, sans-serif;
 
+  /* Page background */
   --color-bg: #fcfcfb;
+
+  /* Elevated surfaces (cards, modals) */
+  --color-surface: #ffffff;
+
+  /* Secondary surface (sidebar, subtle areas) */
+  --color-surface-2: #f8f9fb;
+
+  /* Borders */
+  --color-border: #e5e7eb;
+  --color-border-subtle: #f1f5f9;
+
+  /* Text */
+  --color-text: #0f172a;
+  --color-text-2: #475569;
+  --color-text-3: #94a3b8;
+
+  /* Accent */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
 
   /* Soft shadow tokens */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04),
-    0 1px 6px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 16px -4px rgba(15, 23, 42, 0.08),
-    0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 16px 48px -16px rgba(15, 23, 42, 0.14),
-    0 2px 8px rgba(15, 23, 42, 0.04);
-  --shadow-xl: 0 32px 64px -24px rgba(15, 23, 42, 0.18),
-    0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 6px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 16px -4px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 48px -16px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 32px 64px -24px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* ─── Design tokens — Dark mode ─────────────────────────────────────── */
+.dark {
+  --color-bg: #0e1117;
+  --color-surface: #161b22;
+  --color-surface-2: #1c2333;
+  --color-border: #30363d;
+  --color-border-subtle: #21262d;
+  --color-text: #e6edf3;
+  --color-text-2: #8b949e;
+  --color-text-3: #6e7681;
+  --color-accent: #4493f8;
+  --color-accent-hover: #58a6ff;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 6px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px -4px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 16px 48px -16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 32px 64px -24px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────── */
@@ -35,6 +68,8 @@ html {
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 h1,
@@ -48,6 +83,38 @@ h4 {
 ::selection {
   background-color: #2563eb22;
   color: #1e293b;
+}
+.dark ::selection {
+  background-color: #4493f833;
+  color: #e6edf3;
+}
+
+/* ─── Markdown Renderer — Dark mode code blocks ─────────────────────── */
+.dark .prose-code-block {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #e6edf3;
+}
+
+.dark .prose-inline-code {
+  background-color: #1c2333;
+  color: #e6edf3;
+}
+
+/* ─── Scrollbar — theme-aware ───────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-3);
 }
 
 /* ─── Animations ────────────────────────────────────────────────────── */
@@ -82,6 +149,11 @@ h4 {
   }
 }
 
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
 .animate-fade-up {
   animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -94,27 +166,13 @@ h4 {
   animation: scale-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.delay-100 {
-  animation-delay: 100ms;
-}
-.delay-200 {
-  animation-delay: 200ms;
-}
-.delay-300 {
-  animation-delay: 300ms;
-}
-.delay-400 {
-  animation-delay: 400ms;
-}
-.delay-500 {
-  animation-delay: 500ms;
-}
-.delay-600 {
-  animation-delay: 600ms;
-}
-.delay-700 {
-  animation-delay: 700ms;
-}
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }
 
 /* ─── Reduced motion ────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

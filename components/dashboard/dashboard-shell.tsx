@@ -22,7 +22,7 @@ export function DashboardShell({ name, email, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FCFCFB]">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Sidebar (desktop fixed + mobile drawer) */}
       <Sidebar
         name={name}

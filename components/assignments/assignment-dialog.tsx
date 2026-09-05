@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { X, Loader2, BookOpen } from "lucide-react";
+import Link from "next/link";
 import {
   Assignment,
   AssignmentFormState,
@@ -10,11 +10,14 @@ import {
   ASSIGNMENT_PRIORITIES,
   STATUS_CONFIG,
   PRIORITY_CONFIG,
-  AssignmentPriority,
   AssignmentStatus,
+  AssignmentPriority,
   validateAssignment,
 } from "@/app/lib/assignment-definitions";
-import { createAssignment, updateAssignment } from "@/app/actions/assignments";
+import {
+  createAssignment,
+  updateAssignment,
+} from "@/app/actions/assignments";
 
 type CourseOption = {
   id: string;
@@ -25,67 +28,84 @@ type CourseOption = {
 
 type AssignmentDialogProps = {
   isOpen: boolean;
+  courses: CourseOption[];
   onClose: () => void;
   onSuccess: () => void;
-  courses: CourseOption[];
   assignmentToEdit?: Assignment | null;
+};
+
+type DialogFormValues = {
+  title: string;
+  courseId: string;
+  description: string;
+  dueDate: string;
+  priority: AssignmentPriority;
+  status: AssignmentStatus;
 };
 
 export function AssignmentDialog({
   isOpen,
+  courses,
   onClose,
   onSuccess,
-  courses,
   assignmentToEdit,
 }: AssignmentDialogProps) {
   const isEditing = Boolean(assignmentToEdit);
 
+  // Default course selection
+  const defaultCourseId = courses[0]?.id || "";
+
+  // Helper to format ISO to date input YYYY-MM-DD
+  const formatInputDate = (d: Date | string) => {
+    try {
+      const date = new Date(d);
+      return date.toISOString().split("T")[0];
+    } catch {
+      return "";
+    }
+  };
+
+  const defaultDueDate = () => {
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    return nextWeek.toISOString().split("T")[0];
+  };
+
   // Form State
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DialogFormValues>({
     title: "",
-    courseId: courses[0]?.id || "",
+    courseId: defaultCourseId,
+    dueDate: defaultDueDate(),
+    priority: ASSIGNMENT_PRIORITIES.MEDIUM,
+    status: ASSIGNMENT_STATUSES.NOT_STARTED,
     description: "",
-    dueDate: "",
-    priority: ASSIGNMENT_PRIORITIES.MEDIUM as AssignmentPriority,
-    status: ASSIGNMENT_STATUSES.NOT_STARTED as AssignmentStatus,
   });
 
-  const [errors, setErrors] = useState<NonNullable<AssignmentFormState>["errors"]>({});
+  const [errors, setErrors] = useState<
+    NonNullable<AssignmentFormState>["errors"]
+  >({});
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Helper to format Date to YYYY-MM-DD for input[type="date"]
-  function formatDateForInput(date: Date): string {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  // Populate or reset form
+  // Initialize or reset form
   useEffect(() => {
     if (assignmentToEdit) {
       setFormData({
         title: assignmentToEdit.title,
         courseId: assignmentToEdit.courseId,
-        description: assignmentToEdit.description || "",
-        dueDate: formatDateForInput(new Date(assignmentToEdit.dueDate)),
+        dueDate: formatInputDate(assignmentToEdit.dueDate),
         priority: assignmentToEdit.priority as AssignmentPriority,
         status: assignmentToEdit.status as AssignmentStatus,
+        description: assignmentToEdit.description || "",
       });
     } else {
-      // Default due date: 7 days from today
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 7);
-
       setFormData({
         title: "",
         courseId: courses[0]?.id || "",
-        description: "",
-        dueDate: formatDateForInput(defaultDate),
+        dueDate: defaultDueDate(),
         priority: ASSIGNMENT_PRIORITIES.MEDIUM,
         status: ASSIGNMENT_STATUSES.NOT_STARTED,
+        description: "",
       });
     }
     setErrors({});
@@ -113,10 +133,10 @@ export function AssignmentDialog({
     const data = new FormData();
     data.set("title", formData.title);
     data.set("courseId", formData.courseId);
-    data.set("description", formData.description);
     data.set("dueDate", formData.dueDate);
     data.set("priority", formData.priority);
     data.set("status", formData.status);
+    data.set("description", formData.description || "");
 
     const clientValidation = validateAssignment(data);
     if (!clientValidation.success) {
@@ -163,14 +183,14 @@ export function AssignmentDialog({
       />
 
       {/* Dialog Card */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-4">
           <div>
-            <h2 className="text-[17px] font-semibold text-slate-900">
+            <h2 className="text-[17px] font-semibold text-[var(--color-text)]">
               {isEditing ? "Edit Assignment" : "Add New Assignment"}
             </h2>
-            <p className="text-[13px] text-slate-500 mt-0.5">
+            <p className="text-[13px] text-[var(--color-text-2)] mt-0.5">
               {isEditing
                 ? "Update assignment details and due date."
                 : "Create a task to stay on top of your coursework."}
@@ -180,7 +200,7 @@ export function AssignmentDialog({
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] disabled:opacity-50"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
@@ -189,14 +209,14 @@ export function AssignmentDialog({
 
         {/* If no courses exist, prompt student to add course first */}
         {courses.length === 0 ? (
-          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)] p-6 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <BookOpen className="h-6 w-6" />
             </div>
-            <h3 className="mt-3 text-[15px] font-semibold text-slate-900">
+            <h3 className="mt-3 text-[15px] font-semibold text-[var(--color-text)]">
               No Courses Added Yet
             </h3>
-            <p className="mt-1 max-w-xs text-[13px] text-slate-500">
+            <p className="mt-1 max-w-xs text-[13px] text-[var(--color-text-2)]">
               Assignments must be associated with a course. Please add a course first.
             </p>
             <Link
@@ -211,7 +231,7 @@ export function AssignmentDialog({
           <>
             {/* Global Error Banner */}
             {serverMessage && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+              <div className="mt-4 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 p-3 text-[13px] text-red-700 dark:text-red-300">
                 {serverMessage}
               </div>
             )}
@@ -222,7 +242,7 @@ export function AssignmentDialog({
               <div>
                 <label
                   htmlFor="assignment-title"
-                  className="block text-[13px] font-medium text-slate-700"
+                  className="block text-[13px] font-medium text-[var(--color-text)]"
                 >
                   Assignment Title <span className="text-red-500">*</span>
                 </label>
@@ -234,14 +254,14 @@ export function AssignmentDialog({
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
-                  className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 ${
+                  className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] bg-[var(--color-surface-2)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 ${
                     errors?.title
                       ? "border-red-400 focus:border-red-500"
-                      : "border-slate-200 focus:border-blue-600"
+                      : "border-[var(--color-border)] focus:border-blue-600"
                   }`}
                 />
                 {errors?.title && (
-                  <p className="mt-1 text-[12px] text-red-600">{errors.title[0]}</p>
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.title[0]}</p>
                 )}
               </div>
 
@@ -249,7 +269,7 @@ export function AssignmentDialog({
               <div>
                 <label
                   htmlFor="assignment-course"
-                  className="block text-[13px] font-medium text-slate-700"
+                  className="block text-[13px] font-medium text-[var(--color-text)]"
                 >
                   Course <span className="text-red-500">*</span>
                 </label>
@@ -259,10 +279,10 @@ export function AssignmentDialog({
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, courseId: e.target.value }))
                   }
-                  className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white ${
+                  className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)] ${
                     errors?.courseId
                       ? "border-red-400 focus:border-red-500"
-                      : "border-slate-200 focus:border-blue-600"
+                      : "border-[var(--color-border)] focus:border-blue-600"
                   }`}
                 >
                   {courses.map((course) => (
@@ -272,7 +292,7 @@ export function AssignmentDialog({
                   ))}
                 </select>
                 {errors?.courseId && (
-                  <p className="mt-1 text-[12px] text-red-600">
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                     {errors.courseId[0]}
                   </p>
                 )}
@@ -284,7 +304,7 @@ export function AssignmentDialog({
                 <div>
                   <label
                     htmlFor="assignment-due"
-                    className="block text-[13px] font-medium text-slate-700"
+                    className="block text-[13px] font-medium text-[var(--color-text)]"
                   >
                     Due Date <span className="text-red-500">*</span>
                   </label>
@@ -295,14 +315,14 @@ export function AssignmentDialog({
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, dueDate: e.target.value }))
                     }
-                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white ${
+                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)] ${
                       errors?.dueDate
                         ? "border-red-400 focus:border-red-500"
-                        : "border-slate-200 focus:border-blue-600"
+                        : "border-[var(--color-border)] focus:border-blue-600"
                     }`}
                   />
                   {errors?.dueDate && (
-                    <p className="mt-1 text-[12px] text-red-600">
+                    <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                       {errors.dueDate[0]}
                     </p>
                   )}
@@ -312,7 +332,7 @@ export function AssignmentDialog({
                 <div>
                   <label
                     htmlFor="assignment-priority"
-                    className="block text-[13px] font-medium text-slate-700"
+                    className="block text-[13px] font-medium text-[var(--color-text)]"
                   >
                     Priority <span className="text-red-500">*</span>
                   </label>
@@ -325,7 +345,7 @@ export function AssignmentDialog({
                         priority: e.target.value as AssignmentPriority,
                       }))
                     }
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white"
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)]"
                   >
                     {Object.values(ASSIGNMENT_PRIORITIES).map((p) => (
                       <option key={p} value={p}>
@@ -334,7 +354,7 @@ export function AssignmentDialog({
                     ))}
                   </select>
                   {errors?.priority && (
-                    <p className="mt-1 text-[12px] text-red-600">
+                    <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                       {errors.priority[0]}
                     </p>
                   )}
@@ -345,7 +365,7 @@ export function AssignmentDialog({
               <div>
                 <label
                   htmlFor="assignment-status"
-                  className="block text-[13px] font-medium text-slate-700"
+                  className="block text-[13px] font-medium text-[var(--color-text)]"
                 >
                   Status <span className="text-red-500">*</span>
                 </label>
@@ -358,7 +378,7 @@ export function AssignmentDialog({
                       status: e.target.value as AssignmentStatus,
                     }))
                   }
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white"
+                  className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)]"
                 >
                   {Object.values(ASSIGNMENT_STATUSES).map((s) => (
                     <option key={s} value={s}>
@@ -367,7 +387,7 @@ export function AssignmentDialog({
                   ))}
                 </select>
                 {errors?.status && (
-                  <p className="mt-1 text-[12px] text-red-600">{errors.status[0]}</p>
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.status[0]}</p>
                 )}
               </div>
 
@@ -375,9 +395,9 @@ export function AssignmentDialog({
               <div>
                 <label
                   htmlFor="assignment-desc"
-                  className="block text-[13px] font-medium text-slate-700"
+                  className="block text-[13px] font-medium text-[var(--color-text)]"
                 >
-                  Description / Notes <span className="text-slate-400 font-normal">(Optional)</span>
+                  Description / Notes <span className="text-[var(--color-text-3)] font-normal">(Optional)</span>
                 </label>
                 <textarea
                   id="assignment-desc"
@@ -390,22 +410,22 @@ export function AssignmentDialog({
                       description: e.target.value,
                     }))
                   }
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                  className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] bg-[var(--color-surface-2)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                 />
                 {errors?.description && (
-                  <p className="mt-1 text-[12px] text-red-600">
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                     {errors.description[0]}
                   </p>
                 )}
               </div>
 
               {/* Footer Buttons */}
-              <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-[var(--color-border-subtle)] pt-4">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-[13.5px] font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-[13.5px] font-medium text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>

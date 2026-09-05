@@ -100,12 +100,12 @@ export function AssignmentsView({
   return (
     <div className="animate-fade-in space-y-6">
       {/* ── Page Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border-subtle)] pb-5">
         <div>
-          <h1 className="text-[24px] font-bold tracking-tight text-slate-900">
+          <h1 className="text-[24px] font-bold tracking-tight text-[var(--color-text)]">
             Assignments
           </h1>
-          <p className="mt-1 text-[13.5px] text-slate-500">
+          <p className="mt-1 text-[13.5px] text-[var(--color-text-2)]">
             Stay on top of your coursework and deadlines.
           </p>
         </div>
@@ -123,61 +123,61 @@ export function AssignmentsView({
       {/* ── Summary Cards ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {/* Total */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[12.5px] font-medium text-slate-500">
+            <span className="text-[12.5px] font-medium text-[var(--color-text-3)]">
               Total Assignments
             </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-2)]">
               <FileText className="h-3.5 w-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[22px] font-bold tracking-tight text-slate-900">
+          <p className="mt-2 text-[22px] font-bold tracking-tight text-[var(--color-text)]">
             {totalCount}
           </p>
         </div>
 
         {/* Due This Week */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[12.5px] font-medium text-slate-500">
+            <span className="text-[12.5px] font-medium text-[var(--color-text-3)]">
               Due This Week
             </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
               <AlertCircle className="h-3.5 w-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[22px] font-bold tracking-tight text-amber-700">
+          <p className="mt-2 text-[22px] font-bold tracking-tight text-amber-600 dark:text-amber-400">
             {dueThisWeekCount}
           </p>
         </div>
 
         {/* In Progress */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[12.5px] font-medium text-slate-500">
+            <span className="text-[12.5px] font-medium text-[var(--color-text-3)]">
               In Progress
             </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <Clock className="h-3.5 w-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[22px] font-bold tracking-tight text-blue-700">
+          <p className="mt-2 text-[22px] font-bold tracking-tight text-blue-600 dark:text-blue-400">
             {inProgressCount}
           </p>
         </div>
 
         {/* Completed */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[12.5px] font-medium text-slate-500">
+            <span className="text-[12.5px] font-medium text-[var(--color-text-3)]">
               Completed
             </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[22px] font-bold tracking-tight text-emerald-700">
+          <p className="mt-2 text-[22px] font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
             {completedCount}
           </p>
         </div>
@@ -198,15 +198,15 @@ export function AssignmentsView({
 
       {/* ── Main Content: Empty States vs Grid ──────────────────────── */}
       {totalCount === 0 ? (
-        <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/60 p-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-xs">
+        <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shadow-xs">
             <FileText className="h-7 w-7" strokeWidth={1.75} />
           </div>
 
-          <h3 className="mt-4 text-[16px] font-semibold text-slate-900">
+          <h3 className="mt-4 text-[16px] font-semibold text-[var(--color-text)]">
             No assignments yet.
           </h3>
-          <p className="mt-1 max-w-sm text-[13.5px] text-slate-500">
+          <p className="mt-1 max-w-sm text-[13.5px] text-[var(--color-text-2)]">
             Add coursework, lab reports, and projects to keep track of upcoming deadlines.
           </p>
 
@@ -219,12 +219,12 @@ export function AssignmentsView({
           </button>
         </div>
       ) : filteredAssignments.length === 0 ? (
-        <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-xs">
-          <SearchX className="h-10 w-10 text-slate-300" strokeWidth={1.5} />
-          <h3 className="mt-3 text-[15px] font-semibold text-slate-800">
+        <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-xs">
+          <SearchX className="h-10 w-10 text-[var(--color-text-3)]" strokeWidth={1.5} />
+          <h3 className="mt-3 text-[15px] font-semibold text-[var(--color-text)]">
             No assignments match the selected filters
           </h3>
-          <p className="mt-1 text-[13px] text-slate-500">
+          <p className="mt-1 text-[13px] text-[var(--color-text-2)]">
             Try resetting your status, priority, or course filter.
           </p>
           <button
@@ -233,7 +233,7 @@ export function AssignmentsView({
               setPriorityFilter("ALL");
               setCourseFilter("ALL");
             }}
-            className="mt-4 text-[13px] font-medium text-blue-600 hover:underline"
+            className="mt-4 text-[13px] font-medium text-blue-600 dark:text-blue-400 hover:underline"
           >
             Reset all filters
           </button>

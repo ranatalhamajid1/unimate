@@ -8,7 +8,6 @@
  * Receives `session` data as props (passed from the server-rendered page).
  */
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -28,6 +27,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { logout } from "@/app/actions/auth";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 // ---------------------------------------------------------------------------
 // Nav items
@@ -83,11 +83,11 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-slate-100 px-5">
+      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-[var(--color-border-subtle)] px-5">
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
           <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
         </span>
-        <span className="text-[15px] font-semibold tracking-tight text-slate-900">
+        <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
           UniMate
         </span>
       </div>
@@ -105,25 +105,27 @@ function SidebarContent({
                   aria-disabled={soon}
                   className={`group flex items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150 ${
                     isActive
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                      : "text-[var(--color-text-2)] hover:bg-slate-100/80 dark:hover:bg-slate-700/40 hover:text-[var(--color-text)]"
                   } ${soon ? "opacity-60 cursor-default" : ""}`}
                 >
                   <span className="flex items-center gap-2.5">
                     <Icon
                       className={`h-4 w-4 shrink-0 ${
-                        isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"
+                        isActive
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-[var(--color-text-3)] group-hover:text-[var(--color-text-2)]"
                       }`}
                     />
                     {label}
                   </span>
                   {soon && (
-                    <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                    <span className="rounded-md bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-3)]">
                       Soon
                     </span>
                   )}
                   {isActive && !soon && (
-                    <ChevronRight className="h-3.5 w-3.5 text-blue-500" />
+                    <ChevronRight className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                   )}
                 </Link>
               </li>
@@ -133,22 +135,31 @@ function SidebarContent({
       </nav>
 
       {/* Bottom — user + actions */}
-      <div className="shrink-0 border-t border-slate-100 px-3 py-3 space-y-0.5">
+      <div className="shrink-0 border-t border-[var(--color-border-subtle)] px-3 py-3 space-y-1">
+        {/* Theme Toggle */}
+        <div className="px-1 py-1.5">
+          <p className="mb-1.5 px-2 text-[10.5px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+            Appearance
+          </p>
+          <ThemeToggle variant="segmented" className="w-full" />
+        </div>
+
         {/* Settings */}
-        <button className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-slate-500 transition-all duration-150 hover:bg-slate-100/80 hover:text-slate-900 opacity-60 cursor-default">
-          <Settings className="h-4 w-4 shrink-0 text-slate-400" />
+        <Link
+          href="/dashboard/settings"
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-[var(--color-text-2)] transition-all duration-150 hover:bg-slate-100/80 dark:hover:bg-slate-700/40 hover:text-[var(--color-text)]"
+          onClick={onClose}
+        >
+          <Settings className="h-4 w-4 shrink-0 text-[var(--color-text-3)]" />
           Settings
-          <span className="ml-auto rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
-            Soon
-          </span>
-        </button>
+        </Link>
 
         {/* Logout */}
         <form action={logout}>
           <button
             id="sidebar-logout"
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-slate-600 transition-all duration-150 hover:bg-red-50 hover:text-red-600"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-[var(--color-text-2)] transition-all duration-150 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Log out
@@ -156,15 +167,15 @@ function SidebarContent({
         </form>
 
         {/* User info */}
-        <div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5">
+        <div className="mt-1 flex items-center gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)] px-3 py-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[13px] font-semibold text-white">
             {initial}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-slate-800">
+            <p className="truncate text-[13px] font-semibold text-[var(--color-text)]">
               {name}
             </p>
-            <p className="truncate text-[11px] text-slate-500">{email}</p>
+            <p className="truncate text-[11px] text-[var(--color-text-3)]">{email}</p>
           </div>
         </div>
       </div>
@@ -180,7 +191,7 @@ export function Sidebar({ name, email, isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar — always visible on lg+ */}
-      <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:w-[240px] lg:flex-col lg:border-r lg:border-slate-100 lg:bg-white">
+      <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:w-[240px] lg:flex-col lg:border-r lg:border-[var(--color-border-subtle)] lg:bg-[var(--color-surface)]">
         <SidebarContent name={name} email={email} />
       </aside>
 
@@ -189,17 +200,17 @@ export function Sidebar({ name, email, isOpen, onClose }: SidebarProps) {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-[2px] lg:hidden"
+            className="fixed inset-0 z-40 bg-slate-900/30 dark:bg-black/50 backdrop-blur-[2px] lg:hidden"
             onClick={onClose}
             aria-hidden
           />
           {/* Drawer panel */}
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-slate-100 bg-white shadow-[4px_0_32px_rgba(15,23,42,0.12)] lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-[var(--color-border-subtle)] bg-[var(--color-surface)] shadow-[4px_0_32px_rgba(15,23,42,0.12)] dark:shadow-[4px_0_32px_rgba(0,0,0,0.5)] lg:hidden">
             {/* Close button */}
             <button
               onClick={onClose}
               aria-label="Close menu"
-              className="absolute right-3 top-3.5 flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+              className="absolute right-3 top-3.5 flex h-7 w-7 items-center justify-center rounded-lg text-[var(--color-text-2)] hover:bg-slate-100 dark:hover:bg-slate-700/50"
             >
               <X className="h-4 w-4" />
             </button>

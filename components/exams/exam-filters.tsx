@@ -31,7 +31,7 @@ export function ExamFilters({
   return (
     <div className="flex flex-wrap items-center gap-3">
       {/* Status Filter Tabs */}
-      <div className="inline-flex rounded-xl border border-slate-200/80 bg-slate-50/70 p-1">
+      <div className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-1">
         {statusOptions.map((opt) => {
           const isSelected = statusFilter === opt.value;
           return (
@@ -40,8 +40,8 @@ export function ExamFilters({
               onClick={() => onStatusChange(opt.value)}
               className={`rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-all ${
                 isSelected
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-[var(--color-surface)] text-[var(--color-text)] shadow-xs"
+                  : "text-[var(--color-text-2)] hover:text-[var(--color-text)]"
               }`}
             >
               {opt.label}
@@ -55,7 +55,7 @@ export function ExamFilters({
         <select
           value={courseFilter}
           onChange={(e) => onCourseChange(e.target.value)}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[12.5px] font-medium text-slate-700 focus:border-blue-600 focus:outline-none shadow-xs max-w-[180px] truncate"
+          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--color-text)] focus:border-blue-600 focus:outline-none shadow-xs max-w-[180px] truncate"
           aria-label="Filter by course"
         >
           <option value="ALL">All Courses</option>

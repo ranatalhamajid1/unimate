@@ -44,28 +44,28 @@ export function CoursesView({ initialCourses }: CoursesViewProps) {
   return (
     <div className="animate-fade-in space-y-6">
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border-subtle)] pb-5">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-[24px] font-bold tracking-tight text-slate-900">
+            <h1 className="text-[24px] font-bold tracking-tight text-[var(--color-text)]">
               Courses
             </h1>
             {initialCourses.length > 0 && (
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[12px] font-semibold text-slate-600">
+              <span className="inline-flex items-center rounded-full bg-[var(--color-surface-2)] px-2.5 py-0.5 text-[12px] font-semibold text-[var(--color-text-2)]">
                 {initialCourses.length} {initialCourses.length === 1 ? "course" : "courses"}
               </span>
             )}
           </div>
-          <p className="mt-1 text-[13.5px] text-slate-500">
+          <p className="mt-1 text-[13.5px] text-[var(--color-text-2)]">
             Manage your current semester courses.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {initialCourses.length > 0 && (
-            <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-100 bg-white px-3 py-2 text-[13px] text-slate-600 shadow-xs">
-              <Layers className="h-4 w-4 text-slate-400" />
-              <span>Total: <strong className="font-semibold text-slate-900">{totalCredits}</strong> Credits</span>
+            <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13px] text-[var(--color-text-2)] shadow-xs">
+              <Layers className="h-4 w-4 text-[var(--color-text-3)]" />
+              <span>Total: <strong className="font-semibold text-[var(--color-text)]">{totalCredits}</strong> Credits</span>
             </div>
           )}
 
@@ -82,15 +82,15 @@ export function CoursesView({ initialCourses }: CoursesViewProps) {
 
       {/* ── Content: Empty State vs Grid ────────────────────────────────── */}
       {initialCourses.length === 0 ? (
-        <div className="flex min-h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/60 p-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-xs">
+        <div className="flex min-h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shadow-xs">
             <BookOpen className="h-7 w-7" strokeWidth={1.75} />
           </div>
 
-          <h3 className="mt-4 text-[16px] font-semibold text-slate-900">
+          <h3 className="mt-4 text-[16px] font-semibold text-[var(--color-text)]">
             Your courses will appear here.
           </h3>
-          <p className="mt-1 max-w-sm text-[13.5px] text-slate-500">
+          <p className="mt-1 max-w-sm text-[13.5px] text-[var(--color-text-2)]">
             Add your first course to get started. Track instructors, credit hours, and semester progress.
           </p>
 

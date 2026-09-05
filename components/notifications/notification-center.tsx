@@ -92,7 +92,7 @@ export function NotificationCenter({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={`Notifications (${unreadCount} unread)`}
         aria-expanded={isOpen}
-        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-all duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-100"
+        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--color-border)] text-[var(--color-text-2)] transition-all duration-150 hover:border-[var(--color-border)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] focus:outline-hidden focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20"
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
@@ -104,15 +104,15 @@ export function NotificationCenter({
 
       {/* Popover Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 rounded-2xl border border-slate-200/90 bg-white shadow-xl z-50 overflow-hidden animate-in fade-in-50 slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] z-50 overflow-hidden animate-in fade-in-50 slide-in-from-top-2 duration-150">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-2)]/70 px-4 py-3">
             <div className="flex items-center gap-2">
-              <h2 className="text-[14px] font-semibold text-slate-900">
+              <h2 className="text-[14px] font-semibold text-[var(--color-text)]">
                 Notifications
               </h2>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                <span className="rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:text-blue-400">
                   {unreadCount} new
                 </span>
               )}
@@ -135,13 +135,13 @@ export function NotificationCenter({
           <div className="max-h-[380px] overflow-y-auto p-2 space-y-2">
             {notifications.length === 0 ? (
               <div className="py-8 text-center">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-2">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700/50 text-[var(--color-text-3)] mb-2">
                   <Inbox className="h-5 w-5" />
                 </div>
-                <p className="text-[13px] font-medium text-slate-800">
+                <p className="text-[13px] font-medium text-[var(--color-text)]">
                   All caught up!
                 </p>
-                <p className="text-[11.5px] text-slate-400 mt-0.5">
+                <p className="text-[11.5px] text-[var(--color-text-3)] mt-0.5">
                   No notifications to show right now.
                 </p>
               </div>
@@ -159,11 +159,11 @@ export function NotificationCenter({
           </div>
 
           {/* Footer */}
-          <div className="border-t border-slate-100 bg-slate-50/50 p-2 text-center">
+          <div className="border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-2)]/50 p-2 text-center">
             <Link
               href="/dashboard/notifications"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center gap-1.5 w-full rounded-xl py-1.5 text-[12.5px] font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 w-full rounded-xl py-1.5 text-[12.5px] font-semibold text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-colors"
             >
               <span>View all notifications</span>
               <ArrowRight className="h-3.5 w-3.5 text-slate-400" />

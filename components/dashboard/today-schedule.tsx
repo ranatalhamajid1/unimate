@@ -26,14 +26,14 @@ export function TodaySchedule({ classes, currentHour }: Props) {
   );
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)]">
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
-        <Clock className="h-4 w-4 text-slate-400" />
-        <h2 className="text-[14px] font-semibold text-slate-900">
+        <Clock className="h-4 w-4 text-[var(--color-text-3)]" />
+        <h2 className="text-[14px] font-semibold text-[var(--color-text)]">
           Today&apos;s schedule
         </h2>
-        <span className="ml-auto text-[11.5px] text-slate-400">
+        <span className="ml-auto text-[11.5px] text-[var(--color-text-3)]">
           {classes.filter((c) => c.type !== "free").length} classes
         </span>
       </div>
@@ -41,7 +41,7 @@ export function TodaySchedule({ classes, currentHour }: Props) {
       {/* Class list */}
       {classes.length === 0 ? (
         <div className="py-7 text-center">
-          <p className="text-[13px] text-slate-400 font-medium">
+          <p className="text-[13px] text-[var(--color-text-3)] font-medium">
             Nothing scheduled today.
           </p>
         </div>
@@ -60,20 +60,20 @@ export function TodaySchedule({ classes, currentHour }: Props) {
               key={cls.id}
               className={`flex items-center gap-3.5 rounded-xl px-3.5 py-3 transition-all duration-200 ${
                 isUpcoming
-                  ? "border border-blue-100 bg-blue-50/70"
+                  ? "border border-blue-100 dark:border-blue-500/20 bg-blue-50/70 dark:bg-blue-500/10"
                   : isPast
                     ? "opacity-40"
                     : isFree
-                      ? "border border-dashed border-slate-200 bg-slate-50/50"
-                      : "border border-slate-100 bg-slate-50/40"
+                      ? "border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)]/50"
+                      : "border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)]/40"
               }`}
             >
               {/* Time */}
               <span
                 className={`w-[68px] shrink-0 text-[12px] tabular-nums ${
                   isUpcoming
-                    ? "font-semibold text-blue-700"
-                    : "text-slate-400"
+                    ? "font-semibold text-blue-700 dark:text-blue-400"
+                    : "text-[var(--color-text-3)]"
                 }`}
               >
                 {cls.time}
@@ -83,10 +83,10 @@ export function TodaySchedule({ classes, currentHour }: Props) {
               <span
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
                   isFree
-                    ? "bg-slate-200/60 text-slate-400"
+                    ? "bg-slate-200/60 dark:bg-slate-700/60 text-[var(--color-text-3)]"
                     : cls.type === "lab"
-                      ? "bg-violet-100 text-violet-600"
-                      : "bg-blue-100 text-blue-600"
+                      ? "bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400"
+                      : "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
                 }`}
               >
                 {isFree ? (
@@ -102,13 +102,13 @@ export function TodaySchedule({ classes, currentHour }: Props) {
               <div className="min-w-0 flex-1">
                 <p
                   className={`truncate text-[13px] font-medium ${
-                    isUpcoming ? "text-blue-900" : isFree ? "text-slate-400" : "text-slate-700"
+                    isUpcoming ? "text-blue-900 dark:text-blue-300" : isFree ? "text-[var(--color-text-3)]" : "text-[var(--color-text-2)]"
                   }`}
                 >
                   {cls.name}
                 </p>
                 {cls.room && (
-                  <p className="text-[11.5px] text-slate-400">{cls.room}</p>
+                  <p className="text-[11.5px] text-[var(--color-text-3)]">{cls.room}</p>
                 )}
               </div>
 

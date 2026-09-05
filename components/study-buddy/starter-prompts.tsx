@@ -42,16 +42,16 @@ export function StarterPrompts({
             type="button"
             disabled={disabled}
             onClick={() => onSelectPrompt(item.prompt)}
-            className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-3.5 text-left text-slate-700 shadow-xs transition-all duration-150 hover:border-blue-300 hover:bg-blue-50/40 hover:text-blue-900 disabled:opacity-50 disabled:pointer-events-none group"
+            className="flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5 text-left text-[var(--color-text-2)] shadow-xs transition-all duration-150 hover:border-blue-300 dark:hover:border-blue-500/40 hover:bg-blue-50/40 dark:hover:bg-blue-500/10 hover:text-blue-900 dark:hover:text-blue-300 disabled:opacity-50 disabled:pointer-events-none group"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700/50 text-[var(--color-text-2)] transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 group-hover:text-blue-600 dark:group-hover:text-blue-400">
               <Icon className="h-4 w-4" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-slate-900 truncate group-hover:text-blue-700">
+              <p className="text-[13px] font-medium text-[var(--color-text)] truncate group-hover:text-blue-700 dark:group-hover:text-blue-400">
                 {item.title}
               </p>
-              <p className="text-[11.5px] text-slate-500 truncate">
+              <p className="text-[11.5px] text-[var(--color-text-3)] truncate">
                 {item.prompt}
               </p>
             </div>

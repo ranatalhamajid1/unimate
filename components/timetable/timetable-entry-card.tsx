@@ -20,7 +20,7 @@ export function TimetableEntryCard({
 
   return (
     <div
-      className="group relative flex flex-col justify-between rounded-xl border border-slate-100 bg-white p-3.5 shadow-xs transition-all duration-150 hover:border-slate-200 hover:shadow-sm"
+      className="group relative flex flex-col justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm"
       style={{
         borderLeftWidth: "4px",
         borderLeftColor: courseColor,
@@ -32,41 +32,41 @@ export function TimetableEntryCard({
           <span
             className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider"
             style={{
-              backgroundColor: `${courseColor}18`,
+              backgroundColor: `${courseColor}20`,
               color: courseColor,
             }}
           >
             {courseCode}
           </span>
 
-          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-            <Tag className="h-2.5 w-2.5 text-slate-400" />
+          <span className="inline-flex items-center gap-1 rounded-md bg-[var(--color-surface-2)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-2)]">
+            <Tag className="h-2.5 w-2.5 text-[var(--color-text-3)]" />
             {entry.type}
           </span>
         </div>
 
         {/* Course Name */}
-        <h4 className="mt-2 text-[13.5px] font-semibold text-slate-900 leading-snug line-clamp-2">
+        <h4 className="mt-2 text-[13.5px] font-semibold text-[var(--color-text)] leading-snug line-clamp-2">
           {courseName}
         </h4>
 
         {/* Meta: Time & Room */}
-        <div className="mt-2.5 space-y-1 text-[12px] text-slate-500">
+        <div className="mt-2.5 space-y-1 text-[12px] text-[var(--color-text-2)]">
           <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span className="font-medium text-slate-700">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-3)]" />
+            <span className="font-medium text-[var(--color-text)]">
               {formatTimeRange(entry.startTime, entry.endTime)}
             </span>
           </div>
 
           {entry.room ? (
             <div className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-3)]" />
               <span className="truncate">{entry.room}</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 text-slate-400 italic">
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+            <div className="flex items-center gap-1.5 text-[var(--color-text-3)] italic">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-3)]" />
               <span>Room TBA</span>
             </div>
           )}
@@ -74,10 +74,10 @@ export function TimetableEntryCard({
       </div>
 
       {/* Actions */}
-      <div className="mt-3 flex items-center justify-end gap-1 border-t border-slate-50 pt-2 opacity-80 group-hover:opacity-100 transition-opacity">
+      <div className="mt-3 flex items-center justify-end gap-1 border-t border-[var(--color-border-subtle)] pt-2 opacity-80 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(entry)}
-          className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-blue-600 transition-colors"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)] hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           title="Edit class"
           aria-label="Edit class"
         >
@@ -85,7 +85,7 @@ export function TimetableEntryCard({
         </button>
         <button
           onClick={() => onDelete(entry)}
-          className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--color-text-3)] hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 transition-colors"
           title="Delete class"
           aria-label="Delete class"
         >

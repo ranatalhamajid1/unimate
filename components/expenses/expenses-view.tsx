@@ -125,10 +125,10 @@ export function ExpensesView({
       {/* ── Page Header ─────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight text-slate-900 sm:text-[26px]">
+          <h1 className="text-[22px] font-bold tracking-tight text-[var(--color-text)] sm:text-[26px]">
             Expenses
           </h1>
-          <p className="mt-1 text-[13.5px] text-slate-500">
+          <p className="mt-1 text-[13.5px] text-[var(--color-text-2)]">
             Keep track of your university and personal spending.
           </p>
         </div>
@@ -145,73 +145,73 @@ export function ExpensesView({
       {/* ── Summary Cards ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {/* Total Spending */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+            <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
               Total Spending
             </p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <Wallet className="h-4 w-4" />
             </span>
           </div>
-          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-slate-900">
+          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
             {summary.totalSpendingString}
           </p>
-          <p className="mt-1.5 text-[12px] font-medium text-slate-500">
+          <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
             {summary.hasExpenses ? `Across ${summary.expenseCount} expenses` : "No expenses recorded"}
           </p>
         </div>
 
         {/* This Month */}
-        <div className="relative overflow-hidden rounded-2xl border border-blue-100/80 bg-gradient-to-br from-blue-50/70 to-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+        <div className="relative overflow-hidden rounded-2xl border border-blue-100/80 dark:border-blue-900/40 bg-gradient-to-br from-blue-50/70 dark:from-blue-950/30 to-white dark:to-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+            <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
               This Month
             </p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-400">
               <Calendar className="h-4 w-4" />
             </span>
           </div>
-          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-blue-700">
+          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-blue-700 dark:text-blue-400">
             {summary.thisMonthSpendingString}
           </p>
-          <p className="mt-1.5 text-[12px] font-medium text-slate-500">
+          <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
             Current calendar month
           </p>
         </div>
 
         {/* This Week */}
-        <div className="relative overflow-hidden rounded-2xl border border-emerald-100/80 bg-gradient-to-br from-emerald-50/70 to-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+        <div className="relative overflow-hidden rounded-2xl border border-emerald-100/80 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/70 dark:from-emerald-950/30 to-white dark:to-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+            <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
               This Week
             </p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400">
               <Receipt className="h-4 w-4" />
             </span>
           </div>
-          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-emerald-700">
+          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-emerald-700 dark:text-emerald-400">
             {summary.thisWeekSpendingString}
           </p>
-          <p className="mt-1.5 text-[12px] font-medium text-slate-500">
+          <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
             Monday to Sunday
           </p>
         </div>
 
         {/* Average Monthly */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+            <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
               Average Monthly
             </p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-2)]">
               <TrendingUp className="h-4 w-4" />
             </span>
           </div>
-          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-slate-900">
+          <p className="text-[1.85rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
             {summary.averageMonthlySpendingString}
           </p>
-          <p className="mt-1.5 text-[12px] font-medium text-slate-500">
+          <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
             Active spending months
           </p>
         </div>
@@ -219,20 +219,20 @@ export function ExpensesView({
 
       {/* ── Spending Insight Banner ─────────────────────────────────── */}
       {summary.hasExpenses && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-blue-100/80 bg-blue-50/40 p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-blue-100/80 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-slate-900">
+              <p className="text-[13px] font-semibold text-[var(--color-text)]">
                 Spending Insight
               </p>
-              <p className="text-[12px] text-slate-600">
+              <p className="text-[12px] text-[var(--color-text-2)]">
                 {insights.topCategory ? (
                   <>
                     Highest expense category:{" "}
-                    <span className="font-semibold text-slate-800">
+                    <span className="font-semibold text-[var(--color-text)]">
                       {insights.topCategory.label} ({insights.topCategory.amountString})
                     </span>
                     . {insights.insightText}
@@ -248,10 +248,10 @@ export function ExpensesView({
             <div
               className={`inline-flex items-center gap-1 self-start sm:self-auto rounded-full px-2.5 py-1 text-[11px] font-semibold border ${
                 insights.monthOverMonthTrend === "up"
-                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                  ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/60"
                   : insights.monthOverMonthTrend === "down"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : "bg-slate-100 text-slate-700 border-slate-200"
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60"
+                  : "bg-[var(--color-surface-2)] text-[var(--color-text-2)] border-[var(--color-border)]"
               }`}
             >
               {insights.monthOverMonthTrend === "up" ? (
@@ -287,11 +287,11 @@ export function ExpensesView({
       {/* ── Expenses List ───────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[15px] font-semibold text-slate-900">
+          <h2 className="text-[15px] font-semibold text-[var(--color-text)]">
             Transactions ({filteredExpenses.length})
           </h2>
           {hasActiveFilters && (
-            <span className="text-[12px] text-slate-500">
+            <span className="text-[12px] text-[var(--color-text-3)]">
               Showing filtered results
             </span>
           )}
@@ -299,14 +299,14 @@ export function ExpensesView({
 
         {initialExpenses.length === 0 ? (
           /* Empty state: No expenses logged yet */
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-14 px-4 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-3">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] py-14 px-4 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mb-3">
               <Receipt className="h-6 w-6" />
             </div>
-            <h3 className="text-[16px] font-semibold text-slate-900">
+            <h3 className="text-[16px] font-semibold text-[var(--color-text)]">
               No expenses yet
             </h3>
-            <p className="mt-1 max-w-sm text-[13px] text-slate-500">
+            <p className="mt-1 max-w-sm text-[13px] text-[var(--color-text-2)]">
               Start tracking your spending to understand where your money goes.
             </p>
             <button
@@ -319,13 +319,13 @@ export function ExpensesView({
           </div>
         ) : filteredExpenses.length === 0 ? (
           /* Empty state: Filter returned 0 */
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-12 px-4 text-center">
-            <p className="text-[14px] font-medium text-slate-700">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] py-12 px-4 text-center">
+            <p className="text-[14px] font-medium text-[var(--color-text-2)]">
               No expenses match your filters.
             </p>
             <button
               onClick={handleClearFilters}
-              className="mt-3 text-[13px] font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+              className="mt-3 text-[13px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
             >
               Clear Filters
             </button>

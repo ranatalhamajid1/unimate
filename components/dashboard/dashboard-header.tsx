@@ -26,13 +26,13 @@ export function DashboardHeader({
   return (
     <div className="mb-7 flex items-start justify-between gap-4">
       <div>
-        <p className="text-[11.5px] font-semibold uppercase tracking-widest text-slate-400 mb-2">
+        <p className="text-[11.5px] font-semibold uppercase tracking-widest text-[var(--color-text-3)] mb-2">
           {dateString}
         </p>
-        <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">
+        <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--color-text)] sm:text-3xl">
           {greeting}, {firstName} 👋
         </h1>
-        <p className="mt-1.5 text-[14.5px] text-slate-500">
+        <p className="mt-1.5 text-[14.5px] text-[var(--color-text-2)]">
           Here&apos;s what&apos;s happening with your university life today.
         </p>
       </div>

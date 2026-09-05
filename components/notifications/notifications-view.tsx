@@ -2,11 +2,8 @@
 
 import { useState, useTransition } from "react";
 import {
-  Bell,
   CheckCheck,
   Inbox,
-  Filter,
-  AlertCircle,
   Calendar,
   AlertTriangle,
   FileText,
@@ -112,16 +109,16 @@ export function NotificationsView({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">
+            <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--color-text)] sm:text-3xl">
               Notifications
             </h1>
             {unreadCount > 0 && (
-              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[12px] font-semibold text-blue-700">
+              <span className="rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-[12px] font-semibold text-blue-700 dark:text-blue-400">
                 {unreadCount} unread
               </span>
             )}
           </div>
-          <p className="mt-1 text-[14px] text-slate-500">
+          <p className="mt-1 text-[14px] text-[var(--color-text-2)]">
             Stay on top of your academic schedule, deadlines, and attendance.
           </p>
         </div>
@@ -131,9 +128,9 @@ export function NotificationsView({
             type="button"
             onClick={handleMarkAllRead}
             disabled={isPending}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[13px] font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2 text-[13px] font-medium text-[var(--color-text-2)] shadow-xs transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] disabled:opacity-50"
           >
-            <CheckCheck className="h-4 w-4 text-blue-600" />
+            <CheckCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span>Mark all as read</span>
           </button>
         )}
@@ -146,16 +143,16 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.ALL)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.ALL
-              ? "bg-slate-900 text-white"
-              : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50"
+              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
           <span>All</span>
           <span
             className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
               currentFilter === NOTIFICATION_FILTERS.ALL
-                ? "bg-slate-800 text-slate-200"
-                : "bg-slate-100 text-slate-600"
+                ? "bg-slate-800 dark:bg-blue-700 text-slate-200 dark:text-white"
+                : "bg-slate-100 dark:bg-slate-800 text-[var(--color-text-2)]"
             }`}
           >
             {notifications.length}
@@ -168,7 +165,7 @@ export function NotificationsView({
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.UNREAD
               ? "bg-blue-600 text-white"
-              : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50"
+              : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
           <span>Unread</span>
@@ -177,7 +174,7 @@ export function NotificationsView({
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.UNREAD
                   ? "bg-blue-700 text-white"
-                  : "bg-blue-50 text-blue-700"
+                  : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400"
               }`}
             >
               {unreadFilterCount}
@@ -190,8 +187,8 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.ASSIGNMENTS)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.ASSIGNMENTS
-              ? "bg-slate-900 text-white"
-              : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50"
+              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
           <FileText className="h-3.5 w-3.5" />
@@ -200,8 +197,8 @@ export function NotificationsView({
             <span
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.ASSIGNMENTS
-                  ? "bg-slate-800 text-slate-200"
-                  : "bg-slate-100 text-slate-600"
+                  ? "bg-slate-800 dark:bg-blue-700 text-slate-200 dark:text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-[var(--color-text-2)]"
               }`}
             >
               {assignmentsFilterCount}
@@ -214,8 +211,8 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.EXAMS)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.EXAMS
-              ? "bg-slate-900 text-white"
-              : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50"
+              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
           <Calendar className="h-3.5 w-3.5" />
@@ -224,8 +221,8 @@ export function NotificationsView({
             <span
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.EXAMS
-                  ? "bg-slate-800 text-slate-200"
-                  : "bg-slate-100 text-slate-600"
+                  ? "bg-slate-800 dark:bg-blue-700 text-slate-200 dark:text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-[var(--color-text-2)]"
               }`}
             >
               {examsFilterCount}
@@ -238,8 +235,8 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.ATTENDANCE)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.ATTENDANCE
-              ? "bg-slate-900 text-white"
-              : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50"
+              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
           <AlertTriangle className="h-3.5 w-3.5" />
@@ -248,8 +245,8 @@ export function NotificationsView({
             <span
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.ATTENDANCE
-                  ? "bg-slate-800 text-slate-200"
-                  : "bg-slate-100 text-slate-600"
+                  ? "bg-slate-800 dark:bg-blue-700 text-slate-200 dark:text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-[var(--color-text-2)]"
               }`}
             >
               {attendanceFilterCount}
@@ -261,11 +258,11 @@ export function NotificationsView({
       {/* ── Notification List ─────────────────────────────────── */}
       <div className="space-y-3">
         {filteredNotifications.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-12 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3">
+          <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-12 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-surface-2)] text-[var(--color-text-3)] mb-3">
               <Inbox className="h-6 w-6" />
             </div>
-            <h3 className="text-[15px] font-semibold text-slate-900">
+            <h3 className="text-[15px] font-semibold text-[var(--color-text)]">
               {currentFilter === NOTIFICATION_FILTERS.UNREAD
                 ? "No unread notifications"
                 : currentFilter === NOTIFICATION_FILTERS.ASSIGNMENTS
@@ -276,7 +273,7 @@ export function NotificationsView({
                 ? "No attendance warnings"
                 : "No notifications yet"}
             </h3>
-            <p className="mt-1 text-[13px] text-slate-500 max-w-sm mx-auto">
+            <p className="mt-1 text-[13px] text-[var(--color-text-2)] max-w-sm mx-auto">
               {currentFilter === NOTIFICATION_FILTERS.UNREAD
                 ? "You have reviewed all your academic alerts and reminders."
                 : "When deadlines or exam dates approach, alerts will automatically appear here."}

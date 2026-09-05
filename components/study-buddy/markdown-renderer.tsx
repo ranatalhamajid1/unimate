@@ -10,21 +10,21 @@ export function FormattedMarkdown({ content }: { content: string }) {
   const blocks = content.split(/\n\n+/);
 
   return (
-    <div className="space-y-3 text-[14px] leading-relaxed text-slate-800">
+    <div className="space-y-3 text-[14px] leading-relaxed text-[var(--color-text-2)]">
       {blocks.map((block, idx) => {
         const trimmed = block.trim();
 
         // Header 3 or 4
         if (trimmed.startsWith("### ")) {
           return (
-            <h4 key={idx} className="text-[14.5px] font-semibold text-slate-900 pt-1">
+            <h4 key={idx} className="text-[14.5px] font-semibold text-[var(--color-text)] pt-1">
               {renderInline(trimmed.replace(/^###\s+/, ""))}
             </h4>
           );
         }
         if (trimmed.startsWith("## ")) {
           return (
-            <h3 key={idx} className="text-[15px] font-bold text-slate-900 pt-1">
+            <h3 key={idx} className="text-[15px] font-bold text-[var(--color-text)] pt-1">
               {renderInline(trimmed.replace(/^##\s+/, ""))}
             </h3>
           );
@@ -37,7 +37,7 @@ export function FormattedMarkdown({ content }: { content: string }) {
           return (
             <ul key={idx} className="space-y-1.5 pl-4 list-disc marker:text-blue-500">
               {lines.map((line, lIdx) => (
-                <li key={lIdx} className="text-[13.5px] text-slate-700">
+                <li key={lIdx} className="text-[13.5px] text-[var(--color-text-2)]">
                   {renderInline(line.replace(/^\s*[-*•]\s+/, ""))}
                 </li>
               ))}
@@ -49,9 +49,9 @@ export function FormattedMarkdown({ content }: { content: string }) {
         const isNumList = lines.every((l) => /^\s*\d+\.\s+/.test(l));
         if (isNumList) {
           return (
-            <ol key={idx} className="space-y-1.5 pl-4 list-decimal marker:text-blue-600 font-medium text-slate-700">
+            <ol key={idx} className="space-y-1.5 pl-4 list-decimal marker:text-blue-600 font-medium text-[var(--color-text-2)]">
               {lines.map((line, lIdx) => (
-                <li key={lIdx} className="text-[13.5px] text-slate-700">
+                <li key={lIdx} className="text-[13.5px] text-[var(--color-text-2)]">
                   {renderInline(line.replace(/^\s*\d+\.\s+/, ""))}
                 </li>
               ))}
@@ -61,7 +61,7 @@ export function FormattedMarkdown({ content }: { content: string }) {
 
         // Normal paragraph with possible single line breaks
         return (
-          <p key={idx} className="text-[14px] text-slate-700">
+          <p key={idx} className="text-[14px] text-[var(--color-text-2)]">
             {lines.map((line, lineIdx) => (
               <React.Fragment key={lineIdx}>
                 {lineIdx > 0 && <br />}
@@ -92,7 +92,7 @@ function renderInline(text: string): React.ReactNode {
     const token = match[0];
     if (token.startsWith("**") && token.endsWith("**")) {
       parts.push(
-        <strong key={match.index} className="font-semibold text-slate-900">
+        <strong key={match.index} className="font-semibold text-[var(--color-text)]">
           {token.slice(2, -2)}
         </strong>
       );
@@ -100,14 +100,14 @@ function renderInline(text: string): React.ReactNode {
       parts.push(
         <code
           key={match.index}
-          className="rounded bg-slate-100 px-1.5 py-0.5 text-[12.5px] font-mono font-medium text-slate-800"
+          className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[12.5px] font-mono font-medium text-slate-800 dark:text-slate-200"
         >
           {token.slice(1, -1)}
         </code>
       );
     } else if (token.startsWith("*") && token.endsWith("*")) {
       parts.push(
-        <em key={match.index} className="italic text-slate-600">
+        <em key={match.index} className="italic text-[var(--color-text-3)]">
           {token.slice(1, -1)}
         </em>
       );

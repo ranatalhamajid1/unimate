@@ -25,35 +25,35 @@ export function AcademicSummary({ overview }: AcademicSummaryProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {/* 1. Current GPA */}
-      <div className="relative overflow-hidden rounded-2xl border border-blue-100/80 bg-gradient-to-br from-blue-50/70 to-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+      <div className="relative overflow-hidden rounded-2xl border border-blue-100/80 dark:border-blue-900/40 bg-gradient-to-br from-blue-50/70 dark:from-blue-950/30 to-white dark:to-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+          <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
             Current GPA
           </p>
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100/80 text-blue-700">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100/80 dark:bg-blue-900/60 text-blue-700 dark:text-blue-400">
             <Award className="h-4 w-4" />
           </span>
         </div>
-        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-blue-700">
+        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-blue-700 dark:text-blue-400">
           {gpaString}
         </p>
-        <p className="mt-1.5 text-[12px] font-medium text-slate-500">
+        <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
           {gpaSub} {gradedCoursesCount > 0 ? `(${gradedCoursesCount}/${coursesCount} graded)` : ""}
         </p>
       </div>
 
       {/* 2. Overall Attendance */}
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-100/80 bg-gradient-to-br from-emerald-50/70 to-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-100/80 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/70 dark:from-emerald-950/30 to-white dark:to-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+          <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
             Overall Attendance
           </p>
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/80 text-emerald-700">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/80 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400">
             <Percent className="h-4 w-4" />
           </span>
         </div>
         <div className="flex items-baseline gap-2">
-          <p className="text-[1.95rem] font-bold leading-none tracking-tight text-emerald-700">
+          <p className="text-[1.95rem] font-bold leading-none tracking-tight text-emerald-700 dark:text-emerald-400">
             {attendanceString}
           </p>
           {overview.overallAttendance !== null && (
@@ -64,41 +64,41 @@ export function AcademicSummary({ overview }: AcademicSummaryProps) {
             </span>
           )}
         </div>
-        <p className="mt-1.5 text-[12px] font-medium text-slate-500">{attendanceSub}</p>
+        <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">{attendanceSub}</p>
       </div>
 
       {/* 3. Total Credits */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+          <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
             Total Credits
           </p>
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-2)]">
             <GraduationCap className="h-4 w-4" />
           </span>
         </div>
-        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-slate-900">
+        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
           {totalCredits}
         </p>
-        <p className="mt-1.5 text-[12px] font-medium text-slate-500">
+        <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
           Across {coursesCount} enrolled courses
         </p>
       </div>
 
       {/* 4. Courses Tracked */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+          <p className="text-[12px] font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
             Courses Tracked
           </p>
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-2)]">
             <BookOpen className="h-4 w-4" />
           </span>
         </div>
-        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-slate-900">
+        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
           {coursesCount}
         </p>
-        <p className="mt-1.5 text-[12px] font-medium text-slate-500">
+        <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
           Active semester courses
         </p>
       </div>

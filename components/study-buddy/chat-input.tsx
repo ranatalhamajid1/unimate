@@ -46,7 +46,7 @@ export function ChatInput({
   const isOverWarning = text.length > 800;
 
   return (
-    <div className="relative rounded-2xl border border-slate-200/90 bg-white p-2 shadow-sm transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+    <div className="relative rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-2 shadow-sm transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-blue-500/20">
       <div className="flex items-end gap-2">
         <textarea
           ref={textareaRef}
@@ -58,7 +58,7 @@ export function ChatInput({
           aria-label="Message to AI Study Buddy"
           rows={1}
           maxLength={1000}
-          className="max-h-[140px] min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-[14px] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:outline-hidden disabled:opacity-50"
+          className="max-h-[140px] min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-[14px] leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-3)] focus:outline-hidden disabled:opacity-50"
         />
 
         <button
@@ -66,7 +66,7 @@ export function ChatInput({
           onClick={handleSubmit}
           disabled={!text.trim() || isLoading || disabled}
           aria-label="Send message"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs transition-all duration-150 hover:bg-blue-500 active:scale-95 disabled:pointer-events-none disabled:bg-slate-200 disabled:text-slate-400"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs transition-all duration-150 hover:bg-blue-500 active:scale-95 disabled:pointer-events-none disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500"
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -77,7 +77,7 @@ export function ChatInput({
       </div>
 
       {/* Helper text / character limit */}
-      <div className="mt-1 flex items-center justify-between px-3 pb-1 text-[11px] text-slate-400">
+      <div className="mt-1 flex items-center justify-between px-3 pb-1 text-[11px] text-[var(--color-text-3)]">
         <span>Enter to send, Shift+Enter for new line</span>
         {isOverWarning && (
           <span className="text-amber-600 font-mono">

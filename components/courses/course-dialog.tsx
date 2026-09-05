@@ -122,7 +122,7 @@ export function CourseDialog({
         }
       }
     } catch (err) {
-      console.error("Course submission error:", err);
+      console.error("Course submission failed:", err);
       setServerMessage("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -139,14 +139,14 @@ export function CourseDialog({
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-4">
           <div>
-            <h2 className="text-[17px] font-semibold text-slate-900">
+            <h2 className="text-[17px] font-semibold text-[var(--color-text)]">
               {isEditing ? "Edit Course" : "Add New Course"}
             </h2>
-            <p className="text-[13px] text-slate-500 mt-0.5">
+            <p className="text-[13px] text-[var(--color-text-2)] mt-0.5">
               {isEditing
                 ? "Update the details for this course."
                 : "Fill in the details below to add a course to your semester."}
@@ -156,7 +156,7 @@ export function CourseDialog({
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] disabled:opacity-50"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
@@ -165,7 +165,7 @@ export function CourseDialog({
 
         {/* Global Error Banner */}
         {serverMessage && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+          <div className="mt-4 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 p-3 text-[13px] text-red-700 dark:text-red-300">
             {serverMessage}
           </div>
         )}
@@ -176,7 +176,7 @@ export function CourseDialog({
           <div>
             <label
               htmlFor="course-name"
-              className="block text-[13px] font-medium text-slate-700"
+              className="block text-[13px] font-medium text-[var(--color-text)]"
             >
               Course Name <span className="text-red-500">*</span>
             </label>
@@ -188,14 +188,14 @@ export function CourseDialog({
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, name: e.target.value }))
               }
-              className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 ${
+              className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] bg-[var(--color-surface-2)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 ${
                 errors?.name
                   ? "border-red-400 focus:border-red-500"
-                  : "border-slate-200 focus:border-blue-600"
+                  : "border-[var(--color-border)] focus:border-blue-600"
               }`}
             />
             {errors?.name && (
-              <p className="mt-1 text-[12px] text-red-600">{errors.name[0]}</p>
+              <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.name[0]}</p>
             )}
           </div>
 
@@ -205,7 +205,7 @@ export function CourseDialog({
             <div>
               <label
                 htmlFor="course-code"
-                className="block text-[13px] font-medium text-slate-700"
+                className="block text-[13px] font-medium text-[var(--color-text)]"
               >
                 Course Code <span className="text-red-500">*</span>
               </label>
@@ -220,14 +220,14 @@ export function CourseDialog({
                     code: e.target.value.toUpperCase(),
                   }))
                 }
-                className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 uppercase ${
+                className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] bg-[var(--color-surface-2)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 uppercase ${
                   errors?.code
                     ? "border-red-400 focus:border-red-500"
-                    : "border-slate-200 focus:border-blue-600"
+                    : "border-[var(--color-border)] focus:border-blue-600"
                 }`}
               />
               {errors?.code && (
-                <p className="mt-1 text-[12px] text-red-600">{errors.code[0]}</p>
+                <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.code[0]}</p>
               )}
             </div>
 
@@ -235,7 +235,7 @@ export function CourseDialog({
             <div>
               <label
                 htmlFor="credit-hours"
-                className="block text-[13px] font-medium text-slate-700"
+                className="block text-[13px] font-medium text-[var(--color-text)]"
               >
                 Credit Hours <span className="text-red-500">*</span>
               </label>
@@ -248,10 +248,10 @@ export function CourseDialog({
                     creditHours: Number(e.target.value),
                   }))
                 }
-                className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white ${
+                className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)] ${
                   errors?.creditHours
                     ? "border-red-400 focus:border-red-500"
-                    : "border-slate-200 focus:border-blue-600"
+                    : "border-[var(--color-border)] focus:border-blue-600"
                 }`}
               >
                 <option value={1}>1 Credit Hour</option>
@@ -262,7 +262,7 @@ export function CourseDialog({
                 <option value={6}>6 Credit Hours</option>
               </select>
               {errors?.creditHours && (
-                <p className="mt-1 text-[12px] text-red-600">
+                <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                   {errors.creditHours[0]}
                 </p>
               )}
@@ -275,9 +275,9 @@ export function CourseDialog({
             <div>
               <label
                 htmlFor="instructor"
-                className="block text-[13px] font-medium text-slate-700"
+                className="block text-[13px] font-medium text-[var(--color-text)]"
               >
-                Instructor <span className="text-slate-400 font-normal">(Optional)</span>
+                Instructor <span className="text-[var(--color-text-3)] font-normal">(Optional)</span>
               </label>
               <input
                 id="instructor"
@@ -290,10 +290,10 @@ export function CourseDialog({
                     instructor: e.target.value,
                   }))
                 }
-                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               />
               {errors?.instructor && (
-                <p className="mt-1 text-[12px] text-red-600">
+                <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                   {errors.instructor[0]}
                 </p>
               )}
@@ -303,9 +303,9 @@ export function CourseDialog({
             <div>
               <label
                 htmlFor="semester"
-                className="block text-[13px] font-medium text-slate-700"
+                className="block text-[13px] font-medium text-[var(--color-text)]"
               >
-                Semester <span className="text-slate-400 font-normal">(Optional)</span>
+                Semester <span className="text-[var(--color-text-3)] font-normal">(Optional)</span>
               </label>
               <input
                 id="semester"
@@ -318,10 +318,10 @@ export function CourseDialog({
                     semester: e.target.value,
                   }))
                 }
-                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               />
               {errors?.semester && (
-                <p className="mt-1 text-[12px] text-red-600">
+                <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                   {errors.semester[0]}
                 </p>
               )}
@@ -330,7 +330,7 @@ export function CourseDialog({
 
           {/* Color Selector */}
           <div>
-            <label className="block text-[13px] font-medium text-slate-700 mb-2">
+            <label className="block text-[13px] font-medium text-[var(--color-text)] mb-2">
               Course Color Indicator
             </label>
             <div className="flex flex-wrap items-center gap-2.5">
@@ -343,8 +343,8 @@ export function CourseDialog({
                     onClick={() =>
                       setFormData((prev) => ({ ...prev, color: preset.value }))
                     }
-                    className={`relative flex h-8 w-8 items-center justify-center rounded-full transition-transform hover:scale-105 focus:outline-none ring-2 ring-offset-2 ${
-                      isSelected ? "ring-slate-900 shadow-sm" : "ring-transparent"
+                    className={`relative flex h-8 w-8 items-center justify-center rounded-full transition-transform hover:scale-105 focus:outline-none ring-2 ring-offset-2 ring-offset-[var(--color-surface)] ${
+                      isSelected ? "ring-blue-500 shadow-sm" : "ring-transparent"
                     }`}
                     style={{
                       backgroundColor: preset.value,
@@ -360,12 +360,12 @@ export function CourseDialog({
           </div>
 
           {/* Footer Buttons */}
-          <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+          <div className="mt-6 flex items-center justify-end gap-3 border-t border-[var(--color-border-subtle)] pt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-[13.5px] font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-[13.5px] font-medium text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

@@ -10,14 +10,14 @@ type CategoryBreakdownProps = {
 export function CategoryBreakdown({ items }: CategoryBreakdownProps) {
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
         <div className="flex items-center gap-2 mb-4">
-          <PieChart className="h-4 w-4 text-blue-600" />
-          <h3 className="text-[14px] font-semibold text-slate-900">Spending by Category</h3>
+          <PieChart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <h3 className="text-[14px] font-semibold text-[var(--color-text)]">Spending by Category</h3>
         </div>
         <div className="py-8 text-center">
-          <p className="text-[13px] text-slate-500 font-medium">No spending data yet.</p>
-          <p className="mt-1 text-[12px] text-slate-400">
+          <p className="text-[13px] text-[var(--color-text-2)] font-medium">No spending data yet.</p>
+          <p className="mt-1 text-[12px] text-[var(--color-text-3)]">
             Log expenses to see your category breakdown.
           </p>
         </div>
@@ -26,13 +26,13 @@ export function CategoryBreakdown({ items }: CategoryBreakdownProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <PieChart className="h-4 w-4 text-blue-600" />
-          <h3 className="text-[14px] font-semibold text-slate-900">Spending by Category</h3>
+          <PieChart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <h3 className="text-[14px] font-semibold text-[var(--color-text)]">Spending by Category</h3>
         </div>
-        <span className="text-[12px] font-medium text-slate-400">
+        <span className="text-[12px] font-medium text-[var(--color-text-3)]">
           {items.length} {items.length === 1 ? "category" : "categories"}
         </span>
       </div>
@@ -46,18 +46,18 @@ export function CategoryBreakdown({ items }: CategoryBreakdownProps) {
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="font-medium text-slate-800">{item.label}</span>
+                <span className="font-medium text-[var(--color-text)]">{item.label}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-slate-900">{item.amountString}</span>
-                <span className="text-[11.5px] font-medium text-slate-400 w-9 text-right">
+                <span className="font-semibold text-[var(--color-text)]">{item.amountString}</span>
+                <span className="text-[11.5px] font-medium text-[var(--color-text-3)] w-9 text-right">
                   {item.percentage}%
                 </span>
               </div>
             </div>
 
             {/* Progress Bar */}
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface-2)]">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{

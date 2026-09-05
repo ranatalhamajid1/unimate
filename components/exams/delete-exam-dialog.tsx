@@ -54,25 +54,25 @@ export function DeleteExamDialog({
       />
 
       {/* Dialog Card */}
-      <div className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-2xl animate-in zoom-in-95 duration-150">
         <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
             <AlertTriangle className="h-5 w-5" />
           </div>
 
           <div className="flex-1">
-            <h3 className="text-[16px] font-semibold text-slate-900 leading-snug">
+            <h3 className="text-[16px] font-semibold text-[var(--color-text)] leading-snug">
               Delete this exam?
             </h3>
-            <p className="mt-1 text-[13px] text-slate-700 font-medium line-clamp-1">
+            <p className="mt-1 text-[13px] text-[var(--color-text-2)] font-medium line-clamp-1">
               {exam.title}
             </p>
-            <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+            <p className="mt-1.5 text-[13px] text-[var(--color-text-3)] leading-relaxed">
               This exam will be permanently removed from your dashboard and countdowns.
             </p>
 
             {errorMessage && (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-[12.5px] text-red-700">
+              <div className="mt-3 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 p-2.5 text-[12.5px] text-red-700 dark:text-red-300">
                 {errorMessage}
               </div>
             )}
@@ -82,7 +82,7 @@ export function DeleteExamDialog({
                 type="button"
                 onClick={onClose}
                 disabled={isDeleting}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-[13.5px] font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-[13.5px] font-medium text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>

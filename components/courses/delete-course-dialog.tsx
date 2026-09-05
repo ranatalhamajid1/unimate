@@ -23,11 +23,7 @@ export function DeleteCourseDialog({
 
   if (!isOpen || !course) return null;
 
-  async function handleDelete() {
-    if (!course) return;
-    setIsDeleting(true);
-    setErrorMessage(null);
-
+  const performDelete = async () => {
     try {
       const res = await deleteCourse(course.id);
       if (res.success) {
@@ -42,7 +38,7 @@ export function DeleteCourseDialog({
     } finally {
       setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -54,22 +50,22 @@ export function DeleteCourseDialog({
       />
 
       {/* Dialog Card */}
-      <div className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-2xl animate-in zoom-in-95 duration-150">
         <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
             <AlertTriangle className="h-5 w-5" />
           </div>
 
           <div className="flex-1">
-            <h3 className="text-[16px] font-semibold text-slate-900 leading-snug">
+            <h3 className="text-[16px] font-semibold text-[var(--color-text)] leading-snug">
               Delete {course.name}?
             </h3>
-            <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+            <p className="mt-1.5 text-[13px] text-[var(--color-text-2)] leading-relaxed">
               This course will be permanently removed from your account. Any associated data will also be deleted.
             </p>
 
             {errorMessage && (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-[12.5px] text-red-700">
+              <div className="mt-3 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 p-2.5 text-[12.5px] text-red-700 dark:text-red-300">
                 {errorMessage}
               </div>
             )}
@@ -79,13 +75,13 @@ export function DeleteCourseDialog({
                 type="button"
                 onClick={onClose}
                 disabled={isDeleting}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-[13.5px] font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-[13.5px] font-medium text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={performDelete}
                 disabled={isDeleting}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-[13.5px] font-medium text-white shadow-xs hover:bg-red-700 transition-colors disabled:opacity-50 min-w-[90px]"
               >

@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { X, Loader2, BookOpen } from "lucide-react";
+import Link from "next/link";
 import {
   Exam,
   ExamFormState,
   EXAM_TYPES,
+  EXAM_STATUSES,
   EXAM_TYPE_CONFIG,
   ExamType,
+  ExamStatus,
   validateExam,
 } from "@/app/lib/exam-definitions";
 import { createExam, updateExam } from "@/app/actions/exams";
@@ -22,80 +24,96 @@ type CourseOption = {
 
 type ExamDialogProps = {
   isOpen: boolean;
+  courses: CourseOption[];
   onClose: () => void;
   onSuccess: () => void;
-  courses: CourseOption[];
   examToEdit?: Exam | null;
+};
+
+type DialogExamFormValues = {
+  title: string;
+  courseId: string;
+  type: ExamType;
+  date: string;
+  time: string;
+  room: string;
+  notes: string;
+  preparationProgress: number;
+  status: ExamStatus;
+};
+
+// Default dates helper
+const defaultExamDate = () => {
+  const twoWeeks = new Date();
+  twoWeeks.setDate(twoWeeks.getDate() + 14);
+  return twoWeeks.toISOString().split("T")[0];
+};
+
+// Helper to split Date into YYYY-MM-DD and HH:MM
+const parseExamDateTime = (dateVal: Date | string) => {
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) {
+    return { date: defaultExamDate(), time: "09:00" };
+  }
+  const dateStr = d.toISOString().split("T")[0];
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return { date: dateStr, time: `${hours}:${minutes}` };
 };
 
 export function ExamDialog({
   isOpen,
+  courses,
   onClose,
   onSuccess,
-  courses,
   examToEdit,
 }: ExamDialogProps) {
   const isEditing = Boolean(examToEdit);
+  const defaultCourseId = courses[0]?.id || "";
 
   // Form State
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DialogExamFormValues>({
     title: "",
-    courseId: courses[0]?.id || "",
-    type: EXAM_TYPES.FINAL as ExamType,
-    date: "",
-    time: "10:00",
+    courseId: defaultCourseId,
+    type: EXAM_TYPES.FINAL,
+    date: defaultExamDate(),
+    time: "09:00",
     room: "",
-    preparationProgress: 0,
     notes: "",
+    preparationProgress: 0,
+    status: EXAM_STATUSES.UPCOMING,
   });
 
   const [errors, setErrors] = useState<NonNullable<ExamFormState>["errors"]>({});
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Helpers to split DateTime into Date and Time strings
-  function formatDateString(date: Date): string {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  function formatTimeString(date: Date): string {
-    const d = new Date(date);
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    return `${hours}:${minutes}`;
-  }
-
-  // Populate or reset form
+  // Initialize or reset form
   useEffect(() => {
     if (examToEdit) {
+      const { date, time } = parseExamDateTime(examToEdit.examDate);
       setFormData({
         title: examToEdit.title,
         courseId: examToEdit.courseId,
         type: examToEdit.type as ExamType,
-        date: formatDateString(new Date(examToEdit.examDate)),
-        time: formatTimeString(new Date(examToEdit.examDate)),
+        date,
+        time,
         room: examToEdit.room || "",
-        preparationProgress: examToEdit.preparationProgress || 0,
         notes: examToEdit.notes || "",
+        preparationProgress: examToEdit.preparationProgress,
+        status: examToEdit.status as ExamStatus,
       });
     } else {
-      // Default date: 14 days from today
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 14);
-
       setFormData({
         title: "",
         courseId: courses[0]?.id || "",
         type: EXAM_TYPES.FINAL,
-        date: formatDateString(defaultDate),
-        time: "10:00",
+        date: defaultExamDate(),
+        time: "09:00",
         room: "",
-        preparationProgress: 0,
         notes: "",
+        preparationProgress: 0,
+        status: EXAM_STATUSES.UPCOMING,
       });
     }
     setErrors({});
@@ -126,9 +144,10 @@ export function ExamDialog({
     data.set("type", formData.type);
     data.set("date", formData.date);
     data.set("time", formData.time);
-    data.set("room", formData.room);
+    data.set("room", formData.room || "");
+    data.set("notes", formData.notes || "");
     data.set("preparationProgress", String(formData.preparationProgress));
-    data.set("notes", formData.notes);
+    data.set("status", formData.status);
 
     const clientValidation = validateExam(data);
     if (!clientValidation.success) {
@@ -175,14 +194,14 @@ export function ExamDialog({
       />
 
       {/* Dialog Card */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-4">
           <div>
-            <h2 className="text-[17px] font-semibold text-slate-900">
+            <h2 className="text-[17px] font-semibold text-[var(--color-text)]">
               {isEditing ? "Edit Exam" : "Schedule New Exam"}
             </h2>
-            <p className="text-[13px] text-slate-500 mt-0.5">
+            <p className="text-[13px] text-[var(--color-text-2)] mt-0.5">
               {isEditing
                 ? "Update exam date, time, and preparation progress."
                 : "Add an upcoming midterm, final, or quiz to your schedule."}
@@ -192,7 +211,7 @@ export function ExamDialog({
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] disabled:opacity-50"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
@@ -201,14 +220,14 @@ export function ExamDialog({
 
         {/* If no courses exist */}
         {courses.length === 0 ? (
-          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+          <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)] p-6 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <BookOpen className="h-6 w-6" />
             </div>
-            <h3 className="mt-3 text-[15px] font-semibold text-slate-900">
+            <h3 className="mt-3 text-[15px] font-semibold text-[var(--color-text)]">
               No Courses Added Yet
             </h3>
-            <p className="mt-1 max-w-xs text-[13px] text-slate-500">
+            <p className="mt-1 max-w-xs text-[13px] text-[var(--color-text-2)]">
               Exams must be associated with a course. Please add a course first.
             </p>
             <Link
@@ -223,7 +242,7 @@ export function ExamDialog({
           <>
             {/* Global Error Banner */}
             {serverMessage && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+              <div className="mt-4 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 p-3 text-[13px] text-red-700 dark:text-red-300">
                 {serverMessage}
               </div>
             )}
@@ -234,7 +253,7 @@ export function ExamDialog({
               <div>
                 <label
                   htmlFor="exam-title"
-                  className="block text-[13px] font-medium text-slate-700"
+                  className="block text-[13px] font-medium text-[var(--color-text)]"
                 >
                   Exam Title <span className="text-red-500">*</span>
                 </label>
@@ -246,14 +265,14 @@ export function ExamDialog({
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
-                  className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 ${
+                  className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] bg-[var(--color-surface-2)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 ${
                     errors?.title
                       ? "border-red-400 focus:border-red-500"
-                      : "border-slate-200 focus:border-blue-600"
+                      : "border-[var(--color-border)] focus:border-blue-600"
                   }`}
                 />
                 {errors?.title && (
-                  <p className="mt-1 text-[12px] text-red-600">{errors.title[0]}</p>
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.title[0]}</p>
                 )}
               </div>
 
@@ -263,7 +282,7 @@ export function ExamDialog({
                 <div>
                   <label
                     htmlFor="exam-course"
-                    className="block text-[13px] font-medium text-slate-700"
+                    className="block text-[13px] font-medium text-[var(--color-text)]"
                   >
                     Course <span className="text-red-500">*</span>
                   </label>
@@ -273,10 +292,10 @@ export function ExamDialog({
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, courseId: e.target.value }))
                     }
-                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white ${
+                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)] ${
                       errors?.courseId
                         ? "border-red-400 focus:border-red-500"
-                        : "border-slate-200 focus:border-blue-600"
+                        : "border-[var(--color-border)] focus:border-blue-600"
                     }`}
                   >
                     {courses.map((course) => (
@@ -286,7 +305,7 @@ export function ExamDialog({
                     ))}
                   </select>
                   {errors?.courseId && (
-                    <p className="mt-1 text-[12px] text-red-600">
+                    <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                       {errors.courseId[0]}
                     </p>
                   )}
@@ -296,7 +315,7 @@ export function ExamDialog({
                 <div>
                   <label
                     htmlFor="exam-type"
-                    className="block text-[13px] font-medium text-slate-700"
+                    className="block text-[13px] font-medium text-[var(--color-text)]"
                   >
                     Exam Type <span className="text-red-500">*</span>
                   </label>
@@ -309,7 +328,7 @@ export function ExamDialog({
                         type: e.target.value as ExamType,
                       }))
                     }
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white"
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)]"
                   >
                     {Object.values(EXAM_TYPES).map((t) => (
                       <option key={t} value={t}>
@@ -318,7 +337,7 @@ export function ExamDialog({
                     ))}
                   </select>
                   {errors?.type && (
-                    <p className="mt-1 text-[12px] text-red-600">{errors.type[0]}</p>
+                    <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.type[0]}</p>
                   )}
                 </div>
               </div>
@@ -329,7 +348,7 @@ export function ExamDialog({
                 <div>
                   <label
                     htmlFor="exam-date"
-                    className="block text-[13px] font-medium text-slate-700"
+                    className="block text-[13px] font-medium text-[var(--color-text)]"
                   >
                     Exam Date <span className="text-red-500">*</span>
                   </label>
@@ -340,14 +359,14 @@ export function ExamDialog({
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, date: e.target.value }))
                     }
-                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white ${
+                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)] ${
                       errors?.date
                         ? "border-red-400 focus:border-red-500"
-                        : "border-slate-200 focus:border-blue-600"
+                        : "border-[var(--color-border)] focus:border-blue-600"
                     }`}
                   />
                   {errors?.date && (
-                    <p className="mt-1 text-[12px] text-red-600">{errors.date[0]}</p>
+                    <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.date[0]}</p>
                   )}
                 </div>
 
@@ -355,7 +374,7 @@ export function ExamDialog({
                 <div>
                   <label
                     htmlFor="exam-time"
-                    className="block text-[13px] font-medium text-slate-700"
+                    className="block text-[13px] font-medium text-[var(--color-text)]"
                   >
                     Start Time <span className="text-red-500">*</span>
                   </label>
@@ -366,14 +385,14 @@ export function ExamDialog({
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, time: e.target.value }))
                     }
-                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white ${
+                    className={`mt-1.5 w-full rounded-xl border px-3.5 py-2 text-[14px] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-[var(--color-surface-2)] ${
                       errors?.time
                         ? "border-red-400 focus:border-red-500"
-                        : "border-slate-200 focus:border-blue-600"
+                        : "border-[var(--color-border)] focus:border-blue-600"
                     }`}
                   />
                   {errors?.time && (
-                    <p className="mt-1 text-[12px] text-red-600">{errors.time[0]}</p>
+                    <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.time[0]}</p>
                   )}
                 </div>
               </div>
@@ -382,9 +401,9 @@ export function ExamDialog({
               <div>
                 <label
                   htmlFor="exam-room"
-                  className="block text-[13px] font-medium text-slate-700"
+                  className="block text-[13px] font-medium text-[var(--color-text)]"
                 >
-                  Room / Hall <span className="text-slate-400 font-normal">(Optional)</span>
+                  Room / Hall <span className="text-[var(--color-text-3)] font-normal">(Optional)</span>
                 </label>
                 <input
                   id="exam-room"
@@ -394,10 +413,10 @@ export function ExamDialog({
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, room: e.target.value }))
                   }
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                  className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] bg-[var(--color-surface-2)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                 />
                 {errors?.room && (
-                  <p className="mt-1 text-[12px] text-red-600">{errors.room[0]}</p>
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.room[0]}</p>
                 )}
               </div>
 
@@ -406,11 +425,11 @@ export function ExamDialog({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="exam-prep"
-                    className="block text-[13px] font-medium text-slate-700"
+                    className="block text-[13px] font-medium text-[var(--color-text)]"
                   >
                     Preparation Progress
                   </label>
-                  <span className="text-[13px] font-semibold text-blue-600">
+                  <span className="text-[13px] font-semibold text-blue-600 dark:text-blue-400">
                     {formData.preparationProgress}%
                   </span>
                 </div>
@@ -430,7 +449,7 @@ export function ExamDialog({
                   className="mt-2 w-full accent-blue-600"
                 />
                 {errors?.preparationProgress && (
-                  <p className="mt-1 text-[12px] text-red-600">
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">
                     {errors.preparationProgress[0]}
                   </p>
                 )}
@@ -440,9 +459,9 @@ export function ExamDialog({
               <div>
                 <label
                   htmlFor="exam-notes"
-                  className="block text-[13px] font-medium text-slate-700"
+                  className="block text-[13px] font-medium text-[var(--color-text)]"
                 >
-                  Notes & Focus Topics <span className="text-slate-400 font-normal">(Optional)</span>
+                  Notes & Focus Topics <span className="text-[var(--color-text-3)] font-normal">(Optional)</span>
                 </label>
                 <textarea
                   id="exam-notes"
@@ -452,20 +471,20 @@ export function ExamDialog({
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, notes: e.target.value }))
                   }
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                  className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] px-3.5 py-2 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-text-3)] bg-[var(--color-surface-2)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                 />
                 {errors?.notes && (
-                  <p className="mt-1 text-[12px] text-red-600">{errors.notes[0]}</p>
+                  <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{errors.notes[0]}</p>
                 )}
               </div>
 
               {/* Footer Buttons */}
-              <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-[var(--color-border-subtle)] pt-4">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-[13.5px] font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  className="rounded-xl border border-[var(--color-border)] px-4 py-2 text-[13.5px] font-medium text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>

@@ -9,7 +9,6 @@ import {
   CategoryBreakdownItem,
   MonthlyTrendItem,
   SpendingInsight,
-  EXPENSE_CATEGORIES,
   ExpenseCategory,
   getCategoryMetadata,
   formatPKR,

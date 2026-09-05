@@ -121,24 +121,24 @@ export function StudyBuddyView({
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] min-h-[550px] flex-col rounded-2xl border border-slate-200/80 bg-slate-50/50 shadow-xs overflow-hidden">
+    <div className="flex h-[calc(100vh-8rem)] min-h-[550px] flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/50 shadow-xs overflow-hidden">
       {/* ── Chat Header ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between border-b border-slate-200/80 bg-white px-5 py-4">
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-sm text-white">
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-[16px] font-semibold text-slate-900">
+              <h1 className="text-[16px] font-semibold text-[var(--color-text)]">
                 AI Study Buddy
               </h1>
-              <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+              <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Sync
               </span>
             </div>
-            <p className="text-[12.5px] text-slate-500">
+            <p className="text-[12.5px] text-[var(--color-text-2)]">
               Your personalized academic assistant
             </p>
           </div>
@@ -152,7 +152,7 @@ export function StudyBuddyView({
               onClick={handleClearChat}
               disabled={isLoading}
               title="Clear conversation"
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-[12px] font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium text-[var(--color-text-2)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] disabled:opacity-50"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Clear chat</span>
@@ -170,28 +170,28 @@ export function StudyBuddyView({
           /* Empty state */
           <div className="mx-auto max-w-2xl pt-4 sm:pt-8 space-y-6">
             {/* Welcome card */}
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs text-center space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-xs text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
                 <Sparkles className="h-6 w-6" />
               </div>
-              <h2 className="text-[18px] font-semibold text-slate-900">
+              <h2 className="text-[18px] font-semibold text-[var(--color-text)]">
                 Welcome, {studentName}!
               </h2>
-              <p className="text-[13.5px] leading-relaxed text-slate-600 max-w-lg mx-auto">
+              <p className="text-[13.5px] leading-relaxed text-[var(--color-text-2)] max-w-lg mx-auto">
                 I am connected directly to your enrolled courses, today&apos;s timetable,
                 upcoming exams, pending assignments, and attendance records.
               </p>
 
               {/* Privacy badge */}
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-[11.5px] text-slate-600">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-700/50 px-3 py-1 text-[11.5px] text-[var(--color-text-2)]">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Private &amp; Secure — Your financial data is never shared</span>
               </div>
             </div>
 
             {/* Starter prompts */}
             <div className="space-y-2.5">
-              <p className="text-[12.5px] font-medium text-slate-500 uppercase tracking-wider px-1">
+              <p className="text-[12.5px] font-medium text-[var(--color-text-3)] uppercase tracking-wider px-1">
                 Suggested questions to get started
               </p>
               <StarterPrompts
@@ -217,7 +217,7 @@ export function StudyBuddyView({
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <div className="rounded-2xl rounded-tl-xs border border-slate-200/90 bg-white px-4 py-3.5 shadow-xs">
+                <div className="rounded-2xl rounded-tl-xs border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3.5 shadow-xs">
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-blue-600 animate-bounce" />
                     <span
@@ -228,7 +228,7 @@ export function StudyBuddyView({
                       className="h-2 w-2 rounded-full bg-blue-600 animate-bounce"
                       style={{ animationDelay: "300ms" }}
                     />
-                    <span className="ml-2 text-[12.5px] text-slate-500">
+                    <span className="ml-2 text-[12.5px] text-[var(--color-text-2)]">
                       Study Buddy is reviewing your courses and schedule...
                     </span>
                   </div>
@@ -240,9 +240,9 @@ export function StudyBuddyView({
 
         {/* Error message banner */}
         {errorMessage && (
-          <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-red-50 p-3.5 text-[13px] text-red-700 flex items-center justify-between gap-2">
+          <div className="mx-auto max-w-3xl rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-3.5 text-[13px] text-red-700 dark:text-red-400 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
               <span>{errorMessage}</span>
             </div>
             <button
@@ -253,7 +253,7 @@ export function StudyBuddyView({
                   handleSendMessage(lastUserMsg.content);
                 }
               }}
-              className="flex items-center gap-1 font-semibold text-red-800 hover:underline shrink-0"
+              className="flex items-center gap-1 font-semibold text-red-800 dark:text-red-300 hover:underline shrink-0"
             >
               <RefreshCw className="h-3 w-3" />
               Retry
@@ -263,7 +263,7 @@ export function StudyBuddyView({
       </div>
 
       {/* ── Input Bar ─────────────────────────────────────────── */}
-      <div className="border-t border-slate-200/80 bg-white p-3 sm:p-4">
+      <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4">
         <div className="mx-auto max-w-3xl">
           <ChatInput
             onSendMessage={handleSendMessage}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Award, CalendarCheck, BookOpen, ArrowRight, Plus } from "lucide-react";
+import { Award, CalendarCheck, BookOpen, Plus } from "lucide-react";
 import { AcademicOverview } from "@/app/lib/academic-definitions";
 import { AcademicSummary } from "@/components/academic/academic-summary";
 import { CoursePerformanceCard } from "@/components/academic/course-performance-card";
@@ -33,10 +33,10 @@ export function AcademicsView({ overview }: AcademicsViewProps) {
       {/* ── Page Header ─────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight text-slate-900 sm:text-[26px]">
+          <h1 className="text-[22px] font-bold tracking-tight text-[var(--color-text)] sm:text-[26px]">
             Academic Performance
           </h1>
-          <p className="mt-1 text-[13.5px] text-slate-500">
+          <p className="mt-1 text-[13.5px] text-[var(--color-text-2)]">
             Track your GPA, grades, and attendance across all courses.
           </p>
         </div>
@@ -46,9 +46,9 @@ export function AcademicsView({ overview }: AcademicsViewProps) {
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => handleOpenGradeDialog()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3.5 py-2 text-[13px] font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 px-3.5 py-2 text-[13px] font-semibold text-blue-700 dark:text-blue-400 shadow-sm transition hover:bg-blue-100 dark:hover:bg-blue-900/50"
             >
-              <Award className="h-4 w-4 text-blue-600" />
+              <Award className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               Update Grade
             </button>
             <button
@@ -69,10 +69,10 @@ export function AcademicsView({ overview }: AcademicsViewProps) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-[16px] font-semibold text-slate-900">
+            <h2 className="text-[16px] font-semibold text-[var(--color-text)]">
               Course Breakdown
             </h2>
-            <p className="text-[12.5px] text-slate-500">
+            <p className="text-[12.5px] text-[var(--color-text-2)]">
               Course-wise GPA weightage and attendance tracking.
             </p>
           </div>
@@ -80,14 +80,14 @@ export function AcademicsView({ overview }: AcademicsViewProps) {
 
         {/* Empty state: No courses enrolled */}
         {overview.courses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-14 px-4 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-3">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] py-14 px-4 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mb-3">
               <BookOpen className="h-6 w-6" />
             </div>
-            <h3 className="text-[16px] font-semibold text-slate-900">
+            <h3 className="text-[16px] font-semibold text-[var(--color-text)]">
               No courses yet
             </h3>
-            <p className="mt-1 max-w-sm text-[13px] text-slate-500">
+            <p className="mt-1 max-w-sm text-[13px] text-[var(--color-text-2)]">
               Add your first course to start tracking your academic performance, GPA, and class attendance.
             </p>
             <Link

@@ -170,3 +170,6 @@ export function validateTimetableEntry(formData: FormData): ValidationResult<Tim
     },
   };
 }
+
+export const validateTimetable = validateTimetableEntry;
+

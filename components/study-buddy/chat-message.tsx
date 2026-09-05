@@ -43,12 +43,12 @@ export function ChatMessageBubble({
           <div className="rounded-2xl rounded-tr-xs bg-blue-600 px-4 py-3 text-[14px] leading-relaxed text-white shadow-xs">
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
           </div>
-          <span className="mt-1 px-1 text-[11px] text-slate-400">
-            {timeStr}
+          <span className="mt-1 px-1 text-[11px] text-[var(--color-text-3)]">
+            {studentName} • {timeStr}
           </span>
         </div>
-        <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-slate-200 text-[12px] font-semibold text-slate-700">
-          <User className="h-4 w-4 text-slate-600" />
+        <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-[12px] font-semibold text-[var(--color-text-2)]">
+          <User className="h-4 w-4 text-slate-600 dark:text-slate-400" />
         </div>
       </div>
     );
@@ -61,14 +61,14 @@ export function ChatMessageBubble({
       </div>
 
       <div className="flex max-w-[90%] sm:max-w-[85%] flex-col">
-        <div className="relative rounded-2xl rounded-tl-xs border border-slate-200/90 bg-white p-4 shadow-xs">
+        <div className="relative rounded-2xl rounded-tl-xs border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xs">
           {/* Header info */}
-          <div className="mb-2 flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="mb-2 flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-2">
             <div className="flex items-center gap-1.5">
-              <span className="text-[12.5px] font-semibold text-slate-900">
+              <span className="text-[12.5px] font-semibold text-[var(--color-text)]">
                 AI Study Buddy
               </span>
-              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10.5px] font-medium text-blue-700">
+              <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 text-[10.5px] font-medium text-blue-700 dark:text-blue-400">
                 Verified UniMate Data
               </span>
             </div>
@@ -77,12 +77,12 @@ export function ChatMessageBubble({
               type="button"
               onClick={handleCopy}
               aria-label="Copy response"
-              className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600"
+              className="flex items-center gap-1 text-[11px] text-[var(--color-text-3)] hover:text-[var(--color-text-2)]"
             >
               {copied ? (
                 <>
-                  <Check className="h-3 w-3 text-emerald-600" />
-                  <span className="text-emerald-600">Copied</span>
+                  <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
                 </>
               ) : (
                 <>
@@ -97,7 +97,7 @@ export function ChatMessageBubble({
           <FormattedMarkdown content={message.content} />
         </div>
 
-        <span className="mt-1 px-1 text-[11px] text-slate-400">
+        <span className="mt-1 px-1 text-[11px] text-[var(--color-text-3)]">
           {timeStr}
         </span>
       </div>
