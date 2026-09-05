@@ -43,3 +43,6 @@ next-env.d.ts
 
 # user data (flat-file store — do not commit)
 /data/users.json
+
+.vercel
+.env*
