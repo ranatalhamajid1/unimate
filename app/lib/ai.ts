@@ -84,7 +84,7 @@ export async function generateStudyBuddyResponse(
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const modelName = process.env.AI_MODEL || "gemini-2.5-flash";
+    const modelName = process.env.AI_MODEL || "gemini-3.6-flash";
 
     // Format bounded history (last 6 messages max to conserve tokens)
     const boundedHistory = conversationHistory.slice(-6).map((msg) => ({
