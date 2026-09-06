@@ -70,21 +70,10 @@ export async function updateCourseRecord(
   userId: string,
   data: CourseFormValues
 ): Promise<Course> {
-  // Verify ownership before updating
-  const existing = await prisma.course.findFirst({
+  const result = await prisma.course.updateMany({
     where: {
       id: courseId,
       userId,
-    },
-  });
-
-  if (!existing) {
-    throw new Error("Course not found or unauthorized.");
-  }
-
-  return await prisma.course.update({
-    where: {
-      id: courseId,
     },
     data: {
       name: data.name,
@@ -95,6 +84,19 @@ export async function updateCourseRecord(
       color: data.color || "#2563eb",
     },
   });
+
+  if (result.count === 0) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
+  const updated = await prisma.course.findFirst({
+    where: {
+      id: courseId,
+      userId,
+    },
+  });
+
+  return updated!;
 }
 
 /**
@@ -105,21 +107,14 @@ export async function deleteCourseRecord(
   courseId: string,
   userId: string
 ): Promise<void> {
-  // Verify ownership before deleting
-  const existing = await prisma.course.findFirst({
+  const result = await prisma.course.deleteMany({
     where: {
       id: courseId,
       userId,
     },
   });
 
-  if (!existing) {
+  if (result.count === 0) {
     throw new Error("Course not found or unauthorized.");
   }
-
-  await prisma.course.delete({
-    where: {
-      id: courseId,
-    },
-  });
 }

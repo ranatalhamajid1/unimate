@@ -116,6 +116,14 @@ export async function createTimetableEntryRecord(
   userId: string,
   data: TimetableFormValues
 ): Promise<TimetableEntry> {
+  // Verify target course ownership
+  const course = await prisma.course.findFirst({
+    where: { id: data.courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
   return await prisma.timetableEntry.create({
     data: {
       userId,
@@ -147,21 +155,18 @@ export async function updateTimetableEntryRecord(
   userId: string,
   data: TimetableFormValues
 ): Promise<TimetableEntry> {
-  // Verify ownership before update
-  const existing = await prisma.timetableEntry.findFirst({
+  // Verify target course ownership
+  const course = await prisma.course.findFirst({
+    where: { id: data.courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
+  const result = await prisma.timetableEntry.updateMany({
     where: {
       id: entryId,
       userId,
-    },
-  });
-
-  if (!existing) {
-    throw new Error("Timetable entry not found or unauthorized.");
-  }
-
-  return await prisma.timetableEntry.update({
-    where: {
-      id: entryId,
     },
     data: {
       courseId: data.courseId,
@@ -170,6 +175,17 @@ export async function updateTimetableEntryRecord(
       endTime: data.endTime,
       room: data.room || "",
       type: data.type || "Lecture",
+    },
+  });
+
+  if (result.count === 0) {
+    throw new Error("Timetable entry not found or unauthorized.");
+  }
+
+  const updated = await prisma.timetableEntry.findFirst({
+    where: {
+      id: entryId,
+      userId,
     },
     include: {
       course: {
@@ -182,6 +198,8 @@ export async function updateTimetableEntryRecord(
       },
     },
   });
+
+  return updated!;
 }
 
 /**
@@ -191,20 +209,14 @@ export async function deleteTimetableEntryRecord(
   entryId: string,
   userId: string
 ): Promise<void> {
-  const existing = await prisma.timetableEntry.findFirst({
+  const result = await prisma.timetableEntry.deleteMany({
     where: {
       id: entryId,
       userId,
     },
   });
 
-  if (!existing) {
+  if (result.count === 0) {
     throw new Error("Timetable entry not found or unauthorized.");
   }
-
-  await prisma.timetableEntry.delete({
-    where: {
-      id: entryId,
-    },
-  });
 }

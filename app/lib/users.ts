@@ -7,7 +7,6 @@ export type StoredUser = {
   name: string;
   email: string;
   passwordHash: string;
-  hashedPassword?: string; // backwards compatibility alias
   createdAt: Date;
   updatedAt: Date;
 };
@@ -33,10 +32,7 @@ export async function findUserByEmail(
     return null;
   }
 
-  return {
-    ...user,
-    hashedPassword: user.passwordHash,
-  };
+  return user;
 }
 
 /**
@@ -53,10 +49,7 @@ export async function findUserById(id: string): Promise<StoredUser | null> {
     return null;
   }
 
-  return {
-    ...user,
-    hashedPassword: user.passwordHash,
-  };
+  return user;
 }
 
 /**
@@ -76,8 +69,5 @@ export async function createUser(
     },
   });
 
-  return {
-    ...user,
-    hashedPassword: user.passwordHash,
-  };
+  return user;
 }

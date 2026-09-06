@@ -1,8 +1,12 @@
 /**
  * Dashboard Overview page — /dashboard
  *
- * Server Component — fetches real timetable & assignment data server-side.
- * Auth guard is in layout.tsx (and proxy.ts as primary).
+ * Upgraded into a true Student Command Center:
+ * - Server-side intelligence layer with ranked daily priorities
+ * - Real study hours from PostgreSQL StudySession
+ * - Dynamic academic insights
+ * - Active study plan tasks
+ * - Dynamic student goals progress
  */
 
 import Link from "next/link";
@@ -19,6 +23,12 @@ import {
   getUserNotifications,
   getUnreadNotificationCount,
 } from "@/app/lib/notifications";
+import { getStudentPriorities } from "@/app/lib/student-intelligence";
+import { getWeeklyStudyTotal, getWeeklyStudyProgress } from "@/app/lib/study-sessions";
+import { getAcademicInsights } from "@/app/lib/academic-insights";
+import { calculateStudentGoalsProgress } from "@/app/lib/goals";
+import { getUserActiveStudyPlan } from "@/app/lib/study-plans";
+import { getPKTDateParts } from "@/app/lib/timezone";
 import {
   formatDueLabel,
   ASSIGNMENT_STATUSES,
@@ -33,21 +43,21 @@ import {
 import type {
   ScheduleClass,
   Assignment as DashboardAssignment,
+  StatCard,
 } from "@/app/lib/dashboard-data";
-
-// Data
-import {
-  DEMO_STATS,
-  DEMO_STUDY_PROGRESS,
-} from "@/app/lib/dashboard-data";
+import { DEMO_STATS } from "@/app/lib/dashboard-data";
 
 // Components
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { DailyPriorities } from "@/components/dashboard/daily-priorities";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { TodaySchedule } from "@/components/dashboard/today-schedule";
+import { TodayStudyPlan } from "@/components/dashboard/today-study-plan";
 import { UpcomingAssignments } from "@/components/dashboard/upcoming-assignments";
 import { NextExam } from "@/components/dashboard/next-exam";
 import { StudyProgress } from "@/components/dashboard/study-progress";
+import { AcademicInsightsCard } from "@/components/dashboard/academic-insights-card";
+import { GoalsCard } from "@/components/dashboard/goals-card";
 import { AiBuddyCard } from "@/components/dashboard/ai-buddy-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 
@@ -71,28 +81,25 @@ function getDateString(now: Date): string {
 }
 
 // ---------------------------------------------------------------------------
-// Page
+// Page Component
 // ---------------------------------------------------------------------------
 
 export default async function DashboardPage() {
-  // Secondary session guard (layout.tsx + proxy.ts are primary)
   const session = await getSession();
   if (!session) redirect("/login");
 
-  // Time-based values computed on the server
   const now = new Date();
-  const currentHour = now.getHours();
+  const pkt = getPKTDateParts(now);
+  const currentHour = pkt.hours;
   const greeting = getGreeting(currentHour);
   const dateString = getDateString(now);
-
-  // Fetch real timetable for today (1=Mon ... 7=Sun) and real upcoming assignments
-  const jsDay = now.getDay();
-  const todayDayIndex = jsDay === 0 ? 7 : jsDay;
 
   // Trigger academic notification generation
   await generateAcademicNotifications(session.userId);
 
+  // Parallel fetch of all Command Center data
   const [
+    prioritiesReport,
     todayEntries,
     upcomingAssignments,
     dueThisWeekCount,
@@ -101,8 +108,14 @@ export default async function DashboardPage() {
     expenseSummary,
     recentNotifications,
     unreadNotificationCount,
+    weeklyStudy,
+    studyDays,
+    academicInsights,
+    studentGoals,
+    activePlan,
   ] = await Promise.all([
-    getTodayTimetable(session.userId, todayDayIndex),
+    getStudentPriorities(session.userId, now),
+    getTodayTimetable(session.userId, pkt.dayOfWeek),
     getUpcomingAssignments(session.userId, 5),
     getDueThisWeekCount(session.userId),
     getNextExam(session.userId),
@@ -110,6 +123,11 @@ export default async function DashboardPage() {
     getExpenseSummary(session.userId),
     getUserNotifications(session.userId, { limit: 5 }),
     getUnreadNotificationCount(session.userId),
+    getWeeklyStudyTotal(session.userId, now),
+    getWeeklyStudyProgress(session.userId, now),
+    getAcademicInsights(session.userId),
+    calculateStudentGoalsProgress(session.userId),
+    getUserActiveStudyPlan(session.userId),
   ]);
 
   const realSchedule: ScheduleClass[] = todayEntries.map((e) => ({
@@ -153,33 +171,40 @@ export default async function DashboardPage() {
       }
     : null;
 
-  const updatedStats = DEMO_STATS.map((s) => {
-    if (s.id === "gpa") {
-      return {
-        ...s,
-        value: academicOverview.gpaString,
-        sub: academicOverview.gpaSub,
-      };
-    }
-    if (s.id === "attendance") {
-      return {
-        ...s,
-        value: academicOverview.attendanceString,
-        sub: academicOverview.attendanceSub,
-      };
-    }
-    if (s.id === "assignments") {
-      return {
-        ...s,
-        value: String(dueThisWeekCount),
-        sub: "Due this week",
-      };
-    }
-    return s;
-  });
+  // Real stats replacing all demo values
+  const updatedStats: StatCard[] = [
+    {
+      id: "gpa",
+      label: "GPA",
+      value: academicOverview.gpaString,
+      sub: academicOverview.gpaSub,
+      trend: "up",
+    },
+    {
+      id: "attendance",
+      label: "Attendance",
+      value: academicOverview.attendanceString,
+      sub: academicOverview.attendanceSub,
+      trend: "neutral",
+    },
+    {
+      id: "assignments",
+      label: "Assignments",
+      value: String(dueThisWeekCount),
+      sub: "Due this week",
+      trend: "neutral",
+    },
+    {
+      id: "study-hours",
+      label: "Study hours",
+      value: weeklyStudy.formatted,
+      sub: "This week (real)",
+      trend: "up",
+    },
+  ];
 
   return (
-    <div className="animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* ── Page header ─────────────────────────────────────────────── */}
       <DashboardHeader
         name={session.name}
@@ -189,94 +214,105 @@ export default async function DashboardPage() {
         unreadCount={unreadNotificationCount}
       />
 
-      {/* ── Stats row ───────────────────────────────────────────────── */}
+      {/* ── Today's Priorities (Smart Intelligence Layer) ──────────── */}
+      <DailyPriorities report={prioritiesReport} />
+
+      {/* ── Overview Stats Row ──────────────────────────────────────── */}
       <StatsCards stats={updatedStats} />
 
-      {/* ── Main grid ───────────────────────────────────────────────── */}
-      <div className="grid gap-4 lg:grid-cols-3 lg:gap-5">
-        {/* Left column — 2/3 width on desktop */}
-        <div className="space-y-4 lg:col-span-2">
+      {/* ── Main Command Center Grid ────────────────────────────────── */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column — 2/3 width on desktop */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Today's Schedule */}
           <TodaySchedule
             classes={realSchedule}
             currentHour={currentHour}
           />
+
+          {/* Today's Active Study Plan Tasks */}
+          <TodayStudyPlan plan={activePlan} />
+
+          {/* Upcoming Assignments */}
           <UpcomingAssignments assignments={realAssignments} />
-          <StudyProgress days={DEMO_STUDY_PROGRESS} />
+
+          {/* Real Study Progress Chart */}
+          <StudyProgress days={studyDays} />
+
+          {/* Quick Actions */}
           <QuickActions />
         </div>
 
-        {/* Right column — 1/3 width on desktop */}
-        <div className="space-y-4">
+        {/* Right Column — 1/3 width on desktop */}
+        <div className="space-y-6">
+          {/* Academic Insights */}
+          <AcademicInsightsCard insights={academicInsights} />
+
+          {/* Next Exam */}
           <NextExam exam={nextExamData} />
 
-          {/* Academic Performance Card */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+          {/* Goals Card */}
+          <GoalsCard goals={studentGoals} />
+
+          {/* Academic Standing Card */}
+          <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Award className="h-4 w-4 text-blue-600" />
-                <h2 className="text-[14px] font-semibold text-slate-900">Academic Standing</h2>
+                <Award className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                  Academic Standing
+                </h2>
               </div>
               <Link
                 href="/dashboard/academics"
-                className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
               >
                 View all
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-3 py-1">
-              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">GPA</p>
-                <p className="text-[18px] font-bold text-blue-700 mt-0.5">{academicOverview.gpaString}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{academicOverview.gpaSub}</p>
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)] p-3">
+                <p className="text-[10.5px] font-bold text-[var(--color-text-3)] uppercase tracking-wider">GPA</p>
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-0.5">{academicOverview.gpaString}</p>
+                <p className="text-[11px] text-[var(--color-text-3)] mt-0.5">{academicOverview.gpaSub}</p>
               </div>
-              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Attendance</p>
-                <p className="text-[18px] font-bold text-emerald-700 mt-0.5">{academicOverview.attendanceString}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{academicOverview.attendanceSub}</p>
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)] p-3">
+                <p className="text-[10.5px] font-bold text-[var(--color-text-3)] uppercase tracking-wider">Attendance</p>
+                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{academicOverview.attendanceString}</p>
+                <p className="text-[11px] text-[var(--color-text-3)] mt-0.5">{academicOverview.attendanceSub}</p>
               </div>
             </div>
-            <Link
-              href="/dashboard/academics"
-              className="mt-3 flex items-center justify-between text-xs font-semibold text-blue-600 hover:text-blue-700 pt-1"
-            >
-              <span>View Academic Performance</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
 
           {/* Monthly Spending Card */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+          <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-violet-600" />
-                <h2 className="text-[14px] font-semibold text-slate-900">This Month Spending</h2>
+                <Wallet className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                  This Month Spending
+                </h2>
               </div>
               <Link
                 href="/dashboard/expenses"
-                className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
               >
                 View all
               </Link>
             </div>
             <div>
-              <p className="text-[1.75rem] font-bold text-slate-900 tracking-tight leading-tight">
+              <p className="text-2xl font-bold text-[var(--color-text)] tracking-tight">
                 {expenseSummary.thisMonthSpendingString}
               </p>
-              <p className="mt-1 text-[12px] text-slate-500">
+              <p className="mt-1 text-xs text-[var(--color-text-3)]">
                 {expenseSummary.hasExpenses
                   ? `Total tracked: ${expenseSummary.totalSpendingString}`
                   : "No expenses logged this month"}
               </p>
             </div>
-            <Link
-              href="/dashboard/expenses"
-              className="mt-3 flex items-center justify-between text-xs font-semibold text-blue-600 hover:text-blue-700 pt-1"
-            >
-              <span>View Expenses</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
 
+          {/* AI Study Buddy Card */}
           <AiBuddyCard />
         </div>
       </div>

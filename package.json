@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node ./scripts/build.js",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --conditions=react-server --test tests/security-regression.test.ts tests/phase13-command-center.test.ts tests/phase13-smoke-test.test.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -19,7 +20,8 @@
     "next": "16.3.4",
     "next-themes": "^0.4.6",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -30,6 +32,7 @@
     "eslint-config-next": "16.3.4",
     "prisma": "^6.4.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

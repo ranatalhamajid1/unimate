@@ -29,8 +29,19 @@ export async function GET(req: NextRequest) {
     .setExpirationTime("7d")
     .sign(encodedKey);
 
-  const redirectTo = req.nextUrl.searchParams.get("redirect") || "/dashboard";
-  const url = new URL(redirectTo, req.url);
+  let safeRedirect = "/dashboard";
+  const redirectParam = req.nextUrl.searchParams.get("redirect");
+  if (
+    redirectParam &&
+    redirectParam.startsWith("/") &&
+    !redirectParam.startsWith("//") &&
+    !redirectParam.startsWith("/\\") &&
+    !redirectParam.includes("://")
+  ) {
+    safeRedirect = redirectParam;
+  }
+
+  const url = new URL(safeRedirect, req.url);
 
   const res = NextResponse.redirect(url);
   res.cookies.set("session", token, {

@@ -110,6 +110,14 @@ export async function createAssignmentRecord(
   userId: string,
   data: AssignmentFormValues
 ): Promise<Assignment> {
+  // Verify target course ownership
+  const course = await prisma.course.findFirst({
+    where: { id: data.courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
   return await prisma.assignment.create({
     data: {
       userId,
@@ -141,20 +149,18 @@ export async function updateAssignmentRecord(
   userId: string,
   data: AssignmentFormValues
 ): Promise<Assignment> {
-  const existing = await prisma.assignment.findFirst({
+  // Verify target course ownership
+  const course = await prisma.course.findFirst({
+    where: { id: data.courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
+  const result = await prisma.assignment.updateMany({
     where: {
       id: assignmentId,
       userId,
-    },
-  });
-
-  if (!existing) {
-    throw new Error("Assignment not found or unauthorized.");
-  }
-
-  return await prisma.assignment.update({
-    where: {
-      id: assignmentId,
     },
     data: {
       courseId: data.courseId,
@@ -163,6 +169,17 @@ export async function updateAssignmentRecord(
       dueDate: data.dueDate,
       priority: data.priority,
       status: data.status,
+    },
+  });
+
+  if (result.count === 0) {
+    throw new Error("Assignment not found or unauthorized.");
+  }
+
+  const updated = await prisma.assignment.findFirst({
+    where: {
+      id: assignmentId,
+      userId,
     },
     include: {
       course: {
@@ -175,6 +192,8 @@ export async function updateAssignmentRecord(
       },
     },
   });
+
+  return updated!;
 }
 
 /**
@@ -184,20 +203,14 @@ export async function deleteAssignmentRecord(
   assignmentId: string,
   userId: string
 ): Promise<void> {
-  const existing = await prisma.assignment.findFirst({
+  const result = await prisma.assignment.deleteMany({
     where: {
       id: assignmentId,
       userId,
     },
   });
 
-  if (!existing) {
+  if (result.count === 0) {
     throw new Error("Assignment not found or unauthorized.");
   }
-
-  await prisma.assignment.delete({
-    where: {
-      id: assignmentId,
-    },
-  });
 }

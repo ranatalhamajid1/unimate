@@ -101,7 +101,11 @@ export async function deleteSession(): Promise<void> {
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  return decrypt(token);
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(COOKIE_NAME)?.value;
+    return decrypt(token);
+  } catch {
+    return null;
+  }
 }

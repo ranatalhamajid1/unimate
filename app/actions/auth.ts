@@ -107,10 +107,11 @@ export async function login(
   }
 
   // 3. Compare password
-  const passwordMatch = await bcrypt.compare(
-    password,
-    user.passwordHash || user.hashedPassword || ""
-  );
+  if (!user.passwordHash) {
+    return { message: "Invalid email or password." };
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user.passwordHash);
   if (!passwordMatch) {
     return { message: "Invalid email or password." };
   }

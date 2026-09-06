@@ -111,6 +111,14 @@ export async function createExamRecord(
   userId: string,
   data: ExamFormValues
 ): Promise<Exam> {
+  // Verify target course ownership
+  const course = await prisma.course.findFirst({
+    where: { id: data.courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
   return await prisma.exam.create({
     data: {
       userId,
@@ -144,20 +152,18 @@ export async function updateExamRecord(
   userId: string,
   data: ExamFormValues
 ): Promise<Exam> {
-  const existing = await prisma.exam.findFirst({
+  // Verify target course ownership
+  const course = await prisma.course.findFirst({
+    where: { id: data.courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
+  const result = await prisma.exam.updateMany({
     where: {
       id: examId,
       userId,
-    },
-  });
-
-  if (!existing) {
-    throw new Error("Exam not found or unauthorized.");
-  }
-
-  return await prisma.exam.update({
-    where: {
-      id: examId,
     },
     data: {
       courseId: data.courseId,
@@ -168,6 +174,17 @@ export async function updateExamRecord(
       status: data.status,
       preparationProgress: data.preparationProgress,
       notes: data.notes || "",
+    },
+  });
+
+  if (result.count === 0) {
+    throw new Error("Exam not found or unauthorized.");
+  }
+
+  const updated = await prisma.exam.findFirst({
+    where: {
+      id: examId,
+      userId,
     },
     include: {
       course: {
@@ -180,6 +197,8 @@ export async function updateExamRecord(
       },
     },
   });
+
+  return updated!;
 }
 
 /**
@@ -189,20 +208,14 @@ export async function deleteExamRecord(
   examId: string,
   userId: string
 ): Promise<void> {
-  const existing = await prisma.exam.findFirst({
+  const result = await prisma.exam.deleteMany({
     where: {
       id: examId,
       userId,
     },
   });
 
-  if (!existing) {
+  if (result.count === 0) {
     throw new Error("Exam not found or unauthorized.");
   }
-
-  await prisma.exam.delete({
-    where: {
-      id: examId,
-    },
-  });
 }

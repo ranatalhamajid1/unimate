@@ -169,6 +169,14 @@ export async function getCourseAcademicData(userId: string, courseId: string) {
  * Upsert a grade for a course owned by the user.
  */
 export async function upsertCourseGrade(userId: string, courseId: string, grade: string) {
+  // Explicitly verify that the course belongs to the authenticated user
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
   const gradePoints = getGradePoints(grade);
 
   return await prisma.courseGrade.upsert({
@@ -200,6 +208,14 @@ export async function upsertAttendance(
   totalClasses: number,
   attendedClasses: number
 ) {
+  // Explicitly verify that the course belongs to the authenticated user
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
   return await prisma.attendance.upsert({
     where: {
       userId_courseId: {
@@ -224,6 +240,14 @@ export async function upsertAttendance(
  * Delete a grade for a course.
  */
 export async function deleteCourseGrade(userId: string, courseId: string) {
+  // Explicitly verify that the course belongs to the authenticated user
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
   return await prisma.courseGrade.deleteMany({
     where: {
       userId,
@@ -236,6 +260,14 @@ export async function deleteCourseGrade(userId: string, courseId: string) {
  * Delete attendance for a course.
  */
 export async function deleteAttendance(userId: string, courseId: string) {
+  // Explicitly verify that the course belongs to the authenticated user
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, userId },
+  });
+  if (!course) {
+    throw new Error("Course not found or unauthorized.");
+  }
+
   return await prisma.attendance.deleteMany({
     where: {
       userId,

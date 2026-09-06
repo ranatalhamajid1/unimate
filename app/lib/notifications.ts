@@ -92,21 +92,15 @@ export async function markNotificationAsRead(
   notificationId: string
 ): Promise<boolean> {
   try {
-    const existing = await prisma.notification.findFirst({
+    const result = await prisma.notification.updateMany({
       where: { id: notificationId, userId },
-    });
-
-    if (!existing) return false;
-
-    await prisma.notification.update({
-      where: { id: notificationId },
       data: {
         read: true,
         readAt: new Date(),
       },
     });
 
-    return true;
+    return result.count > 0;
   } catch (error) {
     console.error("Database error in markNotificationAsRead:", error);
     return false;
@@ -144,17 +138,11 @@ export async function deleteNotification(
   notificationId: string
 ): Promise<boolean> {
   try {
-    const existing = await prisma.notification.findFirst({
+    const result = await prisma.notification.deleteMany({
       where: { id: notificationId, userId },
     });
 
-    if (!existing) return false;
-
-    await prisma.notification.delete({
-      where: { id: notificationId },
-    });
-
-    return true;
+    return result.count > 0;
   } catch (error) {
     console.error("Database error in deleteNotification:", error);
     return false;
@@ -454,7 +442,36 @@ export async function generateAcademicNotifications(
       }
     }
 
-    // 5. Bulk insert newly generated notifications
+    // 5. Evaluate Today's Scheduled Study Plan Tasks
+    const todayStr = now.toISOString().split("T")[0];
+    const todayStart = new Date(`${todayStr}T00:00:00.000Z`);
+    const todayEnd = new Date(`${todayStr}T23:59:59.999Z`);
+
+    const activePlanItems = await prisma.studyPlanItem.findMany({
+      where: {
+        studyPlan: { userId, status: "ACTIVE" },
+        scheduledAt: { gte: todayStart, lte: todayEnd },
+        completed: false,
+      },
+      include: { course: { select: { code: true } } },
+    });
+
+    for (const item of activePlanItems) {
+      const relatedId = `${item.id}:${todayStr}`;
+      const key = `${NOTIFICATION_TYPES.STUDY_PLAN_REMINDER}::${relatedId}`;
+      if (!existingSet.has(key)) {
+        toCreate.push({
+          userId,
+          type: NOTIFICATION_TYPES.STUDY_PLAN_REMINDER,
+          title: "Study session scheduled today",
+          message: `"${item.title}" (${item.duration}m${item.course ? ` for ${item.course.code}` : ""}) is scheduled on your study plan today.`,
+          relatedId,
+        });
+        existingSet.add(key);
+      }
+    }
+
+    // 6. Bulk insert newly generated notifications
     if (toCreate.length > 0) {
       await prisma.notification.createMany({
         data: toCreate,

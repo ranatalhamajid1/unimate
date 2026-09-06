@@ -101,9 +101,61 @@ export async function getRecentExpenses(
   }
 }
 
+export const PKT_OFFSET_MS = 5 * 60 * 60 * 1000; // Asia/Karachi is UTC+05:00 (no DST)
+
+/**
+ * Returns date parts (year, 0-indexed month, day, dayOfWeek: 0=Sun..6=Sat) in Asia/Karachi (PKT).
+ */
+export function getPKTDateParts(date: Date): {
+  year: number;
+  month: number;
+  day: number;
+  dayOfWeek: number;
+} {
+  const pktDate = new Date(date.getTime() + PKT_OFFSET_MS);
+  return {
+    year: pktDate.getUTCFullYear(),
+    month: pktDate.getUTCMonth(),
+    day: pktDate.getUTCDate(),
+    dayOfWeek: pktDate.getUTCDay(),
+  };
+}
+
+/**
+ * Returns UTC boundaries (start and end Date) for "This Month" in Asia/Karachi.
+ */
+export function getPKTMonthBounds(now = new Date()): { start: Date; end: Date } {
+  const parts = getPKTDateParts(now);
+  const startUtcMs = Date.UTC(parts.year, parts.month, 1, 0, 0, 0, 0) - PKT_OFFSET_MS;
+  const endUtcMs = Date.UTC(parts.year, parts.month + 1, 1, 0, 0, 0, 0) - PKT_OFFSET_MS - 1;
+  return {
+    start: new Date(startUtcMs),
+    end: new Date(endUtcMs),
+  };
+}
+
+/**
+ * Returns UTC boundaries (start and end Date) for "This Week" (Monday to Sunday) in Asia/Karachi.
+ */
+export function getPKTWeekBounds(now = new Date()): { start: Date; end: Date } {
+  const parts = getPKTDateParts(now);
+  // dayOfWeek: 0=Sun, 1=Mon, ..., 6=Sat
+  // Monday is start of week: diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const diffToMonday = parts.dayOfWeek === 0 ? -6 : 1 - parts.dayOfWeek;
+  const mondayDay = parts.day + diffToMonday;
+
+  const startUtcMs = Date.UTC(parts.year, parts.month, mondayDay, 0, 0, 0, 0) - PKT_OFFSET_MS;
+  const endUtcMs = Date.UTC(parts.year, parts.month, mondayDay + 7, 0, 0, 0, 0) - PKT_OFFSET_MS - 1;
+  return {
+    start: new Date(startUtcMs),
+    end: new Date(endUtcMs),
+  };
+}
+
 /**
  * Calculate full expense summary metrics:
  * Total Spending, This Month, This Week, and Average Monthly Spending.
+ * Date boundaries are strictly evaluated in Asia/Karachi (PKT).
  */
 export async function getExpenseSummary(userId: string): Promise<ExpenseSummary> {
   try {
@@ -128,19 +180,8 @@ export async function getExpenseSummary(userId: string): Promise<ExpenseSummary>
     }
 
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
-    // Calculate start and end of this week (Monday to Sunday)
-    const dayOfWeek = now.getDay();
-    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() + diffToMonday);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
+    const currentPkt = getPKTDateParts(now);
+    const weekBounds = getPKTWeekBounds(now);
 
     let totalDecimal = new Prisma.Decimal(0);
     let thisMonthDecimal = new Prisma.Decimal(0);
@@ -152,15 +193,14 @@ export async function getExpenseSummary(userId: string): Promise<ExpenseSummary>
       totalDecimal = totalDecimal.plus(amt);
 
       const d = new Date(exp.expenseDate);
-      const y = d.getFullYear();
-      const m = d.getMonth();
-      monthsSet.add(`${y}-${m}`);
+      const expPkt = getPKTDateParts(d);
+      monthsSet.add(`${expPkt.year}-${expPkt.month}`);
 
-      if (y === currentYear && m === currentMonth) {
+      if (expPkt.year === currentPkt.year && expPkt.month === currentPkt.month) {
         thisMonthDecimal = thisMonthDecimal.plus(amt);
       }
 
-      if (d >= startOfWeek && d <= endOfWeek) {
+      if (d >= weekBounds.start && d <= weekBounds.end) {
         thisWeekDecimal = thisWeekDecimal.plus(amt);
       }
     }
@@ -268,19 +308,23 @@ export async function getMonthlySpendingTrend(
 ): Promise<MonthlyTrendItem[]> {
   try {
     const now = new Date();
+    const currentPkt = getPKTDateParts(now);
     const months: { year: number; month: number; key: string; label: string }[] = [];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    // Generate month slots from (monthsCount - 1) months ago up to current month
+    // Generate month slots from (monthsCount - 1) months ago up to current month in PKT
     for (let i = monthsCount - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const month = d.getMonth();
+      const targetDate = new Date(Date.UTC(currentPkt.year, currentPkt.month - i, 1));
+      const year = targetDate.getUTCFullYear();
+      const month = targetDate.getUTCMonth();
       const key = `${year}-${String(month + 1).padStart(2, "0")}`;
-      const label = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      const label = `${monthNames[month]} ${year}`;
       months.push({ year, month, key, label });
     }
 
-    const oldestDate = new Date(months[0].year, months[0].month, 1);
+    // oldestDate bound in UTC
+    const oldestStartUtcMs = Date.UTC(months[0].year, months[0].month, 1, 0, 0, 0, 0) - PKT_OFFSET_MS;
+    const oldestDate = new Date(oldestStartUtcMs);
 
     const expenses = await prisma.expense.findMany({
       where: {
@@ -297,7 +341,8 @@ export async function getMonthlySpendingTrend(
 
     for (const exp of expenses) {
       const d = new Date(exp.expenseDate);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const expPkt = getPKTDateParts(d);
+      const key = `${expPkt.year}-${String(expPkt.month + 1).padStart(2, "0")}`;
       if (totalsMap[key]) {
         totalsMap[key] = totalsMap[key].plus(exp.amount);
       }
@@ -320,16 +365,16 @@ export async function getMonthlySpendingTrend(
 
 /**
  * Calculate spending insights (top category and month-over-month comparison).
+ * Evaluated using Asia/Karachi (PKT) calendar boundaries.
  */
 export async function getSpendingInsights(userId: string): Promise<SpendingInsight> {
   try {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    const curPkt = getPKTDateParts(now);
 
-    const prevDate = new Date(currentYear, currentMonth - 1, 1);
-    const prevYear = prevDate.getFullYear();
-    const prevMonth = prevDate.getMonth();
+    const prevDate = new Date(Date.UTC(curPkt.year, curPkt.month - 1, 1));
+    const prevYear = prevDate.getUTCFullYear();
+    const prevMonth = prevDate.getUTCMonth();
 
     const expenses = await prisma.expense.findMany({
       where: { userId },
@@ -351,8 +396,7 @@ export async function getSpendingInsights(userId: string): Promise<SpendingInsig
 
     for (const exp of expenses) {
       const d = new Date(exp.expenseDate);
-      const y = d.getFullYear();
-      const m = d.getMonth();
+      const expPkt = getPKTDateParts(d);
 
       // Top category tracking
       if (!categoryTotals[exp.category]) {
@@ -360,9 +404,9 @@ export async function getSpendingInsights(userId: string): Promise<SpendingInsig
       }
       categoryTotals[exp.category] = categoryTotals[exp.category].plus(exp.amount);
 
-      if (y === currentYear && m === currentMonth) {
+      if (expPkt.year === curPkt.year && expPkt.month === curPkt.month) {
         thisMonthTotal = thisMonthTotal.plus(exp.amount);
-      } else if (y === prevYear && m === prevMonth) {
+      } else if (expPkt.year === prevYear && expPkt.month === prevMonth) {
         prevMonthTotal = prevMonthTotal.plus(exp.amount);
       }
     }
@@ -450,25 +494,17 @@ export async function createExpenseRecord(
 }
 
 /**
- * Update an existing expense record, verifying userId ownership.
+ * Update an existing expense record, verifying userId ownership atomically.
  */
 export async function updateExpenseRecord(
   expenseId: string,
   userId: string,
   data: ExpenseFormValues
 ): Promise<Expense> {
-  const existing = await prisma.expense.findFirst({
-    where: { id: expenseId, userId },
-  });
-
-  if (!existing) {
-    throw new Error("Expense record not found or unauthorized");
-  }
-
   const amountDecimal = new Prisma.Decimal(data.amount.toFixed(2));
 
-  const updated = await prisma.expense.update({
-    where: { id: expenseId },
+  const result = await prisma.expense.updateMany({
+    where: { id: expenseId, userId },
     data: {
       amount: amountDecimal,
       category: data.category,
@@ -477,30 +513,34 @@ export async function updateExpenseRecord(
     },
   });
 
+  if (result.count === 0) {
+    throw new Error("Expense record not found or unauthorized");
+  }
+
+  const updated = await prisma.expense.findFirst({
+    where: { id: expenseId, userId },
+  });
+
   return {
-    ...updated,
-    amount: Number(updated.amount),
+    ...updated!,
+    amount: Number(updated!.amount),
   };
 }
 
 /**
- * Delete an expense record, verifying userId ownership.
+ * Delete an expense record, verifying userId ownership atomically.
  */
 export async function deleteExpenseRecord(
   expenseId: string,
   userId: string
 ): Promise<boolean> {
-  const existing = await prisma.expense.findFirst({
+  const result = await prisma.expense.deleteMany({
     where: { id: expenseId, userId },
   });
 
-  if (!existing) {
+  if (result.count === 0) {
     throw new Error("Expense record not found or unauthorized");
   }
-
-  await prisma.expense.delete({
-    where: { id: expenseId },
-  });
 
   return true;
 }

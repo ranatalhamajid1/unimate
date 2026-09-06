@@ -8,25 +8,75 @@ export type ChatMessage = {
   content: string;
 };
 
-// In-memory lightweight sliding window rate limiter for MVP (per-user)
-// Allows up to 15 requests per 60 seconds per user
+// In-memory sliding-window rate limiter per user.
+// Enforces a strict limit of 20 requests per 60 seconds per user.
+// Note: This is an in-memory single-node limiter. In a multi-instance production cluster,
+// this would be backed by Redis / Valkey.
+export const AI_RATE_LIMIT = 20; // 20 requests per 60 seconds per user
+export const AI_RATE_WINDOW_MS = 60 * 1000; // 60,000 ms sliding window
+export const AI_RATE_MAX_ENTRIES = 10_000; // Defensive memory bound to prevent unbounded Map growth
+
 const rateLimitMap = new Map<string, number[]>();
 
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 20;
+/**
+ * Prunes expired entries across the map when size exceeds defensive threshold.
+ */
+export function pruneRateLimitMap(now: number = Date.now()): void {
+  for (const [uid, timestamps] of rateLimitMap.entries()) {
+    const valid = timestamps.filter((t) => now - t < AI_RATE_WINDOW_MS);
+    if (valid.length === 0) {
+      rateLimitMap.delete(uid);
+    } else {
+      rateLimitMap.set(uid, valid);
+    }
+  }
+
+  // If still above threshold, drop oldest entries defensively
+  if (rateLimitMap.size > AI_RATE_MAX_ENTRIES) {
+    const overflow = rateLimitMap.size - AI_RATE_MAX_ENTRIES;
+    const keys = Array.from(rateLimitMap.keys());
+    for (let i = 0; i < overflow; i++) {
+      rateLimitMap.delete(keys[i]);
+    }
+  }
+}
+
+/**
+ * Checks and records rate limit for a user at a given timestamp.
+ * Returns true if allowed, false if rate limited.
+ */
+export function checkRateLimit(userId: string, now: number = Date.now()): boolean {
+  // Defensive bounds check on map size
+  if (rateLimitMap.size > AI_RATE_MAX_ENTRIES) {
+    pruneRateLimitMap(now);
+  }
 
   const timestamps = rateLimitMap.get(userId) || [];
-  const validTimestamps = timestamps.filter((t) => now - t < windowMs);
+  const validTimestamps = timestamps.filter((t) => now - t < AI_RATE_WINDOW_MS);
 
-  if (validTimestamps.length >= maxRequests) {
+  if (validTimestamps.length >= AI_RATE_LIMIT) {
+    // Keep only valid timestamps so the array doesn't grow unbounded
+    rateLimitMap.set(userId, validTimestamps);
     return false;
   }
 
   validTimestamps.push(now);
   rateLimitMap.set(userId, validTimestamps);
   return true;
+}
+
+/**
+ * Clears in-memory rate limit state. Exported for test isolation.
+ */
+export function _resetRateLimits(): void {
+  rateLimitMap.clear();
+}
+
+/**
+ * Returns current count of tracked users in rate limit map. Exported for testing.
+ */
+export function _getRateLimitMapSize(): number {
+  return rateLimitMap.size;
 }
 
 const SYSTEM_INSTRUCTIONS = `You are the AI Study Buddy for UniMate — a modern, intelligent, and supportive university academic assistant.

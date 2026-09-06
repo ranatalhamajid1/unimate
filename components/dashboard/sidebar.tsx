@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Calendar,
+  CalendarDays,
   FileText,
   Timer,
   Award,
@@ -25,12 +26,15 @@ import {
   LogOut,
   X,
   ChevronRight,
+  Clock,
+  Layers,
+  Target,
 } from "lucide-react";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 // ---------------------------------------------------------------------------
-// Nav items
+// Nav items & Groups
 // ---------------------------------------------------------------------------
 
 type NavItem = {
@@ -41,16 +45,44 @@ type NavItem = {
   soon: boolean;
 };
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "overview", label: "Overview", href: "/dashboard", icon: LayoutDashboard, soon: false },
-  { id: "courses", label: "Courses", href: "/dashboard/courses", icon: BookOpen, soon: false },
-  { id: "timetable", label: "Timetable", href: "/dashboard/timetable", icon: Calendar, soon: false },
-  { id: "assignments", label: "Assignments", href: "/dashboard/assignments", icon: FileText, soon: false },
-  { id: "exams", label: "Exams", href: "/dashboard/exams", icon: Timer, soon: false },
-  { id: "academics", label: "Academics", href: "/dashboard/academics", icon: Award, soon: false },
-  { id: "expenses", label: "Expenses", href: "/dashboard/expenses", icon: Wallet, soon: false },
-  { id: "ai-buddy", label: "AI Study Buddy", href: "/dashboard/ai", icon: Sparkles, soon: false },
-  { id: "notifications", label: "Notifications", href: "/dashboard/notifications", icon: Bell, soon: false },
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: "ACADEMICS",
+    items: [
+      { id: "overview", label: "Overview", href: "/dashboard", icon: LayoutDashboard, soon: false },
+      { id: "courses", label: "Courses", href: "/dashboard/courses", icon: BookOpen, soon: false },
+      { id: "timetable", label: "Timetable", href: "/dashboard/timetable", icon: Calendar, soon: false },
+      { id: "calendar", label: "Calendar", href: "/dashboard/calendar", icon: CalendarDays, soon: false },
+      { id: "assignments", label: "Assignments", href: "/dashboard/assignments", icon: FileText, soon: false },
+      { id: "exams", label: "Exams", href: "/dashboard/exams", icon: Timer, soon: false },
+      { id: "academics", label: "Academics", href: "/dashboard/academics", icon: Award, soon: false },
+    ],
+  },
+  {
+    title: "PRODUCTIVITY",
+    items: [
+      { id: "study", label: "Study Tracking", href: "/dashboard/study", icon: Clock, soon: false },
+      { id: "study-plan", label: "Study Planner", href: "/dashboard/study-plan", icon: Layers, soon: false },
+      { id: "goals", label: "Goals", href: "/dashboard/goals", icon: Target, soon: false },
+    ],
+  },
+  {
+    title: "PERSONAL",
+    items: [
+      { id: "expenses", label: "Expenses", href: "/dashboard/expenses", icon: Wallet, soon: false },
+    ],
+  },
+  {
+    title: "AI",
+    items: [
+      { id: "ai-buddy", label: "AI Study Buddy", href: "/dashboard/ai", icon: Sparkles, soon: false },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -83,55 +115,73 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-[var(--color-border-subtle)] px-5">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
-          <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
-        </span>
-        <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
-          UniMate
-        </span>
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--color-border-subtle)] px-5">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
+            <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
+            UniMate
+          </span>
+        </div>
+
+        <Link
+          href="/dashboard/notifications"
+          onClick={onClose}
+          aria-label="Notifications"
+          className="rounded-lg p-1.5 text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-colors"
+        >
+          <Bell className="h-4 w-4" />
+        </Link>
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <ul className="space-y-0.5">
-          {NAV_ITEMS.map(({ id, label, href, icon: Icon, soon }) => {
-            const isActive = pathname === href;
-            return (
-              <li key={id}>
-                <Link
-                  href={soon ? "#" : href}
-                  onClick={onClose}
-                  aria-disabled={soon}
-                  className={`group flex items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150 ${
-                    isActive
-                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
-                      : "text-[var(--color-text-2)] hover:bg-slate-100/80 dark:hover:bg-slate-700/40 hover:text-[var(--color-text)]"
-                  } ${soon ? "opacity-60 cursor-default" : ""}`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Icon
-                      className={`h-4 w-4 shrink-0 ${
+      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.title}>
+            <p className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-3)]">
+              {group.title}
+            </p>
+            <ul className="space-y-0.5">
+              {group.items.map(({ id, label, href, icon: Icon, soon }) => {
+                const isActive = pathname === href;
+                return (
+                  <li key={id}>
+                    <Link
+                      href={soon ? "#" : href}
+                      onClick={onClose}
+                      aria-disabled={soon}
+                      className={`group flex items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-medium transition-all duration-150 ${
                         isActive
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-[var(--color-text-3)] group-hover:text-[var(--color-text-2)]"
-                      }`}
-                    />
-                    {label}
-                  </span>
-                  {soon && (
-                    <span className="rounded-md bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-3)]">
-                      Soon
-                    </span>
-                  )}
-                  {isActive && !soon && (
-                    <ChevronRight className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-semibold"
+                          : "text-[var(--color-text-2)] hover:bg-slate-100/80 dark:hover:bg-slate-700/40 hover:text-[var(--color-text)]"
+                      } ${soon ? "opacity-60 cursor-default" : ""}`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Icon
+                          className={`h-4 w-4 shrink-0 ${
+                            isActive
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-[var(--color-text-3)] group-hover:text-[var(--color-text-2)]"
+                          }`}
+                        />
+                        {label}
+                      </span>
+                      {soon && (
+                        <span className="rounded-md bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-3)]">
+                          Soon
+                        </span>
+                      )}
+                      {isActive && !soon && (
+                        <ChevronRight className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       {/* Bottom — user + actions */}
