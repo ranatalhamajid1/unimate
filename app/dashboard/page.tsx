@@ -45,7 +45,6 @@ import type {
   Assignment as DashboardAssignment,
   StatCard,
 } from "@/app/lib/dashboard-data";
-import { DEMO_STATS } from "@/app/lib/dashboard-data";
 
 // Components
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
@@ -60,6 +59,8 @@ import { AcademicInsightsCard } from "@/components/dashboard/academic-insights-c
 import { GoalsCard } from "@/components/dashboard/goals-card";
 import { AiBuddyCard } from "@/components/dashboard/ai-buddy-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { getUserSubscription } from "@/app/lib/entitlements";
+import { UpgradeCard } from "@/components/billing/upgrade-card";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -113,6 +114,7 @@ export default async function DashboardPage() {
     academicInsights,
     studentGoals,
     activePlan,
+    subscription,
   ] = await Promise.all([
     getStudentPriorities(session.userId, now),
     getTodayTimetable(session.userId, pkt.dayOfWeek),
@@ -128,6 +130,7 @@ export default async function DashboardPage() {
     getAcademicInsights(session.userId),
     calculateStudentGoalsProgress(session.userId),
     getUserActiveStudyPlan(session.userId),
+    getUserSubscription(session.userId),
   ]);
 
   const realSchedule: ScheduleClass[] = todayEntries.map((e) => ({
@@ -311,6 +314,9 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
+
+          {/* Pro Upgrade Card for Free Users */}
+          {!subscription.isPro && <UpgradeCard />}
 
           {/* AI Study Buddy Card */}
           <AiBuddyCard />

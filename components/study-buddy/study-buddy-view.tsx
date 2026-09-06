@@ -6,18 +6,30 @@ import { ChatMessageBubble, MessageItem } from "./chat-message";
 import { ChatInput } from "./chat-input";
 import { StarterPrompts } from "./starter-prompts";
 
+type QuotaState = {
+  currentCount: number;
+  limit: number;
+  remaining: number;
+  plan: "FREE" | "PRO";
+};
+
 type StudyBuddyViewProps = {
   studentName: string;
   initialPrompt?: string;
+  initialQuota?: QuotaState;
 };
 
 export function StudyBuddyView({
   studentName,
   initialPrompt,
+  initialQuota,
 }: StudyBuddyViewProps) {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [quota, setQuota] = useState<QuotaState>(
+    initialQuota || { currentCount: 0, limit: 5, remaining: 5, plan: "FREE" }
+  );
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialPromptFiredRef = useRef(false);
 
@@ -77,10 +89,27 @@ export function StudyBuddyView({
             return;
           }
           const errData = await res.json().catch(() => ({}));
+          if (res.status === 429 && errData.limit !== undefined) {
+            setQuota((prev) => ({
+              ...prev,
+              currentCount: errData.currentCount ?? prev.limit,
+              limit: errData.limit,
+              remaining: 0,
+            }));
+          }
           throw new Error(errData.error || "Failed to get AI response");
         }
 
         const data = await res.json();
+        if (data.quota) {
+          setQuota((prev) => ({
+            ...prev,
+            currentCount: data.quota.currentCount,
+            limit: data.quota.limit,
+            remaining: data.quota.remaining,
+          }));
+        }
+
         const aiResponseContent =
           data.response ||
           "Sorry, I couldn't reach the Study Buddy right now. Please try again.";
@@ -145,14 +174,29 @@ export function StudyBuddyView({
         </div>
 
         {/* Clear / Status actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          {/* Subtle quota indicator pill */}
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[11px] sm:text-xs font-medium transition-colors ${
+              quota.remaining <= 1
+                ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                : "border-[var(--color-border-subtle)] bg-[var(--color-surface-2)] text-[var(--color-text-2)]"
+            }`}
+            title={`${quota.currentCount} of ${quota.limit} daily prompts used today`}
+          >
+            <Sparkles className="h-3 w-3 text-blue-500 shrink-0" />
+            <span>
+              {quota.remaining}/{quota.limit} prompts left today
+            </span>
+          </div>
+
           {messages.length > 0 && (
             <button
               type="button"
               onClick={handleClearChat}
               disabled={isLoading}
               title="Clear conversation"
-              className="flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium text-[var(--color-text-2)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] px-3 py-1.5 text-[12px] font-medium text-[var(--color-text-2)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] disabled:opacity-50 cursor-pointer"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Clear chat</span>

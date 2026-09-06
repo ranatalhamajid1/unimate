@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/app/lib/session";
 import { generateStudyBuddyResponse, ChatMessage } from "@/app/lib/ai";
+import { checkAndIncrementAiUsage } from "@/app/lib/ai-limits";
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,7 +59,22 @@ export async function POST(req: NextRequest) {
         .slice(-6) as ChatMessage[];
     }
 
-    // 3. Generate response using authenticated session userId
+    // 3. Durable daily AI quota check & increment
+    const quota = await checkAndIncrementAiUsage(session.userId);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `You've reached your daily AI limit (${quota.currentCount}/${quota.limit} requests today). Quota resets at midnight. Upgrade to Pro for 10x higher allowance!`,
+          code: "QUOTA_EXCEEDED",
+          currentCount: quota.currentCount,
+          limit: quota.limit,
+          upgradeUrl: "/dashboard/billing",
+        },
+        { status: 429 }
+      );
+    }
+
+    // 4. Generate response using authenticated session userId
     const response = await generateStudyBuddyResponse(
       session.userId,
       trimmed,
@@ -66,7 +82,14 @@ export async function POST(req: NextRequest) {
       session.name
     );
 
-    return NextResponse.json({ response });
+    return NextResponse.json({
+      response,
+      quota: {
+        currentCount: quota.currentCount,
+        limit: quota.limit,
+        remaining: quota.remaining,
+      },
+    });
   } catch (error: unknown) {
     console.error("API error in /api/ai/study-buddy:", error);
     return NextResponse.json(

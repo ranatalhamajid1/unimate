@@ -5,10 +5,10 @@ import { Menu, X, GraduationCap } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "AI Study Buddy", href: "#ai-study-buddy" },
-  { label: "Dashboard", href: "#dashboard" },
+  { label: "Features", href: "/#features" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "AI Study Buddy", href: "/#ai-study-buddy" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
 export function Navbar() {

@@ -16,6 +16,8 @@ export function resetMockState() {
   mockState.studentGoals = [];
   mockState.studyPlans = [];
   mockState.studyPlanItems = [];
+  mockState.subscriptions = [];
+  mockState.aiUsages = [];
 }
 
 resetMockState();
@@ -663,6 +665,91 @@ export const mockPrisma = {
       return { count: initial - mockState.studyPlanItems.length };
     },
   },
+  subscription: {
+    findUnique: async ({ where }: any) => {
+      return (
+        mockState.subscriptions.find((s: any) => {
+          if (where.userId && s.userId !== where.userId) return false;
+          if (where.id && s.id !== where.id) return false;
+          return true;
+        }) || null
+      );
+    },
+    findFirst: async ({ where }: any) => {
+      return (
+        mockState.subscriptions.find((s: any) => {
+          if (where.userId && s.userId !== where.userId) return false;
+          if (where.providerCustomerId && s.providerCustomerId !== where.providerCustomerId) return false;
+          if (where.providerSubscriptionId && s.providerSubscriptionId !== where.providerSubscriptionId) return false;
+          return true;
+        }) || null
+      );
+    },
+    upsert: async ({ where, create, update }: any) => {
+      const idx = mockState.subscriptions.findIndex(
+        (s: any) => s.userId === where.userId
+      );
+      if (idx >= 0) {
+        Object.assign(mockState.subscriptions[idx], update, { updatedAt: new Date() });
+        return mockState.subscriptions[idx];
+      } else {
+        const record = {
+          id: `sub-${Date.now()}-${Math.random()}`,
+          ...create,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        mockState.subscriptions.push(record);
+        return record;
+      }
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = mockState.subscriptions.length;
+      mockState.subscriptions = mockState.subscriptions.filter(
+        (s: any) => !(where.userId && s.userId === where.userId)
+      );
+      return { count: initial - mockState.subscriptions.length };
+    },
+  },
+  aIUsage: {
+    findUnique: async ({ where }: any) => {
+      const target = where.userId_date;
+      if (!target) return null;
+      return (
+        mockState.aiUsages.find(
+          (u: any) => u.userId === target.userId && u.date === target.date
+        ) || null
+      );
+    },
+    upsert: async ({ where, create, update }: any) => {
+      const target = where.userId_date;
+      const idx = mockState.aiUsages.findIndex(
+        (u: any) => u.userId === target.userId && u.date === target.date
+      );
+      if (idx >= 0) {
+        if (update.requestCount?.increment) {
+          mockState.aiUsages[idx].requestCount += update.requestCount.increment;
+        } else if (typeof update.requestCount === "number") {
+          mockState.aiUsages[idx].requestCount = update.requestCount;
+        }
+        mockState.aiUsages[idx].updatedAt = new Date();
+        return mockState.aiUsages[idx];
+      } else {
+        const record = {
+          id: `ai-use-${Date.now()}-${Math.random()}`,
+          userId: create.userId,
+          date: create.date,
+          requestCount: create.requestCount || 0,
+          tokenCount: create.tokenCount || 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        mockState.aiUsages.push(record);
+        return record;
+      }
+    },
+  },
 };
 
 (globalThis as any).prisma = mockPrisma;
+

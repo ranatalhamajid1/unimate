@@ -13,6 +13,8 @@ import { getAvailableStudyWindows } from "@/app/lib/study-availability";
 import { getPKTDateParts } from "@/app/lib/timezone";
 import { calculateDaysRemaining } from "@/app/lib/exam-definitions";
 import { DraftStudyPlan, DraftPlanItem } from "@/app/lib/study-plan-definitions";
+import { hasEntitlement } from "@/app/lib/entitlements";
+import { checkAndIncrementAiUsage } from "@/app/lib/ai-limits";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,7 +30,35 @@ export async function POST(req: NextRequest) {
     // Always use session.userId, ignore any client-supplied userId
     const userId = session.userId;
 
-    // 2. Sliding-window rate limit check
+    // 2. Server-side Pro entitlement check
+    const hasAccess = await hasEntitlement(userId, "AI_STUDY_PLAN");
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error: "UniMate Pro is required to generate AI Study Plans.",
+          code: "UPGRADE_REQUIRED",
+          upgradeUrl: "/dashboard/billing",
+        },
+        { status: 403 }
+      );
+    }
+
+    // 3. Durable daily AI quota check & increment
+    const quota = await checkAndIncrementAiUsage(userId);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `Daily AI limit reached (${quota.currentCount}/${quota.limit} requests today). Quota resets at midnight.`,
+          code: "QUOTA_EXCEEDED",
+          currentCount: quota.currentCount,
+          limit: quota.limit,
+          upgradeUrl: "/dashboard/billing",
+        },
+        { status: 429 }
+      );
+    }
+
+    // 4. Sliding-window rate limit check (burst protection)
     if (!checkRateLimit(userId)) {
       return NextResponse.json(
         { error: "Rate limit exceeded. Please wait a moment before requesting another plan." },
@@ -36,7 +66,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Parse and sanitize user request input
+    // 5. Parse and sanitize user request input
     let body: any = {};
     try {
       body = await req.json();

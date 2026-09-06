@@ -4,23 +4,26 @@ const COLUMNS = [
   {
     title: "Product",
     links: [
-      { label: "Features", href: "#features" },
-      { label: "AI Study Buddy", href: "#ai-study-buddy" },
-      { label: "Dashboard", href: "#dashboard" },
+      { label: "Features", href: "/#features" },
+      { label: "AI Study Buddy", href: "/#ai-study-buddy" },
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Pricing", href: "/pricing" },
     ],
   },
   {
-    title: "Company",
+    title: "Support",
     links: [
-      { label: "About", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "Contact Us", href: "/contact" },
+      { label: "Help & FAQ", href: "/pricing#faqs" },
+      { label: "Paddle Buyer Portal", href: "https://paddle.net" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Refund Policy", href: "/refund" },
     ],
   },
 ];

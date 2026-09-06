@@ -8,6 +8,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/app/lib/session";
 import { prisma } from "@/app/lib/prisma";
+import { getDailyAiUsage } from "@/app/lib/ai-limits";
 import { StudyBuddyView } from "@/components/study-buddy/study-buddy-view";
 
 export const metadata = {
@@ -23,12 +24,15 @@ export default async function AIStudyBuddyPage(props: {
     redirect("/login");
   }
 
-  const user = await prisma.user
-    .findUnique({
-      where: { id: session.userId },
-      select: { name: true },
-    })
-    .catch(() => null);
+  const [user, quota] = await Promise.all([
+    prisma.user
+      .findUnique({
+        where: { id: session.userId },
+        select: { name: true },
+      })
+      .catch(() => null),
+    getDailyAiUsage(session.userId),
+  ]);
 
   const studentName = user?.name || session.name || "Student";
 
@@ -40,6 +44,12 @@ export default async function AIStudyBuddyPage(props: {
       <StudyBuddyView
         studentName={studentName}
         initialPrompt={initialPrompt}
+        initialQuota={{
+          currentCount: quota.currentCount,
+          limit: quota.limit,
+          remaining: quota.remaining,
+          plan: quota.plan,
+        }}
       />
     </div>
   );

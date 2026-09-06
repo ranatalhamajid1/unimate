@@ -29,6 +29,7 @@ import {
   Clock,
   Layers,
   Target,
+  CreditCard,
 } from "lucide-react";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -81,6 +82,12 @@ const NAV_GROUPS: NavGroup[] = [
     title: "AI",
     items: [
       { id: "ai-buddy", label: "AI Study Buddy", href: "/dashboard/ai", icon: Sparkles, soon: false },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
+      { id: "billing", label: "Billing & Plans", href: "/dashboard/billing", icon: CreditCard, soon: false },
     ],
   },
 ];
