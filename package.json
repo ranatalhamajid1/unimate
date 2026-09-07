@@ -7,7 +7,7 @@
     "build": "node ./scripts/build.js",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --conditions=react-server --test tests/security-regression.test.ts tests/phase13-command-center.test.ts tests/phase13-smoke-test.test.ts tests/phase14-billing-entitlements.test.ts",
+    "test": "tsx --conditions=react-server --test tests/security-regression.test.ts tests/phase13-command-center.test.ts tests/phase13-smoke-test.test.ts tests/phase14-billing-entitlements.test.ts tests/phase15-mobile-auth.test.ts tests/phase15-mobile-dashboard.test.ts tests/phase15-mobile-core-modules.test.ts tests/phase15-mobile-advanced-modules.test.ts tests/phase15-mobile-qa-hardening.test.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

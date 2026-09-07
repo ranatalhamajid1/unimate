@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
 
+process.env.SESSION_SECRET = process.env.SESSION_SECRET || "default_test_session_secret_at_least_32_chars_long!";
+
 export const mockState: Record<string, any> = {};
 
 export function resetMockState() {
@@ -18,6 +20,7 @@ export function resetMockState() {
   mockState.studyPlanItems = [];
   mockState.subscriptions = [];
   mockState.aiUsages = [];
+  mockState.devicePushTokens = [];
 }
 
 resetMockState();
@@ -215,6 +218,15 @@ export const mockPrisma = {
       if (!item) return null;
       return { ...item, course: { id: item.courseId, name: "Test", code: "CS101", color: "#2563eb" } };
     },
+    count: async ({ where }: any) => {
+      return mockState.assignments.filter((a: any) => {
+        if (where?.userId && a.userId !== where.userId) return false;
+        if (where?.status?.not && a.status === where.status.not) return false;
+        if (where?.dueDate?.gte && a.dueDate < where.dueDate.gte) return false;
+        if (where?.dueDate?.lte && a.dueDate > where.dueDate.lte) return false;
+        return true;
+      }).length;
+    },
     updateMany: async ({ where, data }: any) => {
       let count = 0;
       for (const a of mockState.assignments) {
@@ -252,16 +264,26 @@ export const mockPrisma = {
     create: async ({ data }: any) => {
       const record = { id: `exam-${Date.now()}-${Math.random()}`, ...data };
       mockState.exams.push(record);
-      return { ...record, course: { id: record.courseId, name: "Test", code: "CS101", color: "#2563eb" } };
+      const course = mockState.courses.find((c: any) => c.id === record.courseId) || { id: record.courseId, name: "Test", code: "CS101", color: "#2563eb" };
+      return { ...record, course };
     },
-    findFirst: async ({ where }: any) => {
-      const item = mockState.exams.find((e: any) => {
-        if (where.id && e.id !== where.id) return false;
-        if (where.userId && e.userId !== where.userId) return false;
+    findFirst: async ({ where, include, orderBy }: any) => {
+      let list = mockState.exams.filter((e: any) => {
+        if (where?.id && e.id !== where.id) return false;
+        if (where?.userId && e.userId !== where.userId) return false;
+        if (where?.status?.not && e.status === where.status.not) return false;
+        if (typeof where?.status === "string" && e.status !== where.status) return false;
+        if (where?.examDate?.gte && e.examDate < where.examDate.gte) return false;
+        if (where?.examDate?.lte && e.examDate > where.examDate.lte) return false;
         return true;
       });
+      if (orderBy?.examDate === "asc") {
+        list.sort((a: any, b: any) => new Date(a.examDate).getTime() - new Date(b.examDate).getTime());
+      }
+      const item = list[0];
       if (!item) return null;
-      return { ...item, course: { id: item.courseId, name: "Test", code: "CS101", color: "#2563eb" } };
+      const course = mockState.courses.find((c: any) => c.id === item.courseId) || { id: item.courseId, name: "Test", code: "CS101", color: "#2563eb" };
+      return { ...item, course };
     },
     updateMany: async ({ where, data }: any) => {
       let count = 0;
@@ -329,6 +351,13 @@ export const mockPrisma = {
         if (where?.read !== undefined && n.read !== where.read) return false;
         return true;
       });
+    },
+    count: async ({ where }: any) => {
+      return mockState.notifications.filter((n: any) => {
+        if (where?.userId && n.userId !== where.userId) return false;
+        if (where?.read !== undefined && n.read !== where.read) return false;
+        return true;
+      }).length;
     },
     createMany: async ({ data }: any) => {
       const records = data.map((d: any) => ({
@@ -747,6 +776,38 @@ export const mockPrisma = {
         mockState.aiUsages.push(record);
         return record;
       }
+    },
+  },
+  devicePushToken: {
+    findUnique: async ({ where }: any) => {
+      return (
+        mockState.devicePushTokens.find((t: any) => t.token === where.token) || null
+      );
+    },
+    upsert: async ({ where, create, update }: any) => {
+      const idx = mockState.devicePushTokens.findIndex(
+        (t: any) => t.token === where.token
+      );
+      if (idx >= 0) {
+        Object.assign(mockState.devicePushTokens[idx], update, { updatedAt: new Date() });
+        return mockState.devicePushTokens[idx];
+      } else {
+        const record = {
+          id: `push-token-${Date.now()}-${Math.random()}`,
+          ...create,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        mockState.devicePushTokens.push(record);
+        return record;
+      }
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = mockState.devicePushTokens.length;
+      mockState.devicePushTokens = mockState.devicePushTokens.filter(
+        (t: any) => !(t.userId === where.userId && (!where.token || t.token === where.token))
+      );
+      return { count: initial - mockState.devicePushTokens.length };
     },
   },
 };
