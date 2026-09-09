@@ -33,7 +33,9 @@ async function request<T>(
     } as ApiError;
   }
 
-  const url = path.startsWith("http") ? path : `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const cleanBase = API_BASE_URL.replace(/\/+$/, "");
+  const cleanPath = "/" + path.replace(/^\/+/, "");
+  const url = path.startsWith("http") ? path : `${cleanBase}${cleanPath}`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

@@ -54,6 +54,42 @@ describe("Phase 16: Release Validation & Production Launch Readiness Suite", () 
       assert.equal(mockResolveApiBaseUrl(undefined, false), "http://localhost:3000");
       assert.equal(mockResolveApiBaseUrl(undefined, true), "", "Production build without EXPO_PUBLIC_API_URL must not fallback to localhost");
     });
+
+    test("environment files exist and configure production backend URL without trailing slash", () => {
+      const envFiles = [".env", ".env.production", ".env.example"];
+      for (const file of envFiles) {
+        const filePath = path.join(mobileRoot, file);
+        assert.ok(fs.existsSync(filePath), `${file} must exist`);
+        const content = fs.readFileSync(filePath, "utf8");
+        assert.ok(content.includes("EXPO_PUBLIC_API_URL=https://web-gamma-ten-40.vercel.app"), `${file} must configure correct production API URL`);
+        assert.ok(!content.includes("EXPO_PUBLIC_API_URL=https://web-gamma-ten-40.vercel.app/"), `${file} must not have trailing slash`);
+        // Verify no secret leakage
+        assert.ok(!content.includes("DATABASE_URL"), `${file} must not contain DATABASE_URL`);
+        assert.ok(!content.includes("SESSION_SECRET"), `${file} must not contain SESSION_SECRET`);
+        assert.ok(!content.includes("PADDLE"), `${file} must not contain PADDLE secrets`);
+      }
+    });
+
+    test("eas.json preview and production build profiles define EXPO_PUBLIC_API_URL", () => {
+      const easJson = JSON.parse(fs.readFileSync(path.join(mobileRoot, "eas.json"), "utf8"));
+      assert.equal(easJson.build.preview.env?.EXPO_PUBLIC_API_URL, "https://web-gamma-ten-40.vercel.app");
+      assert.equal(easJson.build.production.env?.EXPO_PUBLIC_API_URL, "https://web-gamma-ten-40.vercel.app");
+    });
+
+    test("URL construction normalizes paths cleanly and never produces double slashes", () => {
+      function buildUrl(baseUrl: string, pathSegment: string): string {
+        const cleanBase = baseUrl.replace(/\/+$/, "");
+        const cleanPath = "/" + pathSegment.replace(/^\/+/, "");
+        return pathSegment.startsWith("http") ? pathSegment : `${cleanBase}${cleanPath}`;
+      }
+
+      const base = "https://web-gamma-ten-40.vercel.app";
+      assert.equal(buildUrl(base, "/api/mobile/auth/signup"), "https://web-gamma-ten-40.vercel.app/api/mobile/auth/signup");
+      assert.equal(buildUrl(base + "/", "/api/mobile/auth/signup"), "https://web-gamma-ten-40.vercel.app/api/mobile/auth/signup");
+      assert.equal(buildUrl(base + "///", "api/mobile/auth/signup"), "https://web-gamma-ten-40.vercel.app/api/mobile/auth/signup");
+      assert.equal(buildUrl(base, "//api/mobile/courses"), "https://web-gamma-ten-40.vercel.app/api/mobile/courses");
+      assert.equal(buildUrl(base, "http://custom-url.com/path"), "http://custom-url.com/path");
+    });
   });
 
   // 3. Deep Link Route Mapping
