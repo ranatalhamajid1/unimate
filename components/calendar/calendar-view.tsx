@@ -12,18 +12,26 @@ import {
   Timer,
   Layers,
   ArrowRight,
+  AlertTriangle,
+  Sparkles,
+  Play,
+  Share2,
+  CalendarCheck,
 } from "lucide-react";
 import {
   CalendarEvent,
   CalendarEventType,
   MonthCalendarData,
 } from "@/app/lib/calendar";
+import type { CalendarIntelligenceData } from "@/app/lib/calendar-intelligence";
 
 type Props = {
   initialData: MonthCalendarData;
+  intelligenceData?: CalendarIntelligenceData;
+  isPro?: boolean;
 };
 
-export function CalendarView({ initialData }: Props) {
+export function CalendarView({ initialData, intelligenceData, isPro }: Props) {
   const [currentYear, setCurrentYear] = useState(initialData.year);
   const [currentMonth, setCurrentMonth] = useState(initialData.month); // 0-indexed
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
@@ -121,6 +129,9 @@ export function CalendarView({ initialData }: Props) {
 
   const selectedDayEvents = filterEvents(initialData.eventsByDate[selectedDate] || []);
 
+  const selectedDayWorkload = intelligenceData?.dailyWorkloads.find((d) => d.dateKey === selectedDate);
+  const selectedDayWindows = intelligenceData?.recommendedStudyWindows.filter((w) => w.dateKey === selectedDate) || [];
+
   function getBadgeIcon(type: CalendarEventType) {
     switch (type) {
       case "CLASS":
@@ -182,6 +193,79 @@ export function CalendarView({ initialData }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Calendar Intelligence Banner */}
+      {intelligenceData && (
+        <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-4 shadow-xs">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold backdrop-blur-xs shadow-xs ${
+                  intelligenceData.weekWorkload.overallTier === "OVERLOADED"
+                    ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25"
+                    : intelligenceData.weekWorkload.overallTier === "BUSY"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25"
+                    : intelligenceData.weekWorkload.overallTier === "LIGHT"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25"
+                    : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {intelligenceData.weekWorkload.overallTier} WEEK
+              </span>
+              <p className="text-xs text-[var(--color-text-2)] font-medium">
+                {intelligenceData.weekWorkload.summary}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard/integrations"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--color-text-3)] hover:text-[var(--color-text)] hover:border-[var(--color-border)] transition-colors"
+              >
+                <Share2 className="h-3 w-3" />
+                Google Sync:{" "}
+                <span
+                  className={
+                    intelligenceData.googleCalendar.connected
+                      ? "text-emerald-600 dark:text-emerald-400 font-bold"
+                      : "text-amber-600 dark:text-amber-400 font-bold"
+                  }
+                >
+                  {intelligenceData.googleCalendar.status}
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Deadline Clusters Notice */}
+          {intelligenceData.deadlineClusters.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)] flex flex-col gap-2">
+              {intelligenceData.deadlineClusters.map((cluster) => (
+                <div
+                  key={cluster.id}
+                  className="flex items-start gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/10 p-2.5 text-xs"
+                >
+                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-amber-800 dark:text-amber-300">
+                        {cluster.label}
+                      </span>
+                      <span className="text-[10px] text-amber-700/80 dark:text-amber-400/80 kpi-numeric">
+                        ({cluster.startDateKey} – {cluster.endDateKey})
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-[var(--color-text-2)]">
+                      {cluster.recommendedAction}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filter Tabs & View Toggle */}
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
@@ -251,17 +335,17 @@ export function CalendarView({ initialData }: Props) {
                   onClick={() => setSelectedDate(calDay.dateKey)}
                   className={`min-h-[72px] sm:min-h-[88px] rounded-xl p-1.5 flex flex-col text-left transition-all border ${
                     isSelected
-                      ? "border-blue-500 bg-blue-50/40 dark:bg-blue-500/10"
+                      ? "border-blue-500 bg-blue-50/40 dark:bg-blue-500/10 shadow-xs ring-1 ring-blue-500/20"
                       : calDay.isToday
-                      ? "border-blue-300 dark:border-blue-800 bg-[var(--color-surface)]"
-                      : "border-transparent bg-[var(--color-surface-2)]/60 hover:bg-[var(--color-surface-2)]"
-                  } ${!calDay.isCurrentMonth ? "opacity-35" : ""}`}
+                      ? "border-blue-400/60 dark:border-blue-700 bg-[var(--color-surface)] shadow-xs"
+                      : "border-transparent bg-[var(--color-surface-2)]/50 hover:bg-[var(--color-surface-2)]"
+                  } ${!calDay.isCurrentMonth ? "opacity-30" : ""}`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <span
-                      className={`text-[11px] font-bold ${
+                      className={`text-[11px] font-bold kpi-numeric ${
                         calDay.isToday
-                          ? "flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white"
+                          ? "flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs"
                           : isSelected
                           ? "text-blue-600 dark:text-blue-400 font-extrabold"
                           : "text-[var(--color-text)]"
@@ -270,7 +354,7 @@ export function CalendarView({ initialData }: Props) {
                       {calDay.dayNumber}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span className="text-[9.5px] font-bold text-[var(--color-text-3)]">
+                      <span className="text-[9.5px] font-bold text-[var(--color-text-3)] kpi-numeric">
                         {dayEvents.length}
                       </span>
                     )}
@@ -281,14 +365,14 @@ export function CalendarView({ initialData }: Props) {
                     {dayEvents.slice(0, 2).map((ev) => (
                       <div
                         key={ev.id}
-                        style={{ backgroundColor: `${ev.courseColor}20`, color: ev.courseColor }}
+                        style={{ backgroundColor: `${ev.courseColor}18`, color: ev.courseColor }}
                         className="truncate rounded px-1 py-0.5 text-[9px] font-semibold"
                       >
                         {ev.courseCode} · {ev.title}
                       </div>
                     ))}
                     {dayEvents.length > 2 && (
-                      <span className="text-[9px] text-[var(--color-text-3)] font-medium pl-1">
+                      <span className="text-[9px] text-[var(--color-text-3)] font-medium pl-1 kpi-numeric">
                         +{dayEvents.length - 2} more
                       </span>
                     )}
@@ -307,14 +391,35 @@ export function CalendarView({ initialData }: Props) {
                 <h2 className="text-sm font-bold text-[var(--color-text)]">
                   {selectedDate === todayStr ? "Today's Schedule" : "Selected Day"}
                 </h2>
-                <p className="text-[11px] text-[var(--color-text-3)] mt-0.5">
+                <p className="text-[11px] text-[var(--color-text-3)] mt-0.5 kpi-numeric">
                   {selectedDate}
                 </p>
               </div>
-              <span className="rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 text-[10px] font-bold">
+              <span className="rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 text-[10px] font-bold kpi-numeric">
                 {selectedDayEvents.length} {selectedDayEvents.length === 1 ? "Event" : "Events"}
               </span>
             </div>
+
+            {/* Day Workload Status */}
+            {selectedDayWorkload && (
+              <div
+                className={`mt-3 rounded-xl border p-2.5 text-xs ${
+                  selectedDayWorkload.tier === "OVERLOADED"
+                    ? "bg-rose-500/5 border-rose-500/25 text-rose-700 dark:text-rose-300"
+                    : selectedDayWorkload.tier === "BUSY"
+                    ? "bg-amber-500/5 border-amber-500/25 text-amber-700 dark:text-amber-300"
+                    : selectedDayWorkload.tier === "LIGHT"
+                    ? "bg-emerald-500/5 border-emerald-500/25 text-emerald-700 dark:text-emerald-300"
+                    : "bg-blue-500/5 border-blue-500/25 text-blue-700 dark:text-blue-300"
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold">
+                  <span className="uppercase tracking-wider text-[10px]">{selectedDayWorkload.tier} DAY</span>
+                  <span className="kpi-numeric text-[11px]">{selectedDayWorkload.classCount} classes · {selectedDayWorkload.deadlinesCount} deadlines</span>
+                </div>
+                <p className="mt-1 text-[11px] opacity-90">{selectedDayWorkload.reason}</p>
+              </div>
+            )}
 
             {selectedDayEvents.length === 0 ? (
               <div className="py-8 text-center">
@@ -327,11 +432,11 @@ export function CalendarView({ initialData }: Props) {
                 </p>
               </div>
             ) : (
-              <div className="mt-3 space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
+              <div className="mt-3 space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
                 {selectedDayEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)] p-3 transition-all hover:border-[var(--color-border)]"
+                    className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)]/70 p-3 transition-all hover:border-[var(--color-border)]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
@@ -354,7 +459,7 @@ export function CalendarView({ initialData }: Props) {
                         <h3 className="mt-1 text-xs font-semibold text-[var(--color-text)]">
                           {event.title}
                         </h3>
-                        <p className="mt-1 flex items-center gap-1 text-[11px] text-[var(--color-text-3)]">
+                        <p className="mt-1 flex items-center gap-1 text-[11px] text-[var(--color-text-3)] kpi-numeric">
                           <Clock className="h-3 w-3" />
                           <span>{event.timeStr}</span>
                         </p>
@@ -370,6 +475,48 @@ export function CalendarView({ initialData }: Props) {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Suggested Study Windows for this day */}
+            {selectedDayWindows.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-[var(--color-border-subtle)]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-[var(--color-text-2)] uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                    Suggested Study Windows
+                  </span>
+                  <span className="text-[9.5px] text-[var(--color-text-3)] font-medium">UniMate Academic</span>
+                </div>
+                <div className="space-y-2">
+                  {selectedDayWindows.map((win) => (
+                    <div
+                      key={win.id}
+                      className="rounded-xl border border-blue-500/25 bg-blue-500/5 dark:bg-blue-500/10 p-2.5 flex items-center justify-between gap-2 shadow-xs"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 kpi-numeric">
+                          {win.startTime} – {win.endTime} ({win.durationMinutes}m)
+                        </span>
+                        <p className="text-xs font-semibold text-[var(--color-text)] truncate mt-0.5">
+                          {win.suggestedFocus.title}
+                        </p>
+                        {win.suggestedFocus.courseCode && (
+                          <span className="inline-block mt-0.5 rounded px-1 py-0.2 text-[9px] font-bold bg-[var(--color-surface)] border border-[var(--color-border-subtle)] text-[var(--color-text-2)]">
+                            {win.suggestedFocus.courseCode}
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        href={`/dashboard/study?targetType=${win.suggestedFocus.targetType}&targetId=${win.suggestedFocus.targetId || ""}&title=${encodeURIComponent(win.suggestedFocus.title)}&duration=${win.durationMinutes}`}
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-xs hover:bg-blue-500 active:scale-[0.98] transition-all shrink-0"
+                      >
+                        <Play className="h-2.5 w-2.5 fill-current" />
+                        Focus
+                      </Link>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

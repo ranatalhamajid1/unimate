@@ -22,7 +22,34 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Student Identity & Profile Fields
+  avatarUrl           String?
+  username            String?           @unique
+  bio                 String?
+  country             String?
+  city                String?
+  universityId        String?
+  campusId            String?
+  departmentId        String?
+  degreeProgram       String?
+  currentSemester     String?
+  graduationYear      Int?
+  skills              String[]          @default([])
+  interests           String[]          @default([])
+  languages           String[]          @default([])
+  socialLinks         Json?
+  onboardingCompleted Boolean           @default(false)
+  isPublicProfile     Boolean           @default(false)
+
+  // Milestone 14: Private Academic Email Verification Fields
+  verifiedAcademicEmail   String?
+  academicEmailVerifiedAt DateTime?
+  isAcademicEmailPublic   Boolean           @default(false)
+
   // Relations
+  university       University?       @relation(fields: [universityId], references: [id], onDelete: SetNull)
+  campus           Campus?           @relation(fields: [campusId], references: [id], onDelete: SetNull)
+  department       Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   courses          Course[]
   timetableEntries TimetableEntry[]
   assignments      Assignment[]
@@ -37,8 +64,24 @@ model User {
   subscription     Subscription?
   aiUsages         AIUsage[]
   devicePushTokens DevicePushToken[]
+  createdCommunities   Community[]       @relation("CommunityCreator")
+  communityMemberships CommunityMember[] @relation("CommunityMemberships")
+  createdAnnouncements CommunityAnnouncement[] @relation("AnnouncementCreator")
+  updatedAnnouncements CommunityAnnouncement[] @relation("AnnouncementUpdater")
+  createdEvents        CommunityEvent[]        @relation("EventCreator")
+  updatedEvents        CommunityEvent[]        @relation("EventUpdater")
+  eventAttendances     CommunityEventAttendee[] @relation("EventAttendee")
+  createdResources     CommunityResource[]     @relation("ResourceCreator")
+  submittedReports     CommunityReport[]       @relation("ReportSubmitter")
+  resolvedReports      CommunityReport[]       @relation("ReportResolver")
+  integrations            UserIntegration[]
+  externalRecordMappings  ExternalRecordMapping[]
+  oauthTransactions       OAuthTransaction[]
+  emailVerificationChallenges EmailVerificationChallenge[]
 
   @@index([email])
+  @@index([username])
+  @@index([universityId])
   @@map("users")
 }
 
@@ -252,16 +295,22 @@ model Notification {
 // ---------------------------------------------------------------------------
 
 model StudySession {
-  id          String   @id @default(cuid())
-  userId      String
-  courseId    String?
-  title       String
-  duration    Int // duration in minutes
-  sessionDate DateTime
-  source      String   @default("MANUAL") // MANUAL, STUDY_PLAN, AI_PLAN
-  completed   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String
+  courseId           String?
+  title              String
+  duration           Int // duration in minutes (actual focused minutes on completion)
+  sessionDate        DateTime
+  source             String    @default("MANUAL") // MANUAL, STUDY_PLAN, AI_PLAN, FOCUS_SESSION
+  completed          Boolean   @default(true)
+  status             String    @default("COMPLETED") // ACTIVE, PAUSED, COMPLETED, CANCELLED
+  targetType         String?   // ASSIGNMENT, EXAM, STUDY_PLAN_ITEM, COURSE_STUDY, GENERAL
+  targetId           String?
+  plannedDuration    Int?      // planned duration in minutes
+  pausedAt           DateTime?
+  totalPausedSeconds Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
@@ -269,6 +318,7 @@ model StudySession {
   @@index([userId])
   @@index([courseId])
   @@index([userId, sessionDate])
+  @@index([userId, status])
   @@map("study_sessions")
 }
 
@@ -312,6 +362,7 @@ model StudyPlan {
 
   @@index([userId])
   @@index([userId, startDate])
+  @@index([userId, status])
   @@map("study_plans")
 }
 
@@ -329,6 +380,11 @@ model StudyPlanItem {
   duration    Int // duration in minutes
   completed   Boolean  @default(false)
   order       Int      @default(0)
+
+  // M15.3 Typed Target Identity (Aligned with M15.2 StudySession)
+  targetType  String?  // ASSIGNMENT, EXAM, STUDY_PLAN_ITEM, COURSE_STUDY, GENERAL
+  targetId    String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -338,6 +394,7 @@ model StudyPlanItem {
   @@index([studyPlanId])
   @@index([courseId])
   @@index([scheduledAt])
+  @@index([targetType, targetId])
   @@map("study_plan_items")
 }
 
@@ -405,4 +462,503 @@ model DevicePushToken {
   @@index([userId])
   @@map("device_push_tokens")
 }
+
+// ---------------------------------------------------------------------------
+// Global University Directory Models
+// ---------------------------------------------------------------------------
+
+model University {
+  id              String       @id @default(cuid())
+  name            String
+  shortName       String?
+  country         String
+  countryCode     String?      // ISO 3166-1 alpha-2, e.g. "PK", "US", "GB"
+  city            String?
+  state           String?      // State / Province / Region
+  website         String?
+  domain          String?      // Official domain e.g. "stanford.edu", "nust.edu.pk"
+  logoUrl         String?
+  timezone        String       @default("UTC")
+  isVerified      Boolean      @default(false)
+  createdByUserId String?
+
+  campuses        Campus[]
+  departments     Department[]
+  students        User[]
+  communities     Community[]
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([name])
+  @@index([country])
+  @@index([countryCode])
+  @@index([domain])
+  @@map("universities")
+}
+
+model Campus {
+  id           String     @id @default(cuid())
+  universityId String
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  name         String
+  city         String?
+  address      String?
+  isMain       Boolean    @default(false)
+
+  students     User[]
+  communities  Community[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([universityId, name])
+  @@index([universityId])
+  @@map("campuses")
+}
+
+model Department {
+  id           String     @id @default(cuid())
+  universityId String
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  name         String
+  faculty      String?
+
+  students     User[]
+  communities  Community[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([universityId, name])
+  @@index([universityId])
+  @@map("departments")
+}
+
+// ---------------------------------------------------------------------------
+// Campus & Student Network Enums
+// ---------------------------------------------------------------------------
+
+enum CommunityType {
+  ACADEMIC
+  STUDY_GROUP
+  CLUB
+  SOCIETY
+  SPORTS
+  TECH
+  CAREER
+  CULTURAL
+  OTHER
+}
+
+enum CommunityScope {
+  UNIVERSITY
+  CAMPUS
+  DEPARTMENT
+}
+
+enum CommunityVisibility {
+  PUBLIC      // Discoverable by all students in Explore
+  CAMPUS_ONLY // Visible only to students in that specific campus
+  PRIVATE     // Discoverable only by active members / invited
+}
+
+enum CommunityModerationStatus {
+  APPROVED
+  PENDING_REVIEW
+  SUSPENDED
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  BANNED
+}
+
+// ---------------------------------------------------------------------------
+// Campus & Student Network Models
+// ---------------------------------------------------------------------------
+
+model Community {
+  id               String                    @id @default(cuid())
+  slug             String                    @unique // Human-readable, e.g. "nust-data-science"
+  name             String
+  description      String                    @default("")
+  avatarUrl        String?
+  bannerUrl        String?
+  type             CommunityType             @default(ACADEMIC)
+  scope            CommunityScope            @default(UNIVERSITY)
+  visibility       CommunityVisibility       @default(PUBLIC)
+
+  // Institutional Scoping (Strict foreign keys)
+  universityId     String
+  campusId         String?
+  departmentId     String?
+
+  // Verification & Moderation Foundation
+  isVerified       Boolean                   @default(false)
+  moderationStatus CommunityModerationStatus @default(APPROVED)
+  createdByUserId  String?                   // Nullable for creator account deletion survival
+
+  // Optional course affinity (for Study Groups)
+  courseCode       String?                   // e.g. "CS301", "MATH101"
+
+  // Limits
+  maxMembers       Int                       @default(500)
+  requiresApproval Boolean                   @default(false)
+
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  // Relations (onDelete: Restrict on University; onDelete: SetNull on creator User)
+  university       University                @relation(fields: [universityId], references: [id], onDelete: Restrict)
+  campus           Campus?                   @relation(fields: [campusId], references: [id], onDelete: SetNull)
+  department       Department?               @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  creator          User?                     @relation("CommunityCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  members          CommunityMember[]
+  announcements    CommunityAnnouncement[]
+  events           CommunityEvent[]
+  resources        CommunityResource[]
+  reports          CommunityReport[]
+
+  @@index([universityId])
+  @@index([campusId])
+  @@index([departmentId])
+  @@index([type])
+  @@index([scope])
+  @@index([visibility])
+  @@index([isVerified])
+  @@index([moderationStatus])
+  @@index([createdByUserId])
+  @@map("communities")
+}
+
+model CommunityMember {
+  id           String           @id @default(cuid())
+  communityId  String
+  userId       String
+  role         MemberRole       @default(MEMBER)
+  status       MembershipStatus @default(ACTIVE)
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Relations
+  community    Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user         User             @relation("CommunityMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([userId])
+  @@index([role])
+  @@index([status])
+  @@map("community_members")
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 10: Campus Network 2.0 Enums
+// ---------------------------------------------------------------------------
+
+enum EventStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum AttendeeStatus {
+  GOING
+  MAYBE
+  NOT_GOING
+}
+
+enum ResourceType {
+  LINK
+  NOTE
+}
+
+enum ReportTargetType {
+  COMMUNITY
+  MEMBER
+  EVENT
+  ANNOUNCEMENT
+  RESOURCE
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  IMPERSONATION
+  INAPPROPRIATE_CONTENT
+  FRAUD
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 10: Campus Network 2.0 Models
+// ---------------------------------------------------------------------------
+
+model CommunityAnnouncement {
+  id              String    @id @default(cuid())
+  communityId     String
+  community       Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  title           String    @db.VarChar(150)
+  content         String    @db.Text
+  isPinned        Boolean   @default(false)
+
+  createdByUserId String?
+  createdByUser   User?     @relation("AnnouncementCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  updatedByUserId String?
+  updatedByUser   User?     @relation("AnnouncementUpdater", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([communityId, isPinned, createdAt(sort: Desc)])
+  @@index([communityId, createdAt(sort: Desc)])
+  @@map("community_announcements")
+}
+
+model CommunityEvent {
+  id              String           @id @default(cuid())
+  communityId     String
+  community       Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  title           String           @db.VarChar(150)
+  description     String           @db.Text
+  location        String?          @db.VarChar(200)
+  isOnline        Boolean          @default(false)
+  meetingUrl      String?          @db.VarChar(500)
+
+  startAt         DateTime
+  endAt           DateTime
+  timezone        String           @default("Asia/Karachi") @db.VarChar(50)
+
+  capacity        Int?             // null = unlimited capacity
+  status          EventStatus      @default(SCHEDULED)
+
+  createdByUserId String?
+  createdByUser   User?            @relation("EventCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  updatedByUserId String?
+  updatedByUser   User?            @relation("EventUpdater", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  attendees       CommunityEventAttendee[]
+
+  @@index([communityId, startAt(sort: Asc)])
+  @@index([communityId, status, startAt(sort: Asc)])
+  @@map("community_events")
+}
+
+model CommunityEventAttendee {
+  id        String         @id @default(cuid())
+  eventId   String
+  event     CommunityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User           @relation("EventAttendee", fields: [userId], references: [id], onDelete: Cascade)
+
+  status    AttendeeStatus @default(GOING)
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([eventId, userId])
+  @@index([userId, status])
+  @@index([eventId, status])
+  @@map("community_event_attendees")
+}
+
+model CommunityResource {
+  id              String       @id @default(cuid())
+  communityId     String
+  community       Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  title           String       @db.VarChar(150)
+  description     String?      @db.VarChar(500)
+  type            ResourceType @default(LINK)
+  url             String       @db.VarChar(1000)
+
+  createdByUserId String?
+  createdByUser   User?        @relation("ResourceCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([communityId, type, createdAt(sort: Desc)])
+  @@map("community_resources")
+}
+
+model CommunityReport {
+  id               String           @id @default(cuid())
+  communityId      String           // Strictly non-null: all reports are community-scoped
+  community        Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  reporterUserId   String
+  reporterUser     User             @relation("ReportSubmitter", fields: [reporterUserId], references: [id], onDelete: Cascade)
+
+  targetType       ReportTargetType
+  targetId         String           @db.VarChar(100)
+
+  reason           ReportReason
+  description      String           @db.VarChar(1000)
+  status           ReportStatus     @default(PENDING)
+
+  resolutionNotes  String?          @db.VarChar(1000)
+  resolvedByUserId String?
+  resolvedByUser   User?            @relation("ReportResolver", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+  resolvedAt       DateTime?
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([communityId, status, createdAt(sort: Desc)])
+  @@index([reporterUserId, targetType, targetId, status])
+  @@index([communityId, targetType, targetId])
+  @@map("community_reports")
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 14: Student Integrations Platform Enums
+// ---------------------------------------------------------------------------
+
+enum IntegrationProvider {
+  GOOGLE_CALENDAR
+  CANVAS
+  MOODLE
+  BLACKBOARD
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  REVOKED
+  NEEDS_REAUTH
+}
+
+enum OAuthClientType {
+  WEB
+  MOBILE
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 14: Student Integrations Platform Models
+// ---------------------------------------------------------------------------
+
+model UserIntegration {
+  id                    String              @id @default(cuid())
+  userId                String
+  provider              IntegrationProvider
+  status                IntegrationStatus   @default(DISCONNECTED)
+
+  // Versioned Encrypted Credentials (e.g. "v1:<iv>:<tag>:<ciphertext>")
+  encryptedAccessToken  String?             @db.Text
+  encryptedRefreshToken String?             @db.Text
+  tokenExpiresAt        DateTime?
+  scopes                String[]            @default([])
+
+  // Account Metadata & Dedicated Provider Resources
+  externalAccountId     String?             @db.VarChar(200)
+  externalAccountEmail  String?             @db.VarChar(255)
+  instanceUrl           String?             @db.VarChar(500) // For self-hosted Canvas/Moodle/Blackboard
+  calendarId            String?             @db.VarChar(255) // Dedicated "UniMate Academic" Google Calendar ID
+
+  // Sync Diagnostics, Locks & State
+  syncCursor            String?             @db.Text         // Pure sync token / timestamp cursor
+  syncLockExpiresAt     DateTime?                            // Concurrency lock to prevent duplicate syncs
+  syncLockToken         String?             @db.VarChar(100) // Fencing token to prevent lease-expiry race
+  lastSyncAt            DateTime?
+  lastSyncStatus        String?             @default("SUCCESS") // "SUCCESS" | "FAILED"
+  lastError             String?             @db.VarChar(1000)
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mappings              ExternalRecordMapping[]
+
+  @@unique([userId, provider])
+  @@index([userId, status])
+  @@map("user_integrations")
+}
+
+model ExternalRecordMapping {
+  id              String              @id @default(cuid())
+  userId          String
+  integrationId   String
+  provider        IntegrationProvider
+  entityType      String              // "COURSE", "ASSIGNMENT", "EXAM", "TIMETABLE"
+  internalId      String              // UniMate internal ID (Course.id, Assignment.id, etc.)
+  externalId      String              // Provider ID (Google Event ID, Canvas Assignment ID)
+  syncHash        String?             // Deterministic SHA-256 of external payload to prevent redundant writes
+  lastSyncedAt    DateTime            @default(now())
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  integration     UserIntegration     @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, entityType, externalId]) // External -> Internal uniqueness
+  @@unique([userId, provider, entityType, internalId]) // Internal -> External uniqueness
+  @@index([userId, internalId])
+  @@index([integrationId])
+  @@map("external_record_mappings")
+}
+
+model OAuthTransaction {
+  id              String              @id @default(cuid())
+  userId          String
+  provider        IntegrationProvider
+  clientType      OAuthClientType     @default(WEB)
+  state           String              @unique // Cryptographically secure random 256-bit hex
+  codeVerifier    String?             @db.Text // Encrypted PKCE verifier (AES-256-GCM v1)
+  expiresAt       DateTime
+  consumedAt      DateTime?           // Set atomically on callback; if NOT NULL, replay fails
+
+  createdAt       DateTime            @default(now())
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([state, consumedAt])
+  @@index([userId, provider])
+  @@map("oauth_transactions")
+}
+
+model EmailVerificationChallenge {
+  id              String    @id @default(cuid())
+  userId          String
+  email           String    @db.VarChar(255)
+  otpHash         String    @db.VarChar(255) // SHA-256 hash of 6-digit OTP
+  expiresAt       DateTime
+  attempts        Int       @default(0)      // Max 3 attempts
+  consumedAt      DateTime?                  // Atomic single-use consumption
+  createdAt       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, email, consumedAt])
+  @@index([expiresAt])
+  @@map("email_verification_challenges")
+}
+
+
+
 

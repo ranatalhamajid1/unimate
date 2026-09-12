@@ -56,7 +56,7 @@ export async function getUserNotifications(
       skip: options?.offset ?? 0,
     });
 
-    return notifications;
+    return notifications.filter((n) => n.type !== "DISMISSED");
   } catch (error) {
     console.error("Database error in getUserNotifications:", error);
     return [];
@@ -130,16 +130,23 @@ export async function markAllNotificationsAsRead(
 }
 
 /**
- * Delete a notification permanently.
+ * Delete a notification by dismissing it.
  * Enforces ownership: notification must belong to userId.
+ * Preserves deterministic relatedId tombstone so identical background events
+ * do not immediately recreate the same notification.
  */
 export async function deleteNotification(
   userId: string,
   notificationId: string
 ): Promise<boolean> {
   try {
-    const result = await prisma.notification.deleteMany({
+    const result = await prisma.notification.updateMany({
       where: { id: notificationId, userId },
+      data: {
+        type: "DISMISSED",
+        read: true,
+        readAt: new Date(),
+      },
     });
 
     return result.count > 0;
@@ -236,12 +243,25 @@ export async function generateAcademicNotifications(
         }),
       ]);
 
-    // Build deduplication index: "TYPE::RELATED_ID"
+    // Build deduplication index: "TYPE::RELATED_ID" and dismissed tombstone index
     const existingSet = new Set(
       existingNotifications
         .filter((n) => n.relatedId)
         .map((n) => `${n.type}::${n.relatedId}`)
     );
+
+    const dismissedRelatedIds = new Set(
+      existingNotifications
+        .filter((n) => n.type === "DISMISSED" && n.relatedId)
+        .map((n) => n.relatedId)
+    );
+
+    const shouldCreate = (type: string, relatedId: string) => {
+      const key = `${type}::${relatedId}`;
+      if (existingSet.has(key)) return false;
+      if (dismissedRelatedIds.has(relatedId)) return false;
+      return true;
+    };
 
     const toCreate: Array<{
       userId: string;
@@ -265,7 +285,7 @@ export async function generateAcademicNotifications(
         // OVERDUE
         const relatedId = `${asgn.id}:overdue`;
         const key = `${NOTIFICATION_TYPES.ASSIGNMENT_OVERDUE}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.ASSIGNMENT_OVERDUE, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.ASSIGNMENT_OVERDUE,
@@ -283,7 +303,7 @@ export async function generateAcademicNotifications(
         if (diffHours <= 48) {
           const relatedId = `${asgn.id}:duesoon`;
           const key = `${NOTIFICATION_TYPES.ASSIGNMENT_DUE_SOON}::${relatedId}`;
-          if (!existingSet.has(key)) {
+          if (shouldCreate(NOTIFICATION_TYPES.ASSIGNMENT_DUE_SOON, relatedId)) {
             const timeLabel =
               diffHours <= 24 ? "due in less than 24 hours" : "due tomorrow";
             toCreate.push({
@@ -326,7 +346,7 @@ export async function generateAcademicNotifications(
       if (isToday) {
         const relatedId = `${exam.id}:today`;
         const key = `${NOTIFICATION_TYPES.EXAM_TODAY}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.EXAM_TODAY, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.EXAM_TODAY,
@@ -340,7 +360,7 @@ export async function generateAcademicNotifications(
         // Exam tomorrow (1 day)
         const relatedId = `${exam.id}:1d`;
         const key = `${NOTIFICATION_TYPES.EXAM_DUE_SOON}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.EXAM_DUE_SOON, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.EXAM_DUE_SOON,
@@ -354,7 +374,7 @@ export async function generateAcademicNotifications(
         // Exam in 3 days
         const relatedId = `${exam.id}:3d`;
         const key = `${NOTIFICATION_TYPES.EXAM_DUE_SOON}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.EXAM_DUE_SOON, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.EXAM_DUE_SOON,
@@ -368,7 +388,7 @@ export async function generateAcademicNotifications(
         // Exam in 7 days
         const relatedId = `${exam.id}:7d`;
         const key = `${NOTIFICATION_TYPES.EXAM_DUE_SOON}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.EXAM_DUE_SOON, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.EXAM_DUE_SOON,
@@ -384,7 +404,7 @@ export async function generateAcademicNotifications(
       if (exam.preparationProgress < 50 && daysRemaining > 0 && daysRemaining <= 5) {
         const relatedId = `${exam.id}:prep`;
         const key = `${NOTIFICATION_TYPES.EXAM_PREPARATION}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.EXAM_PREPARATION, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.EXAM_PREPARATION,
@@ -415,7 +435,7 @@ export async function generateAcademicNotifications(
         // Critical attendance (< 65%)
         const relatedId = `${course.id}:critical`;
         const key = `${NOTIFICATION_TYPES.ATTENDANCE_WARNING}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.ATTENDANCE_WARNING, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.ATTENDANCE_WARNING,
@@ -429,7 +449,7 @@ export async function generateAcademicNotifications(
         // Warning attendance (< 75%)
         const relatedId = `${course.id}:warning`;
         const key = `${NOTIFICATION_TYPES.ATTENDANCE_WARNING}::${relatedId}`;
-        if (!existingSet.has(key)) {
+        if (shouldCreate(NOTIFICATION_TYPES.ATTENDANCE_WARNING, relatedId)) {
           toCreate.push({
             userId,
             type: NOTIFICATION_TYPES.ATTENDANCE_WARNING,
@@ -459,7 +479,7 @@ export async function generateAcademicNotifications(
     for (const item of activePlanItems) {
       const relatedId = `${item.id}:${todayStr}`;
       const key = `${NOTIFICATION_TYPES.STUDY_PLAN_REMINDER}::${relatedId}`;
-      if (!existingSet.has(key)) {
+      if (shouldCreate(NOTIFICATION_TYPES.STUDY_PLAN_REMINDER, relatedId)) {
         toCreate.push({
           userId,
           type: NOTIFICATION_TYPES.STUDY_PLAN_REMINDER,

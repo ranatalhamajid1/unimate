@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   AlertOctagon,
@@ -6,34 +9,37 @@ import {
   ArrowRight,
   CheckCircle2,
   Calendar,
-  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import {
-  StudentPriority,
-  StudentIntelligenceReport,
-  PrioritySeverity,
-} from "@/app/lib/student-intelligence";
+import type { PrioritizedTask, PriorityUrgencyTier } from "@/app/lib/intelligence/priority-engine";
 
-type Props = {
-  report: StudentIntelligenceReport;
+type DailyPrioritiesProps = {
+  priorities: PrioritizedTask[];
 };
 
-export function DailyPriorities({ report }: Props) {
-  const { priorities, isCaughtUp } = report;
+export function DailyPriorities({ priorities }: DailyPrioritiesProps) {
+  const [showAll, setShowAll] = useState(false);
 
-  function getSeverityBadge(severity: PrioritySeverity) {
-    switch (severity) {
-      case "CRITICAL":
+  function getTierBadge(tier: PriorityUrgencyTier) {
+    switch (tier) {
+      case "OVERDUE":
         return {
           icon: <AlertOctagon className="h-4 w-4 text-rose-600 dark:text-rose-400" />,
           badge: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20",
           cardBorder: "border-l-rose-500",
         };
+      case "CRITICAL":
+        return {
+          icon: <AlertOctagon className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
+          badge: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+          cardBorder: "border-l-amber-500",
+        };
       case "HIGH":
         return {
           icon: <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
           badge: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
-          cardBorder: "border-l-amber-500",
+          cardBorder: "border-l-amber-400",
         };
       case "MEDIUM":
         return {
@@ -41,7 +47,7 @@ export function DailyPriorities({ report }: Props) {
           badge: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
           cardBorder: "border-l-blue-500",
         };
-      case "LOW":
+      case "NORMAL":
       default:
         return {
           icon: <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />,
@@ -51,23 +57,48 @@ export function DailyPriorities({ report }: Props) {
     }
   }
 
+  const criticalCount = priorities.filter(
+    (p) => p.urgencyTier === "OVERDUE" || p.urgencyTier === "CRITICAL"
+  ).length;
+
+  const displayedPriorities = showAll ? priorities : priorities.slice(0, 4);
+
   return (
-    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-5 shadow-xs">
+    <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface)] p-5 shadow-xs transition-standard">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
             <AlertTriangle className="h-4 w-4" />
           </span>
           <h2 className="text-sm font-semibold text-[var(--color-text)]">
-            Today&apos;s Priorities
+            Today&apos;s Focus & Priorities
           </h2>
         </div>
 
-        {report.criticalCount > 0 && (
-          <span className="rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 text-[10.5px] font-bold text-rose-600 dark:text-rose-400">
-            {report.criticalCount} Critical
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {criticalCount > 0 && (
+            <span className="rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 text-[10.5px] font-bold text-rose-600 dark:text-rose-400">
+              {criticalCount} Urgent
+            </span>
+          )}
+
+          {priorities.length > 4 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {showAll ? (
+                <>
+                  Show Less <ChevronUp className="w-3.5 h-3.5" />
+                </>
+              ) : (
+                <>
+                  View All ({priorities.length}) <ChevronDown className="w-3.5 h-3.5" />
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {priorities.length === 0 ? (
@@ -85,13 +116,13 @@ export function DailyPriorities({ report }: Props) {
         </div>
       ) : (
         <div className="space-y-2.5">
-          {priorities.slice(0, 5).map((item) => {
-            const style = getSeverityBadge(item.severity);
+          {displayedPriorities.map((item) => {
+            const style = getTierBadge(item.urgencyTier);
 
             return (
               <div
                 key={item.id}
-                className={`rounded-xl border border-[var(--color-border-subtle)] border-l-4 ${style.cardBorder} bg-[var(--color-surface-2)] p-3.5 transition-all`}
+                className={`rounded-xl border border-[var(--color-border-subtle)] border-l-4 ${style.cardBorder} bg-[var(--color-surface-2)] p-3.5 transition-micro hover:border-[var(--color-border)]`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2.5 min-w-0">
@@ -99,27 +130,37 @@ export function DailyPriorities({ report }: Props) {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-xs font-semibold text-[var(--color-text)]">
-                          {item.title}
+                          {item.action}
                         </h3>
+                        {(item.courseCode || item.courseName) && (
+                          <span className="text-[11px] font-medium text-[var(--color-text-3)]">
+                            · {item.courseCode || item.courseName}
+                          </span>
+                        )}
                         <span
                           className={`rounded-md border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider ${style.badge}`}
                         >
-                          {item.severity}
+                          {item.urgencyTier}
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-[var(--color-text-2)] leading-relaxed">
-                        {item.description}
+                        {item.reason}
                       </p>
                     </div>
                   </div>
 
-                  <Link
-                    href={item.actionUrl}
-                    className="shrink-0 rounded-lg p-1.5 text-[var(--color-text-3)] hover:bg-[var(--color-surface)] hover:text-blue-600 transition-colors"
-                    aria-label={`Action for ${item.title}`}
-                  >
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] font-medium text-[var(--color-text-3)] whitespace-nowrap">
+                      {item.deadlineLabel}
+                    </span>
+                    <Link
+                      href="/dashboard/assignments"
+                      className="rounded-lg p-1.5 text-[var(--color-text-3)] hover:bg-[var(--color-surface)] hover:text-blue-600 transition-colors"
+                      aria-label={`Action for ${item.action}`}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             );

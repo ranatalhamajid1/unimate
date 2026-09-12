@@ -18,6 +18,8 @@ export const NOTIFICATION_TYPES = {
   GOAL_PROGRESS: "GOAL_PROGRESS",
   GOAL_AT_RISK: "GOAL_AT_RISK",
   SYSTEM: "SYSTEM",
+  INTEGRATION_SYNC_ERROR: "INTEGRATION_SYNC_ERROR",
+  INTEGRATION_REAUTH_REQUIRED: "INTEGRATION_REAUTH_REQUIRED",
 } as const;
 
 export type NotificationType =
@@ -159,7 +161,34 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
     badgeClass: "bg-slate-100 text-slate-700 border-slate-200/60",
     iconBgClass: "bg-slate-100 text-slate-600 border-slate-200",
   },
+  INTEGRATION_SYNC_ERROR: {
+    category: "SYSTEM",
+    actionLabel: "Check integrations",
+    actionUrl: "/dashboard/integrations",
+    badgeLabel: "Sync error",
+    badgeClass: "bg-rose-50 text-rose-700 border-rose-200/60 font-semibold",
+    iconBgClass: "bg-rose-50 text-rose-600 border-rose-100",
+  },
+  INTEGRATION_REAUTH_REQUIRED: {
+    category: "SYSTEM",
+    actionLabel: "Reconnect",
+    actionUrl: "/dashboard/integrations",
+    badgeLabel: "Reauth required",
+    badgeClass: "bg-amber-50 text-amber-700 border-amber-200/60 font-semibold",
+    iconBgClass: "bg-amber-50 text-amber-600 border-amber-100",
+  },
 };
+
+/**
+ * Deterministic deduplication key generator for integration notifications.
+ * Prevents alert flooding when repetitive sync attempts fail.
+ */
+export function getIntegrationNotificationKey(
+  provider: string,
+  failureType: "sync_error" | "reauth_required"
+): string {
+  return `integration:${provider.toLowerCase()}:${failureType}`;
+}
 
 export function getTypeConfig(type: string): NotificationTypeConfig {
   const valid = type in NOTIFICATION_TYPE_CONFIG;

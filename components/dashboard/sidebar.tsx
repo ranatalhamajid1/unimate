@@ -30,6 +30,9 @@ import {
   Layers,
   Target,
   CreditCard,
+  Users,
+  Share2,
+  TrendingUp,
 } from "lucide-react";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -65,10 +68,17 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: "NETWORK",
+    items: [
+      { id: "communities", label: "Campus Network", href: "/dashboard/communities", icon: Users, soon: false },
+    ],
+  },
+  {
     title: "PRODUCTIVITY",
     items: [
       { id: "study", label: "Study Tracking", href: "/dashboard/study", icon: Clock, soon: false },
       { id: "study-plan", label: "Study Planner", href: "/dashboard/study-plan", icon: Layers, soon: false },
+      { id: "weekly-review", label: "Weekly Review", href: "/dashboard/review", icon: TrendingUp, soon: false },
       { id: "goals", label: "Goals", href: "/dashboard/goals", icon: Target, soon: false },
     ],
   },
@@ -88,6 +98,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: "ACCOUNT",
     items: [
       { id: "billing", label: "Billing & Plans", href: "/dashboard/billing", icon: CreditCard, soon: false },
+      { id: "integrations", label: "Integrations", href: "/dashboard/integrations", icon: Share2, soon: false },
     ],
   },
 ];
@@ -121,10 +132,10 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--color-border-subtle)] px-5">
+      {/* Logo & Brand Header */}
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--color-glass-border)] px-5">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 shadow-[0_2px_10px_rgba(99,102,241,0.35)]">
             <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
           </span>
           <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
@@ -136,17 +147,17 @@ function SidebarContent({
           href="/dashboard/notifications"
           onClick={onClose}
           aria-label="Notifications"
-          className="rounded-lg p-1.5 text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-colors"
+          className="rounded-lg p-1.5 text-[var(--color-text-3)] hover:bg-[var(--color-surface-2)]/70 hover:text-[var(--color-text)] transition-micro"
         >
           <Bell className="h-4 w-4" />
         </Link>
       </div>
 
-      {/* Nav items */}
+      {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
         {NAV_GROUPS.map((group) => (
           <div key={group.title}>
-            <p className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-3)]">
+            <p className="px-2.5 pb-1.5 text-[9.5px] font-bold uppercase tracking-widest text-[var(--color-text-3)]/90">
               {group.title}
             </p>
             <ul className="space-y-0.5">
@@ -158,17 +169,17 @@ function SidebarContent({
                       href={soon ? "#" : href}
                       onClick={onClose}
                       aria-disabled={soon}
-                      className={`group flex items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-medium transition-all duration-150 ${
+                      className={`group flex items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-medium transition-micro border ${
                         isActive
-                          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-semibold"
-                          : "text-[var(--color-text-2)] hover:bg-slate-100/80 dark:hover:bg-slate-700/40 hover:text-[var(--color-text)]"
+                          ? "bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-900 dark:text-indigo-200 font-semibold border-indigo-500/20 dark:border-indigo-500/30 shadow-[0_1px_4px_rgba(99,102,241,0.08)]"
+                          : "border-transparent text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]/80 hover:text-[var(--color-text)]"
                       } ${soon ? "opacity-60 cursor-default" : ""}`}
                     >
                       <span className="flex items-center gap-2.5">
                         <Icon
-                          className={`h-4 w-4 shrink-0 ${
+                          className={`h-4 w-4 shrink-0 transition-micro ${
                             isActive
-                              ? "text-blue-600 dark:text-blue-400"
+                              ? "text-indigo-600 dark:text-indigo-400"
                               : "text-[var(--color-text-3)] group-hover:text-[var(--color-text-2)]"
                           }`}
                         />
@@ -180,7 +191,9 @@ function SidebarContent({
                         </span>
                       )}
                       {isActive && !soon && (
-                        <ChevronRight className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]" />
+                        </span>
                       )}
                     </Link>
                   </li>
@@ -191,11 +204,11 @@ function SidebarContent({
         ))}
       </nav>
 
-      {/* Bottom — user + actions */}
-      <div className="shrink-0 border-t border-[var(--color-border-subtle)] px-3 py-3 space-y-1">
+      {/* Bottom section — user + controls */}
+      <div className="shrink-0 border-t border-[var(--color-glass-border)] px-3 py-3 space-y-1 bg-[var(--color-glass-bg)]/40">
         {/* Theme Toggle */}
         <div className="px-1 py-1.5">
-          <p className="mb-1.5 px-2 text-[10.5px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+          <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
             Appearance
           </p>
           <ThemeToggle variant="segmented" className="w-full" />
@@ -204,7 +217,7 @@ function SidebarContent({
         {/* Settings */}
         <Link
           href="/dashboard/settings"
-          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-[var(--color-text-2)] transition-all duration-150 hover:bg-slate-100/80 dark:hover:bg-slate-700/40 hover:text-[var(--color-text)]"
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-[var(--color-text-2)] transition-micro hover:bg-[var(--color-surface-2)]/80 hover:text-[var(--color-text)]"
           onClick={onClose}
         >
           <Settings className="h-4 w-4 shrink-0 text-[var(--color-text-3)]" />
@@ -216,23 +229,23 @@ function SidebarContent({
           <button
             id="sidebar-logout"
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-[var(--color-text-2)] transition-all duration-150 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-[var(--color-text-2)] transition-micro hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Log out
           </button>
         </form>
 
-        {/* User info */}
-        <div className="mt-1 flex items-center gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-2)] px-3 py-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[13px] font-semibold text-white">
+        {/* User profile capsule */}
+        <div className="mt-1.5 flex items-center gap-2.5 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-surface-2)]/60 backdrop-blur-sm px-3 py-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-[12px] font-semibold text-white shadow-xs">
             {initial}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-[var(--color-text)]">
+            <p className="truncate text-[12.5px] font-semibold text-[var(--color-text)]">
               {name}
             </p>
-            <p className="truncate text-[11px] text-[var(--color-text-3)]">{email}</p>
+            <p className="truncate text-[10.5px] text-[var(--color-text-3)]">{email}</p>
           </div>
         </div>
       </div>
@@ -247,8 +260,8 @@ function SidebarContent({
 export function Sidebar({ name, email, isOpen, onClose }: SidebarProps) {
   return (
     <>
-      {/* Desktop sidebar — always visible on lg+ */}
-      <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:w-[240px] lg:flex-col lg:border-r lg:border-[var(--color-border-subtle)] lg:bg-[var(--color-surface)]">
+      {/* Desktop sidebar — floating glass navigation rail */}
+      <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:w-[248px] lg:flex-col lg:border-r lg:border-[var(--color-glass-border)] lg:bg-[var(--color-glass-bg)] lg:backdrop-blur-2xl [box-shadow:4px_0_24px_rgba(15,23,42,0.04),var(--specular-top)] dark:[box-shadow:4px_0_32px_rgba(0,0,0,0.45),var(--specular-top)]">
         <SidebarContent name={name} email={email} />
       </aside>
 
@@ -257,12 +270,12 @@ export function Sidebar({ name, email, isOpen, onClose }: SidebarProps) {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40 bg-slate-900/30 dark:bg-black/50 backdrop-blur-[2px] lg:hidden"
+            className="fixed inset-0 z-40 bg-slate-900/30 dark:bg-black/60 backdrop-blur-xs lg:hidden"
             onClick={onClose}
             aria-hidden
           />
           {/* Drawer panel */}
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-[var(--color-border-subtle)] bg-[var(--color-surface)] shadow-[4px_0_32px_rgba(15,23,42,0.12)] dark:shadow-[4px_0_32px_rgba(0,0,0,0.5)] lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-[268px] flex-col border-r border-[var(--color-glass-border)] bg-[var(--color-surface)] dark:bg-[var(--color-surface)] shadow-[4px_0_40px_rgba(15,23,42,0.18)] dark:shadow-[4px_0_40px_rgba(0,0,0,0.6)] lg:hidden">
             {/* Close button */}
             <button
               onClick={onClose}

@@ -9,6 +9,23 @@ export type StoredUser = {
   passwordHash: string;
   createdAt: Date;
   updatedAt: Date;
+  avatarUrl?: string | null;
+  username?: string | null;
+  bio?: string | null;
+  country?: string | null;
+  city?: string | null;
+  universityId?: string | null;
+  campusId?: string | null;
+  departmentId?: string | null;
+  degreeProgram?: string | null;
+  currentSemester?: string | null;
+  graduationYear?: number | null;
+  skills?: string[];
+  interests?: string[];
+  languages?: string[];
+  socialLinks?: any;
+  onboardingCompleted?: boolean;
+  isPublicProfile?: boolean;
 };
 
 // ---------------------------------------------------------------------------

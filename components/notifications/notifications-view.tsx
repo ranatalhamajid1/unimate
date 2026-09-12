@@ -143,7 +143,7 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.ALL)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.ALL
-              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              ? "bg-[var(--color-accent)] text-white"
               : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
@@ -164,7 +164,7 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.UNREAD)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.UNREAD
-              ? "bg-blue-600 text-white"
+              ? "bg-[var(--color-accent)] text-white"
               : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
@@ -173,7 +173,7 @@ export function NotificationsView({
             <span
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.UNREAD
-                  ? "bg-blue-700 text-white"
+                  ? "bg-white/20 text-white"
                   : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400"
               }`}
             >
@@ -187,7 +187,7 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.ASSIGNMENTS)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.ASSIGNMENTS
-              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              ? "bg-[var(--color-accent)] text-white"
               : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
@@ -197,8 +197,8 @@ export function NotificationsView({
             <span
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.ASSIGNMENTS
-                  ? "bg-slate-800 dark:bg-blue-700 text-slate-200 dark:text-white"
-                  : "bg-slate-100 dark:bg-slate-800 text-[var(--color-text-2)]"
+                  ? "bg-white/20 text-white"
+                  : "bg-[var(--color-surface-2)] text-[var(--color-text-3)]"
               }`}
             >
               {assignmentsFilterCount}
@@ -211,7 +211,7 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.EXAMS)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.EXAMS
-              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              ? "bg-[var(--color-accent)] text-white"
               : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
@@ -221,8 +221,8 @@ export function NotificationsView({
             <span
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.EXAMS
-                  ? "bg-slate-800 dark:bg-blue-700 text-slate-200 dark:text-white"
-                  : "bg-slate-100 dark:bg-slate-800 text-[var(--color-text-2)]"
+                  ? "bg-white/20 text-white"
+                  : "bg-[var(--color-surface-2)] text-[var(--color-text-3)]"
               }`}
             >
               {examsFilterCount}
@@ -235,7 +235,7 @@ export function NotificationsView({
           onClick={() => setCurrentFilter(NOTIFICATION_FILTERS.ATTENDANCE)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors shrink-0 ${
             currentFilter === NOTIFICATION_FILTERS.ATTENDANCE
-              ? "bg-slate-900 dark:bg-blue-600 text-white"
+              ? "bg-[var(--color-accent)] text-white"
               : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
           }`}
         >
@@ -245,8 +245,8 @@ export function NotificationsView({
             <span
               className={`rounded-full px-1.5 py-0.2 text-[11px] font-semibold ${
                 currentFilter === NOTIFICATION_FILTERS.ATTENDANCE
-                  ? "bg-slate-800 dark:bg-blue-700 text-slate-200 dark:text-white"
-                  : "bg-slate-100 dark:bg-slate-800 text-[var(--color-text-2)]"
+                  ? "bg-white/20 text-white"
+                  : "bg-[var(--color-surface-2)] text-[var(--color-text-3)]"
               }`}
             >
               {attendanceFilterCount}

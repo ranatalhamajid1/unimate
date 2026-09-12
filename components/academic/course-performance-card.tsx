@@ -34,7 +34,7 @@ export function CoursePerformanceCard({
   } = course;
 
   return (
-    <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md">
+    <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 [box-shadow:0_1px_3px_rgba(15,23,42,0.04)] card-hover">
       {/* Top course color bar */}
       <div
         className="absolute top-0 left-0 right-0 h-1"
@@ -141,7 +141,7 @@ export function CoursePerformanceCard({
             <div className="mt-2">
               <div className="flex items-baseline justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-[16px] font-bold text-[var(--color-text)]">
+                  <span className="kpi-numeric text-[16px] font-bold text-[var(--color-text)]">
                     {attendancePercentage !== null ? `${attendancePercentage}%` : "0%"}
                   </span>
                   <span
@@ -156,7 +156,7 @@ export function CoursePerformanceCard({
               </div>
 
               {/* Progress bar */}
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-border)]">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${attendanceStatus.barClass}`}
                   style={{

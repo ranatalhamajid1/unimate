@@ -3,6 +3,7 @@ import { authenticateMobile, unauthorizedResponse } from "@/app/lib/mobile-auth"
 import {
   getUserActiveStudyPlan,
   createStudyPlanWithItems,
+  acceptAdaptiveStudyPlan,
 } from "@/app/lib/study-plans";
 import { validateStudyPlanInput } from "@/app/lib/study-plan-definitions";
 
@@ -89,22 +90,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const createdPlan = await createStudyPlanWithItems(
-      session.userId,
-      {
-        title: title.trim(),
-        startDate: start,
-        endDate: end,
-      },
-      items.map((it, idx) => ({
+    // Run full server-side revalidation pipeline (ownership, target state, deadlines, collisions)
+    const createdPlan = await acceptAdaptiveStudyPlan(session.userId, {
+      title: title.trim(),
+      startDate: start,
+      endDate: end,
+      items: items.map((it) => ({
         courseId: it.courseId || null,
         title: it.title.trim(),
         description: it.description?.trim() || "",
         scheduledAt: new Date(it.scheduledAt),
-        duration: Math.max(1, Math.min(1440, Math.round(Number(it.duration)))),
-        order: it.order ?? idx,
-      }))
-    );
+        duration: Math.round(Number(it.duration)),
+        targetType: it.targetType || null,
+        targetId: it.targetId || null,
+      })),
+    });
 
     return NextResponse.json(
       {
@@ -114,6 +114,15 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
+    if (error?.code === "P2002") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "An active study plan already exists or was accepted concurrently.",
+        },
+        { status: 409 }
+      );
+    }
     console.error("Error creating mobile study plan:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to create study plan" },

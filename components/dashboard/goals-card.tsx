@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Target, ArrowRight } from "lucide-react";
 import { GoalProgressItem } from "@/app/lib/goal-definitions";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Props = {
   goals: GoalProgressItem[];
@@ -26,36 +27,47 @@ export function GoalsCard({ goals }: Props) {
         </Link>
       </div>
 
-      <div className="space-y-3">
-        {goals.slice(0, 3).map((goal) => {
-          const pctCapped = Math.min(100, Math.max(0, goal.percentage));
-          return (
-            <div key={goal.type} className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-[var(--color-text)]">
-                  {goal.label}
-                </span>
-                <span className="text-[11px] font-bold text-[var(--color-text-2)]">
-                  {goal.formattedCurrent} / {goal.formattedTarget}
-                </span>
-              </div>
+      {goals.length === 0 ? (
+        <EmptyState
+          icon={Target}
+          title="No goals active"
+          description="Set a target semester GPA or weekly study goal to track your momentum."
+          actionLabel="Set a Goal"
+          actionHref="/dashboard/goals"
+          compact
+        />
+      ) : (
+        <div className="space-y-3">
+          {goals.slice(0, 3).map((goal) => {
+            const pctCapped = Math.min(100, Math.max(0, goal.percentage));
+            return (
+              <div key={goal.type} className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[var(--color-text)]">
+                    {goal.label}
+                  </span>
+                  <span className="text-[11px] font-bold text-[var(--color-text-2)]">
+                    {goal.formattedCurrent} / {goal.formattedTarget}
+                  </span>
+                </div>
 
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface-2)]">
-                <div
-                  style={{ width: `${pctCapped}%` }}
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    goal.percentage >= 100
-                      ? "bg-emerald-500"
-                      : goal.isAtRisk
-                      ? "bg-amber-500"
-                      : "bg-blue-600 dark:bg-blue-500"
-                  }`}
-                />
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface-2)]">
+                  <div
+                    style={{ width: `${pctCapped}%` }}
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      goal.percentage >= 100
+                        ? "bg-emerald-500"
+                        : goal.isAtRisk
+                        ? "bg-amber-500"
+                        : "bg-blue-600 dark:bg-blue-500"
+                    }`}
+                  />
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <Link
         href="/dashboard/goals"

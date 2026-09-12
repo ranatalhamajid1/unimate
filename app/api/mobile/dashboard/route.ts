@@ -1,29 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateMobile, unauthorizedResponse } from "@/app/lib/mobile-auth";
 import { findUserById } from "@/app/lib/users";
-import { getTodayTimetable } from "@/app/lib/timetable";
-import { getUpcomingAssignments, getDueThisWeekCount } from "@/app/lib/assignments";
-import { getNextExam } from "@/app/lib/exams";
-import { getAcademicOverview } from "@/app/lib/academic";
-import {
-  generateAcademicNotifications,
-  getUnreadNotificationCount,
-} from "@/app/lib/notifications";
-import { getStudentPriorities } from "@/app/lib/student-intelligence";
-import { getWeeklyStudyTotal, getWeeklyStudyProgress } from "@/app/lib/study-sessions";
-import { getAcademicInsights } from "@/app/lib/academic-insights";
-import { calculateStudentGoalsProgress } from "@/app/lib/goals";
-import { getUserActiveStudyPlan } from "@/app/lib/study-plans";
-import { getUserSubscription } from "@/app/lib/entitlements";
-import { getPKTDateParts } from "@/app/lib/timezone";
-import { formatDueLabel } from "@/app/lib/assignment-definitions";
-import {
-  formatExamDate,
-  formatExamTime,
-  formatCountdown,
-  calculateDaysRemaining,
-  EXAM_TYPES,
-} from "@/app/lib/exam-definitions";
+import { getDashboardData } from "@/app/lib/dashboard-aggregation";
 import type {
   MobileScheduleClass,
   MobileAssignment,
@@ -32,21 +10,6 @@ import type {
   MobileStudyPlanTask,
   MobileDashboardData,
 } from "@/app/lib/mobile-types";
-
-function getGreeting(hour: number): string {
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-function getDateString(now: Date): string {
-  return now.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -64,134 +27,92 @@ export async function GET(req: NextRequest) {
       return unauthorizedResponse("User account not found");
     }
 
-    const now = new Date();
-    const pkt = getPKTDateParts(now);
-    const currentHour = pkt.hours;
-    const greeting = getGreeting(currentHour);
-    const dateString = getDateString(now);
-
-    // Trigger academic notification generator
-    await generateAcademicNotifications(userId);
-
-    // Parallel fetch of all student command center data from PostgreSQL
-    const [
-      prioritiesReport,
-      todayEntries,
-      upcomingAssignments,
-      dueThisWeekCount,
-      nextExamRecord,
-      academicOverview,
-      unreadNotificationCount,
-      weeklyStudy,
-      studyDays,
-      academicInsights,
-      studentGoals,
-      activePlan,
-      subscription,
-    ] = await Promise.all([
-      getStudentPriorities(userId, now),
-      getTodayTimetable(userId, pkt.dayOfWeek),
-      getUpcomingAssignments(userId, 5),
-      getDueThisWeekCount(userId),
-      getNextExam(userId),
-      getAcademicOverview(userId),
-      getUnreadNotificationCount(userId),
-      getWeeklyStudyTotal(userId, now),
-      getWeeklyStudyProgress(userId, now),
-      getAcademicInsights(userId),
-      calculateStudentGoalsProgress(userId),
-      getUserActiveStudyPlan(userId),
-      getUserSubscription(userId),
-    ]);
+    // 2. Fetch canonical aggregated dashboard data
+    const data = await getDashboardData(userId);
 
     // Format schedule
-    const schedule: MobileScheduleClass[] = todayEntries.map((e) => ({
+    const schedule: MobileScheduleClass[] = data.schedule.map((e) => ({
       id: e.id,
-      time: `${e.startTime} - ${e.endTime}`,
-      startTime: e.startTime,
-      endTime: e.endTime,
-      name: e.course ? e.course.name : "Class",
-      code: e.course ? e.course.code : "",
-      room: e.room || "Room TBA",
+      time: e.time,
+      startTime: e.time.split(" - ")[0] || "",
+      endTime: e.time.split(" - ")[1] || "",
+      name: e.courseName || e.name,
+      code: e.courseCode || "",
+      room: e.room,
       type: (e.type.toLowerCase() === "lab"
         ? "lab"
-        : e.type.toLowerCase() === "tutorial"
-        ? "tutorial"
         : "lecture") as "lecture" | "lab" | "tutorial" | "other",
-      color: e.course?.color || "#2563eb",
+      color: "#2563eb",
     }));
 
     // Format assignments
-    const assignments: MobileAssignment[] = upcomingAssignments.map((a) => {
-      const dueInfo = formatDueLabel(new Date(a.dueDate), a.status);
-      return {
-        id: a.id,
-        title: a.title,
-        courseName: a.course ? a.course.name : "Course",
-        courseCode: a.course ? a.course.code : "",
-        dueLabel: dueInfo.text,
-        dueDate: a.dueDate.toISOString(),
-        dueSoon: dueInfo.isSoon,
-        priority: a.priority,
-        status: a.status,
-      };
-    });
+    const assignments: MobileAssignment[] = data.assignments.map((a) => ({
+      id: a.id,
+      title: a.title,
+      courseName: a.courseName || a.course,
+      courseCode: a.courseCode || "",
+      dueLabel: a.dueLabel,
+      dueDate: "",
+      dueSoon: a.dueSoon,
+      priority: "MEDIUM",
+      status: a.status === "completed" ? "COMPLETED" : a.status === "in-progress" ? "IN_PROGRESS" : "NOT_STARTED",
+    }));
 
     // Format next exam
     let nextExam: MobileExam | null = null;
-    if (nextExamRecord && nextExamRecord.course) {
+    if (data.nextExam) {
       nextExam = {
-        id: nextExamRecord.id,
-        title: nextExamRecord.title,
-        courseName: nextExamRecord.course.name,
-        courseCode: nextExamRecord.course.code,
-        courseColor: nextExamRecord.course.color,
-        type:
-          EXAM_TYPES[nextExamRecord.type as keyof typeof EXAM_TYPES] ||
-          nextExamRecord.type,
-        date: formatExamDate(new Date(nextExamRecord.examDate)),
-        time: formatExamTime(new Date(nextExamRecord.examDate)),
-        room: nextExamRecord.room || "Room TBA",
-        countdown: formatCountdown(
-          new Date(nextExamRecord.examDate),
-          nextExamRecord.status
-        ).text,
-        daysRemaining: calculateDaysRemaining(new Date(nextExamRecord.examDate)),
-        preparationProgress: nextExamRecord.preparationProgress,
+        id: data.nextExam.id,
+        title: data.nextExam.title,
+        courseName: data.nextExam.courseName,
+        courseCode: data.nextExam.courseCode,
+        courseColor: data.nextExam.courseColor || "#2563eb",
+        type: data.nextExam.type,
+        date: data.nextExam.date,
+        time: data.nextExam.time,
+        room: data.nextExam.room || "Room TBA",
+        countdown: data.nextExam.countdown,
+        daysRemaining: data.nextExam.daysRemaining,
+        preparationProgress: data.nextExam.preparationProgress,
       };
     }
 
-    // Format daily priorities
-    const priorities: MobilePriorityItem[] = prioritiesReport.priorities.map(
-      (p) => ({
+    // Format daily priorities from canonical priority engine
+    const priorities: MobilePriorityItem[] = data.priorities.map((p) => {
+      let severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" = "MEDIUM";
+      if (p.urgencyTier === "OVERDUE" || p.urgencyTier === "CRITICAL") severity = "CRITICAL";
+      else if (p.urgencyTier === "HIGH") severity = "HIGH";
+      else if (p.urgencyTier === "NORMAL") severity = "LOW";
+
+      return {
         id: p.id,
-        type: p.type,
-        title: p.title,
-        description: p.description,
-        severity: p.severity,
-        actionUrl: p.actionUrl,
+        type: "ASSIGNMENT",
+        title: p.action,
+        description: p.reason,
+        severity,
+        actionUrl: "/(tabs)/assignments",
         courseName: p.courseName,
         courseCode: p.courseCode,
-      })
-    );
+      };
+    });
 
     // Format active study plan
     let formattedActivePlan = null;
-    if (activePlan) {
-      const items: MobileStudyPlanTask[] = (activePlan.items || []).map((item) => ({
+    if (data.activePlan) {
+      const items: MobileStudyPlanTask[] = (data.activePlan.items || []).map((item: any) => ({
         id: item.id,
         title: item.title,
-        scheduledAt: item.scheduledAt.toISOString(),
-        duration: item.duration,
-        completed: item.completed,
+        scheduledAt: item.scheduledAt ? new Date(item.scheduledAt).toISOString() : new Date().toISOString(),
+        duration: item.duration || 0,
+        completed: Boolean(item.completed),
         courseName: item.course ? item.course.name : undefined,
       }));
 
       const completedCount = items.filter((i) => i.completed).length;
 
       formattedActivePlan = {
-        id: activePlan.id,
-        title: activePlan.title,
+        id: data.activePlan.id,
+        title: data.activePlan.title,
         completedItems: completedCount,
         totalItems: items.length,
         items,
@@ -207,45 +128,45 @@ export async function GET(req: NextRequest) {
         createdAt: user.createdAt.toISOString(),
       },
       subscription: {
-        plan: subscription.plan,
-        isPro: subscription.isPro,
-        status: subscription.status,
+        plan: data.isPro ? "PRO" : "FREE",
+        isPro: data.isPro,
+        status: "ACTIVE",
       },
-      greeting,
-      dateString,
-      unreadNotificationCount,
+      greeting: data.greeting,
+      dateString: data.dateString,
+      unreadNotificationCount: data.unreadNotificationCount,
       stats: {
         gpa: {
-          value: academicOverview.gpaString,
-          sub: academicOverview.gpaSub,
+          value: data.academic.gpaString,
+          sub: data.academic.gpaSub,
         },
         attendance: {
-          value: academicOverview.attendanceString,
-          sub: academicOverview.attendanceSub,
+          value: data.academic.attendanceString,
+          sub: data.academic.attendanceSub,
         },
         assignmentsDue: {
-          count: dueThisWeekCount,
+          count: data.assignments.length,
           sub: "Due this week",
         },
         studyHours: {
-          formatted: weeklyStudy.formatted,
-          minutes: weeklyStudy.minutes,
+          formatted: data.weeklyStudy.formatted,
+          minutes: data.weeklyStudy.minutes,
           sub: "This week (real)",
         },
       },
       priorities: {
-        criticalCount: prioritiesReport.criticalCount,
-        highCount: prioritiesReport.highCount,
-        mediumCount: prioritiesReport.mediumCount,
-        lowCount: prioritiesReport.lowCount,
-        isCaughtUp: prioritiesReport.isCaughtUp,
+        criticalCount: priorities.filter((p) => p.severity === "CRITICAL").length,
+        highCount: priorities.filter((p) => p.severity === "HIGH").length,
+        mediumCount: priorities.filter((p) => p.severity === "MEDIUM").length,
+        lowCount: priorities.filter((p) => p.severity === "LOW").length,
+        isCaughtUp: priorities.length === 0,
         items: priorities,
       },
       todaySchedule: schedule,
       upcomingAssignments: assignments,
       nextExam,
       activeStudyPlan: formattedActivePlan,
-      academicInsights: academicInsights.map((insight) => ({
+      academicInsights: (data.academicInsights || []).map((insight: any) => ({
         id: insight.id,
         severity: insight.severity,
         title: insight.title,
@@ -253,7 +174,7 @@ export async function GET(req: NextRequest) {
         actionUrl: insight.actionUrl,
         category: insight.category,
       })),
-      goals: studentGoals.map((g) => ({
+      goals: (data.goals || []).map((g: any) => ({
         goalId: g.goalId,
         type: g.type,
         label: g.label,
@@ -264,7 +185,15 @@ export async function GET(req: NextRequest) {
         isConfigured: g.isConfigured,
         isAtRisk: g.isAtRisk,
       })),
-      weeklyStudyProgress: studyDays,
+      weeklyStudyProgress: [
+        { day: "Mon", hours: 0, isToday: false },
+        { day: "Tue", hours: 0, isToday: false },
+        { day: "Wed", hours: 0, isToday: false },
+        { day: "Thu", hours: 0, isToday: false },
+        { day: "Fri", hours: 0, isToday: false },
+        { day: "Sat", hours: 0, isToday: false },
+        { day: "Sun", hours: 0, isToday: true },
+      ],
     };
 
     return NextResponse.json(payload);

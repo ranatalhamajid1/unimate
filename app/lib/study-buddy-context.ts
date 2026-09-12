@@ -8,9 +8,14 @@ import { getUpcomingExams } from "@/app/lib/exams";
 import { getAcademicOverview } from "@/app/lib/academic";
 import { formatDueLabel } from "@/app/lib/assignment-definitions";
 import { formatExamDate, formatExamTime, calculateDaysRemaining } from "@/app/lib/exam-definitions";
+import { getStudentPriorities } from "@/app/lib/intelligence/priority-engine";
+import { getStudentTodayScheduleGaps } from "@/app/lib/intelligence/schedule-gaps";
 
 export type StudentAIContext = {
   studentName: string;
+  degreeProgram?: string;
+  currentSemester?: string;
+  universityName?: string;
   currentDateStr: string;
   currentDayName: string;
   currentTimeStr: string;
@@ -27,6 +32,19 @@ export type StudentAIContext = {
     endTime: string;
     room: string;
     type: string;
+  }>;
+  topPriorities?: Array<{
+    title: string;
+    course: string;
+    action: string;
+    reason: string;
+    urgencyTier: string;
+    deadlineLabel: string;
+  }>;
+  freeStudyWindows?: Array<{
+    startTime: string;
+    endTime: string;
+    durationMinutes: number;
   }>;
   upcomingAssignments: Array<{
     title: string;
@@ -93,24 +111,38 @@ export async function buildStudyBuddyContext(
   });
 
   // Parallel fetch of user data
-  const [user, courses, timetable, assignments, exams, academics] = await Promise.all([
-    prisma.user
-      .findUnique({
-        where: { id: userId },
-        select: { name: true },
-      })
-      .catch(() => null),
-    getUserCourses(userId),
-    getTodayTimetable(userId, todayDayIndex),
-    getUpcomingAssignments(userId, 10),
-    getUpcomingExams(userId),
-    getAcademicOverview(userId),
-  ]);
+  const [user, courses, timetable, assignments, exams, academics, priorities, scheduleGaps] =
+    await Promise.all([
+      prisma.user
+        .findUnique({
+          where: { id: userId },
+          select: {
+            name: true,
+            degreeProgram: true,
+            currentSemester: true,
+            university: { select: { name: true } },
+          },
+        })
+        .catch(() => null),
+      getUserCourses(userId),
+      getTodayTimetable(userId, todayDayIndex),
+      getUpcomingAssignments(userId, 10),
+      getUpcomingExams(userId),
+      getAcademicOverview(userId),
+      getStudentPriorities(userId, 5, now),
+      getStudentTodayScheduleGaps(userId, now),
+    ]);
 
   const studentName = user?.name || defaultName || "Student";
+  const degreeProgram = user?.degreeProgram || "Undergraduate";
+  const currentSemester = user?.currentSemester || "Current Semester";
+  const universityName = user?.university?.name || "University";
 
   return {
     studentName,
+    degreeProgram,
+    currentSemester,
+    universityName,
     currentDateStr,
     currentDayName,
     currentTimeStr,
@@ -127,6 +159,19 @@ export async function buildStudyBuddyContext(
       endTime: t.endTime,
       room: t.room || "TBA",
       type: t.type,
+    })),
+    topPriorities: priorities.map((p) => ({
+      title: p.title,
+      course: p.courseName,
+      action: p.action,
+      reason: p.reason,
+      urgencyTier: p.urgencyTier,
+      deadlineLabel: p.deadlineLabel,
+    })),
+    freeStudyWindows: scheduleGaps.map((g) => ({
+      startTime: g.startTime,
+      endTime: g.endTime,
+      durationMinutes: g.durationMinutes,
     })),
     upcomingAssignments: assignments.map((a) => ({
       title: a.title,
@@ -175,9 +220,29 @@ export async function buildStudyBuddyContext(
 export function formatContextPrompt(context: StudentAIContext): string {
   const lines: string[] = [];
 
-  lines.push(`STUDENT PROFILE:`);
+  lines.push(`STUDENT ACADEMIC PROFILE:`);
   lines.push(`Name: ${context.studentName}`);
+  if (context.degreeProgram || context.currentSemester) {
+    lines.push(`Degree Program: ${context.degreeProgram || "General"} | Semester: ${context.currentSemester || "Current"}`);
+  }
+  if (context.universityName) {
+    lines.push(`University: ${context.universityName}`);
+  }
   lines.push(`Current Date & Time: ${context.currentDateStr} (${context.currentDayName}), ${context.currentTimeStr}`);
+
+  if (context.topPriorities && context.topPriorities.length > 0) {
+    lines.push(`\nTOP SMART PRIORITIES (Determined by urgency & deadlines):`);
+    context.topPriorities.forEach((p, idx) => {
+      lines.push(`${idx + 1}. [${p.urgencyTier}] ${p.action} (${p.course}) — ${p.reason} [${p.deadlineLabel}]`);
+    });
+  }
+
+  if (context.freeStudyWindows && context.freeStudyWindows.length > 0) {
+    lines.push(`\nAVAILABLE STUDY WINDOWS TODAY:`);
+    context.freeStudyWindows.forEach((w) => {
+      lines.push(`- ${w.durationMinutes} min gap (${w.startTime} - ${w.endTime})`);
+    });
+  }
 
   lines.push(`\nENROLLED COURSES (${context.courses.length}):`);
   if (context.courses.length === 0) {

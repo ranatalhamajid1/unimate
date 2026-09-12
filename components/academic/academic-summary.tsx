@@ -34,7 +34,7 @@ export function AcademicSummary({ overview }: AcademicSummaryProps) {
             <Award className="h-4 w-4" />
           </span>
         </div>
-        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-blue-700 dark:text-blue-400">
+        <p className="kpi-numeric text-[1.95rem] font-bold leading-none tracking-tight text-blue-700 dark:text-blue-400">
           {gpaString}
         </p>
         <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
@@ -53,7 +53,7 @@ export function AcademicSummary({ overview }: AcademicSummaryProps) {
           </span>
         </div>
         <div className="flex items-baseline gap-2">
-          <p className="text-[1.95rem] font-bold leading-none tracking-tight text-emerald-700 dark:text-emerald-400">
+          <p className="kpi-numeric text-[1.95rem] font-bold leading-none tracking-tight text-emerald-700 dark:text-emerald-400">
             {attendanceString}
           </p>
           {overview.overallAttendance !== null && (
@@ -77,7 +77,7 @@ export function AcademicSummary({ overview }: AcademicSummaryProps) {
             <GraduationCap className="h-4 w-4" />
           </span>
         </div>
-        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
+        <p className="kpi-numeric text-[1.95rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
           {totalCredits}
         </p>
         <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">
@@ -95,7 +95,7 @@ export function AcademicSummary({ overview }: AcademicSummaryProps) {
             <BookOpen className="h-4 w-4" />
           </span>
         </div>
-        <p className="text-[1.95rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
+        <p className="kpi-numeric text-[1.95rem] font-bold leading-none tracking-tight text-[var(--color-text)]">
           {coursesCount}
         </p>
         <p className="mt-1.5 text-[12px] font-medium text-[var(--color-text-3)]">

@@ -4,6 +4,7 @@
 
 import { FileText, Circle, CheckCircle2, Clock } from "lucide-react";
 import type { Assignment } from "@/app/lib/dashboard-data";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Props = { assignments: Assignment[] };
 
@@ -41,11 +42,14 @@ export function UpcomingAssignments({ assignments }: Props) {
 
       {/* List */}
       {assignments.length === 0 ? (
-        <div className="py-7 text-center">
-          <p className="text-[13px] text-[var(--color-text-3)] font-medium">
-            You&apos;re all caught up.
-          </p>
-        </div>
+        <EmptyState
+          icon={FileText}
+          title="All caught up!"
+          description="You don't have any pending assignments right now. Track upcoming coursework deadlines early."
+          actionLabel="Add Assignment"
+          actionHref="/dashboard/assignments"
+          compact
+        />
       ) : (
         <ul className="space-y-2">
           {assignments.map((a) => {

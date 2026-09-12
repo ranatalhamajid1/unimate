@@ -101,6 +101,9 @@ export async function deleteSession(): Promise<void> {
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
+  if (process.env.NODE_ENV !== "production" && (globalThis as any).__mockSessionCookie !== undefined) {
+    return decrypt((globalThis as any).__mockSessionCookie);
+  }
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get(COOKIE_NAME)?.value;

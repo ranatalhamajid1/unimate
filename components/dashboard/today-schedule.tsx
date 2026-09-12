@@ -6,8 +6,9 @@
  * hour; for live highlighting wire up a client clock later).
  */
 
-import { Clock, FlaskConical, BookOpen } from "lucide-react";
+import { Clock, FlaskConical, BookOpen, Calendar } from "lucide-react";
 import type { ScheduleClass } from "@/app/lib/dashboard-data";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Props = { classes: ScheduleClass[]; currentHour: number };
 
@@ -40,11 +41,14 @@ export function TodaySchedule({ classes, currentHour }: Props) {
 
       {/* Class list */}
       {classes.length === 0 ? (
-        <div className="py-7 text-center">
-          <p className="text-[13px] text-[var(--color-text-3)] font-medium">
-            Nothing scheduled today.
-          </p>
-        </div>
+        <EmptyState
+          icon={Calendar}
+          title="No classes today"
+          description="You have no classes scheduled for today. Use the free blocks for focused study sessions."
+          actionLabel="View Timetable"
+          actionHref="/dashboard/timetable"
+          compact
+        />
       ) : (
         <ol className="space-y-2">
         {classes.map((cls, idx) => {

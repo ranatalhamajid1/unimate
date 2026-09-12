@@ -7,6 +7,7 @@
 import { getSession } from "@/app/lib/session";
 import { redirect } from "next/navigation";
 import { getUserSubscription } from "@/app/lib/entitlements";
+import { getUserProfile } from "@/app/lib/profile";
 import { SettingsClient } from "@/components/settings/settings-client";
 
 export const metadata = {
@@ -19,6 +20,7 @@ export default async function SettingsPage() {
   if (!session) redirect("/login");
 
   const subscription = await getUserSubscription(session.userId);
+  const profile = await getUserProfile(session.userId);
 
   return (
     <SettingsClient
@@ -26,6 +28,7 @@ export default async function SettingsPage() {
       email={session.email}
       plan={subscription.plan}
       isPro={subscription.isPro}
+      initialProfile={profile}
     />
   );
 }

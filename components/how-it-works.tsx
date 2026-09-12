@@ -1,82 +1,94 @@
+import { Sparkles, UserCheck, CalendarRange, BrainCircuit } from "lucide-react";
+
 const STEPS = [
   {
     number: "01",
     title: "Create your profile",
-    description: "Add your university, semester and courses.",
+    description: "Add your university, degree program, semester and courses in under 2 minutes.",
+    icon: UserCheck,
+    tag: "Instant Setup",
   },
   {
     number: "02",
     title: "Organize your semester",
-    description: "Add your timetable, assignments, exams and notes.",
+    description: "Input your timetable, upcoming assignments, exam schedules, and course resources.",
+    icon: CalendarRange,
+    tag: "Full Synthesis",
   },
   {
     number: "03",
     title: "Let UniMate handle the rest",
-    description: "Track your progress and study smarter with AI.",
+    description: "Receive adaptive study plans, attendance warnings, and AI-driven revision summaries.",
+    icon: BrainCircuit,
+    tag: "Automated Flow",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="scroll-mt-24 px-4 py-20 sm:py-28">
+    <section id="how-it-works" className="scroll-mt-24 px-4 py-20 sm:py-28 lg:py-32">
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mx-auto max-w-xl text-center">
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-blue-200/80 dark:border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            <Sparkles className="h-3 w-3" />
             How it works
-          </p>
-          <h2 className="text-[2.25rem] font-semibold leading-[1.1] tracking-tight text-[var(--color-text)] sm:text-5xl">
+          </div>
+          <h2 className="mt-4 text-[2.25rem] font-semibold leading-[1.1] tracking-[-0.03em] text-[var(--color-text)] sm:text-5xl">
             Up and running
             <br />
             in minutes.
           </h2>
+          <p className="mt-4 text-[16px] leading-relaxed text-[var(--color-text-2)]">
+            A frictionless onboarding experience that transforms chaotic university schedules into a synchronized workflow.
+          </p>
         </div>
 
-        {/* Steps */}
-        <div className="relative mt-16">
-          {/* Connecting line — desktop only, centered on the bubbles */}
+        {/* Steps with Connected Timeline */}
+        <div className="relative mt-16 sm:mt-20">
+          {/* Connecting gradient hairline — desktop */}
           <div
             aria-hidden
-            className="absolute left-0 right-0 top-[26px] hidden sm:block"
+            className="absolute left-[15%] right-[15%] top-7 hidden h-px sm:block"
             style={{
               background:
-                "linear-gradient(to right, transparent 10%, var(--color-border) 22%, var(--color-border) 78%, transparent 90%)",
-              height: "1px",
+                "linear-gradient(to right, transparent, rgba(37,99,235,0.3) 20%, rgba(99,102,241,0.5) 50%, rgba(37,99,235,0.3) 80%, transparent)",
             }}
           />
 
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-6">
-            {STEPS.map((step, idx) => (
-              <div
-                key={step.number}
-                className="relative flex gap-5 sm:flex-col sm:gap-0 sm:text-center"
-              >
-                {/* Vertical connector — mobile only */}
-                {idx < STEPS.length - 1 && (
-                  <div
-                    aria-hidden
-                    className="absolute left-[1.625rem] top-14 bottom-[-2.5rem] w-px bg-[var(--color-border-subtle)] sm:hidden"
-                  />
-                )}
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
+            {STEPS.map((step, idx) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.number}
+                  className="group relative flex flex-col items-start rounded-3xl border border-slate-200/80 dark:border-slate-800/90 bg-[var(--color-surface)]/80 p-6 shadow-[0_4px_20px_-8px_rgba(15,23,42,0.06),0_0_0_1px_rgba(255,255,255,0.8)_inset] dark:shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-md transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_16px_40px_-12px_rgba(37,99,235,0.1)] sm:items-center sm:text-center"
+                >
+                  {/* Step node bubble with illuminated ring */}
+                  <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-200/80 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950/60 shadow-[0_4px_16px_rgba(37,99,235,0.15)] transition-transform duration-300 group-hover:scale-105">
+                    <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400" strokeWidth={1.75} />
+                    <span className="absolute -bottom-2.5 rounded-full bg-slate-900 dark:bg-blue-600 px-2 py-0.5 font-mono text-[10px] font-bold text-white shadow-xs">
+                      {step.number}
+                    </span>
+                  </div>
 
-                {/* Number bubble */}
-                <div className="relative z-10 flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_2px_8px_rgba(15,23,42,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] sm:mx-auto sm:mb-5">
-                  <span className="text-[14px] font-semibold text-blue-600 dark:text-blue-400">
-                    {step.number}
+                  {/* Tag */}
+                  <span className="mb-2 inline-block rounded-md bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[10.5px] font-semibold text-blue-600 dark:text-blue-400">
+                    {step.tag}
                   </span>
-                </div>
 
-                {/* Text */}
-                <div>
-                  <h3 className="text-[16.5px] font-semibold text-[var(--color-text)]">
+                  {/* Title */}
+                  <h3 className="text-[17px] font-semibold tracking-tight text-[var(--color-text)]">
                     {step.title}
                   </h3>
-                  <p className="mt-1.5 text-[14px] leading-relaxed text-[var(--color-text-2)] sm:mx-auto sm:max-w-[200px]">
+
+                  {/* Description */}
+                  <p className="mt-2 text-[14px] leading-relaxed text-[var(--color-text-2)] sm:max-w-[240px]">
                     {step.description}
                   </p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

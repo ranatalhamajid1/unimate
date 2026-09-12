@@ -21,6 +21,8 @@ export type StudyPlanItemData = {
   duration: number; // minutes
   completed: boolean;
   order: number;
+  targetType?: string | null;
+  targetId?: string | null;
   course?: {
     id: string;
     name: string;
@@ -42,6 +44,64 @@ export type StudyPlanData = {
   progressPercentage: number;
   totalDurationMinutes: number;
   completedDurationMinutes: number;
+  feasibility?: PlanFeasibility;
+};
+
+export type PlanningHorizon = 7 | 14;
+
+export type PlanFeasibilityStatus = "FEASIBLE" | "TIGHT" | "OVERLOADED";
+
+export type UnallocatedTask = {
+  id: string;
+  targetType: "ASSIGNMENT" | "EXAM";
+  targetId: string;
+  courseId?: string | null;
+  courseCode: string;
+  courseName: string;
+  title: string;
+  dueDate?: string;
+  urgencyScore: number;
+  urgencyTier: "OVERDUE" | "CRITICAL" | "HIGH" | "MEDIUM" | "NORMAL";
+  remainingMinutes: number;
+  reason: string;
+  recommendedAction: string;
+};
+
+export type PlanFeasibility = {
+  status: PlanFeasibilityStatus;
+  totalRequiredMinutes: number;
+  totalAvailableMinutes: number;
+  deficitMinutes: number;
+  notice: string;
+};
+
+export type AdaptiveStudyBlock = {
+  id?: string;
+  courseId: string | null;
+  courseCode: string;
+  courseName: string;
+  courseColor: string;
+  title: string;
+  description: string;
+  scheduledAt: string; // ISO string
+  duration: number; // minutes
+  targetType: string | null;
+  targetId: string | null;
+  urgencyScore: number;
+  urgencyTier: string;
+  reason: string;
+  completed?: boolean;
+};
+
+export type AdaptiveDraftPlan = {
+  title: string;
+  startDate: string; // ISO string
+  endDate: string; // ISO string
+  horizonDays: PlanningHorizon;
+  feasibility: PlanFeasibility;
+  items: AdaptiveStudyBlock[];
+  unallocatedTasks: UnallocatedTask[];
+  aiExplanation?: string | null;
 };
 
 export type DraftPlanItem = {
@@ -60,6 +120,23 @@ export type DraftStudyPlan = {
   items: DraftPlanItem[];
   isLocalFallback?: boolean;
 };
+
+/**
+ * Pure derived helper to check if a study plan item has passed its scheduled end time
+ * without being marked complete. Derived in-memory; NOT a database enum.
+ */
+export function isStudyPlanItemMissed(
+  item: { scheduledAt: Date | string; duration: number; completed: boolean },
+  now: Date = new Date()
+): boolean {
+  if (item.completed) return false;
+  const schedMs =
+    typeof item.scheduledAt === "string"
+      ? new Date(item.scheduledAt).getTime()
+      : item.scheduledAt.getTime();
+  const itemEndMs = schedMs + item.duration * 60 * 1000;
+  return itemEndMs < now.getTime();
+}
 
 export function validateStudyPlanInput(title: string, startDate: Date, endDate: Date): {
   isValid: boolean;

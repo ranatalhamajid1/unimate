@@ -19,8 +19,27 @@ export function NotificationCenter({
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const [activeTab, setActiveTab] = useState<"ALL" | "UNREAD" | "ACADEMIC" | "CAMPUS">("ALL");
   const [isPending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const filteredNotifications = notifications.filter((n) => {
+    if (activeTab === "UNREAD") return !n.read;
+    if (activeTab === "ACADEMIC") {
+      return [
+        "ASSIGNMENT_DUE_SOON",
+        "ASSIGNMENT_OVERDUE",
+        "EXAM_DUE_SOON",
+        "EXAM_TODAY",
+        "EXAM_PREPARATION",
+        "ATTENDANCE_WARNING",
+      ].includes(n.type);
+    }
+    if (activeTab === "CAMPUS") {
+      return ["COMMUNITY_ANNOUNCEMENT", "COMMUNITY_EVENT", "SYSTEM"].includes(n.type);
+    }
+    return true;
+  });
 
   // Sync state with props when revalidated
   useEffect(() => {
@@ -131,9 +150,27 @@ export function NotificationCenter({
             )}
           </div>
 
+          {/* Category Filter Tabs */}
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface)] overflow-x-auto scrollbar-none">
+            {(["ALL", "UNREAD", "ACADEMIC", "CAMPUS"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-micro cursor-pointer ${
+                  activeTab === tab
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-[var(--color-text-3)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
+                }`}
+              >
+                {tab === "ALL" ? "All" : tab === "UNREAD" ? "Unread" : tab === "ACADEMIC" ? "Academic" : "Campus"}
+              </button>
+            ))}
+          </div>
+
           {/* List */}
           <div className="max-h-[380px] overflow-y-auto p-2 space-y-2">
-            {notifications.length === 0 ? (
+            {filteredNotifications.length === 0 ? (
               <div className="py-8 text-center">
                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700/50 text-[var(--color-text-3)] mb-2">
                   <Inbox className="h-5 w-5" />
@@ -142,11 +179,11 @@ export function NotificationCenter({
                   All caught up!
                 </p>
                 <p className="text-[11.5px] text-[var(--color-text-3)] mt-0.5">
-                  No notifications to show right now.
+                  {activeTab === "UNREAD" ? "No unread notifications." : "No notifications in this category."}
                 </p>
               </div>
             ) : (
-              notifications.slice(0, 5).map((notification) => (
+              filteredNotifications.slice(0, 6).map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}

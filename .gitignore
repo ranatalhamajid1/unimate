@@ -44,5 +44,9 @@ next-env.d.ts
 # user data (flat-file store — do not commit)
 /data/users.json
 
+# uploaded files
+/public/uploads/avatars/*
+!/public/uploads/avatars/.gitkeep
+
 .vercel
 .env*

@@ -8,12 +8,23 @@ import { AcademicSummary } from "@/components/academic/academic-summary";
 import { CoursePerformanceCard } from "@/components/academic/course-performance-card";
 import { GradeDialog } from "@/components/academic/grade-dialog";
 import { AttendanceDialog } from "@/components/academic/attendance-dialog";
+import { GpaWhatIfSimulator } from "@/components/academics/gpa-what-if-simulator";
+import { AttendanceIntelligenceSummary } from "@/components/academics/attendance-intelligence-summary";
+import { StudentAttendanceSummary } from "@/app/lib/intelligence/attendance-intel";
 
 type AcademicsViewProps = {
   overview: AcademicOverview;
+  isPro?: boolean;
+  targetGpa?: number | null;
+  attendanceIntelligence?: StudentAttendanceSummary | null;
 };
 
-export function AcademicsView({ overview }: AcademicsViewProps) {
+export function AcademicsView({
+  overview,
+  isPro = false,
+  targetGpa = null,
+  attendanceIntelligence = null,
+}: AcademicsViewProps) {
   const [isGradeDialogOpen, setIsGradeDialogOpen] = useState(false);
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | undefined>();
@@ -64,6 +75,32 @@ export function AcademicsView({ overview }: AcademicsViewProps) {
 
       {/* ── Summary Cards ───────────────────────────────────────────── */}
       <AcademicSummary overview={overview} />
+
+      {/* ── GPA What-If Simulation Intelligence ─────────────────────── */}
+      {overview.courses.length > 0 && (
+        <GpaWhatIfSimulator
+          initialCourses={overview.courses.map((c) => ({
+            courseId: c.courseId,
+            courseName: c.courseName,
+            courseCode: c.courseCode,
+            creditHours: c.creditHours,
+            currentGrade: c.grade ?? null,
+            currentGradePoints: c.gradePoints ?? null,
+          }))}
+          initialCurrentGpa={overview.gpaString}
+          targetGpa={targetGpa}
+          isPro={isPro}
+        />
+      )}
+
+      {/* ── Attendance Intelligence & Recovery Thresholds ───────────── */}
+      {attendanceIntelligence && attendanceIntelligence.courses.length > 0 && (
+        <AttendanceIntelligenceSummary
+          initialThreshold={attendanceIntelligence.threshold}
+          courses={attendanceIntelligence.courses}
+          isPro={isPro}
+        />
+      )}
 
       {/* ── Course Performance Section ──────────────────────────────── */}
       <div>

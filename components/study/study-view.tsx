@@ -63,7 +63,7 @@ export function StudyView({ summary, sessions, courses }: Props) {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-500 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>Log Study Session</span>
@@ -80,7 +80,7 @@ export function StudyView({ summary, sessions, courses }: Props) {
             </span>
             <Clock className="h-4 w-4 text-blue-500" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--color-text)]">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--color-text)] kpi-numeric">
             {summary.thisWeekHoursString}
           </p>
           <p className="mt-0.5 text-[11px] text-[var(--color-text-3)]">
@@ -96,7 +96,7 @@ export function StudyView({ summary, sessions, courses }: Props) {
             </span>
             <Calendar className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--color-text)]">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--color-text)] kpi-numeric">
             {summary.todayHoursString}
           </p>
           <p className="mt-0.5 text-[11px] text-[var(--color-text-3)]">
@@ -115,7 +115,7 @@ export function StudyView({ summary, sessions, courses }: Props) {
           <p className="mt-2 text-base font-bold tracking-tight text-[var(--color-text)] truncate">
             {summary.mostStudiedCourse ? summary.mostStudiedCourse.courseCode : "—"}
           </p>
-          <p className="mt-0.5 text-[11px] text-[var(--color-text-3)] truncate">
+          <p className="mt-0.5 text-[11px] text-[var(--color-text-3)] truncate kpi-numeric">
             {summary.mostStudiedCourse
               ? `${summary.mostStudiedCourse.formattedHours} logged`
               : "Log sessions to view"}
@@ -130,7 +130,7 @@ export function StudyView({ summary, sessions, courses }: Props) {
             </span>
             <BookOpen className="h-4 w-4 text-amber-500" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--color-text)]">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--color-text)] kpi-numeric">
             {summary.totalSessionsCount}
           </p>
           <p className="mt-0.5 text-[11px] text-[var(--color-text-3)]">
@@ -155,14 +155,14 @@ export function StudyView({ summary, sessions, courses }: Props) {
                     style={{ height: `${pct}%` }}
                     className={`w-full max-w-[28px] rounded-lg transition-all duration-300 ${
                       day.isToday
-                        ? "bg-blue-600 dark:bg-blue-500"
+                        ? "bg-blue-600 dark:bg-blue-500 shadow-xs"
                         : day.hours > 0
                         ? "bg-blue-400/80 dark:bg-blue-600/60"
                         : "bg-transparent"
                     }`}
                   />
                   {day.hours > 0 && (
-                    <span className="absolute top-1 text-[10px] font-bold text-[var(--color-text-2)]">
+                    <span className="absolute top-1 text-[10px] font-bold text-[var(--color-text-2)] kpi-numeric">
                       {day.hours}h
                     </span>
                   )}
@@ -250,7 +250,7 @@ export function StudyView({ summary, sessions, courses }: Props) {
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex items-center gap-3 text-[11px] text-[var(--color-text-3)]">
+                    <div className="mt-1 flex items-center gap-3 text-[11px] text-[var(--color-text-3)] kpi-numeric">
                       <span>{formatPKTDate(session.sessionDate, { month: "short", day: "numeric", year: "numeric" })}</span>
                       <span>·</span>
                       <span className="font-medium text-[var(--color-text-2)]">{durText}</span>

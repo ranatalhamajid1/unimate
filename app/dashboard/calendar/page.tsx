@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/app/lib/session";
 import { getMonthCalendarEvents } from "@/app/lib/calendar";
+import { getCalendarIntelligence } from "@/app/lib/calendar-intelligence";
+import { hasEntitlement } from "@/app/lib/entitlements";
 import { CalendarView } from "@/components/calendar/calendar-view";
 
 export const metadata = {
@@ -12,7 +14,12 @@ export default async function CalendarPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const calendarData = await getMonthCalendarEvents(session.userId);
+  const isPro = await hasEntitlement(session.userId, "AI_STUDY_PLAN");
 
-  return <CalendarView initialData={calendarData} />;
+  const [calendarData, intelligenceData] = await Promise.all([
+    getMonthCalendarEvents(session.userId),
+    getCalendarIntelligence(session.userId, { isPro }),
+  ]);
+
+  return <CalendarView initialData={calendarData} intelligenceData={intelligenceData} isPro={isPro} />;
 }
