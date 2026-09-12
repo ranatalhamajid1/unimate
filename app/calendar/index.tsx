@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Screen } from "@/components/ui/Screen";
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
@@ -19,9 +19,15 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
+import { triggerSelectionFeedback } from "@/lib/haptics";
 import { spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/layout";
-import type { MobileCalendarData, MobileCalendarEvent } from "@/lib/types";
+import type {
+  MobileCalendarData,
+  MobileCalendarEvent,
+  MobileCalendarIntelligenceData,
+  MobileRecommendedStudyWindow,
+} from "@/lib/types";
 
 const FILTER_OPTIONS = [
   { value: "ALL", label: "All" },
@@ -33,6 +39,7 @@ const FILTER_OPTIONS = [
 
 export default function CalendarScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
 
   // Month navigation state
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -56,6 +63,16 @@ export default function CalendarScreen() {
       );
     },
   });
+
+  const { data: intelRes } = useQuery({
+    queryKey: ["calendar-intelligence", dateQueryStr],
+    queryFn: async () => {
+      return await apiClient.get<{ success: boolean; data: MobileCalendarIntelligenceData }>(
+        `/api/mobile/intelligence/calendar?date=${dateQueryStr}`
+      );
+    },
+  });
+  const intelligence = intelRes?.data;
 
   const handlePrevMonth = () => {
     setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
@@ -120,6 +137,22 @@ export default function CalendarScreen() {
     }
   };
 
+  const handleStartFocus = (win: MobileRecommendedStudyWindow) => {
+    triggerSelectionFeedback();
+    router.push({
+      pathname: "/focus-session",
+      params: {
+        id: win.suggestedFocus.targetId || "",
+        entityType: win.suggestedFocus.targetType,
+        title: win.suggestedFocus.title,
+        courseCode: win.suggestedFocus.courseCode || "",
+        courseName: win.suggestedFocus.courseName || "",
+        courseColor: win.suggestedFocus.courseColor || "",
+        estimatedMinutes: String(win.durationMinutes),
+      },
+    });
+  };
+
   return (
     <Screen style={styles.container}>
       <Stack.Screen options={{ title: "Academic Calendar", headerBackTitle: "More" }} />
@@ -140,6 +173,7 @@ export default function CalendarScreen() {
         <View style={styles.monthNavRow}>
           <TouchableOpacity
             onPress={handlePrevMonth}
+            activeOpacity={0.7}
             style={[styles.navBtn, { borderColor: colors.border }]}
             accessibilityRole="button"
             accessibilityLabel="Previous month"
@@ -147,7 +181,7 @@ export default function CalendarScreen() {
             <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleCurrentMonth} style={styles.monthTitleBox}>
+          <TouchableOpacity onPress={handleCurrentMonth} activeOpacity={0.7} style={styles.monthTitleBox}>
             <AppText variant="h2">{calendar?.monthLabel || "Calendar"}</AppText>
             <AppText variant="caption" colorRole="tertiary">
               Asia/Karachi (PKT)
@@ -156,6 +190,7 @@ export default function CalendarScreen() {
 
           <TouchableOpacity
             onPress={handleNextMonth}
+            activeOpacity={0.7}
             style={[styles.navBtn, { borderColor: colors.border }]}
             accessibilityRole="button"
             accessibilityLabel="Next month"
@@ -163,6 +198,57 @@ export default function CalendarScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
+
+        {/* Calendar Intelligence Summary Banner */}
+        {Boolean(intelligence) && (
+          <Card style={styles.intelCard}>
+            <View style={styles.intelHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
+                <Ionicons name="sparkles" size={16} color={colors.accent} />
+                <StatusChip
+                  label={`${intelligence?.weekWorkload.overallTier} WEEK`}
+                  variant={
+                    intelligence?.weekWorkload.overallTier === "OVERLOADED"
+                      ? "danger"
+                      : intelligence?.weekWorkload.overallTier === "BUSY"
+                      ? "warning"
+                      : intelligence?.weekWorkload.overallTier === "LIGHT"
+                      ? "success"
+                      : "primary"
+                  }
+                  size="sm"
+                />
+              </View>
+              <StatusChip
+                label={intelligence?.googleCalendar.connected ? "Google Synced" : "Google Sync Off"}
+                variant={intelligence?.googleCalendar.connected ? "success" : "neutral"}
+                size="sm"
+              />
+            </View>
+            <AppText variant="caption" colorRole="secondary" style={{ marginTop: 6 }}>
+              {intelligence?.weekWorkload.summary}
+            </AppText>
+
+            {/* Deadline Clusters */}
+            {intelligence && intelligence.deadlineClusters.length > 0 && (
+              <View style={styles.clustersContainer}>
+                {intelligence.deadlineClusters.map((cl) => (
+                  <View key={cl.id} style={[styles.clusterBox, { borderColor: colors.warning }]}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Ionicons name="alert-circle" size={16} color={colors.warning} />
+                      <AppText variant="caption" style={{ fontWeight: "700", color: colors.warning }}>
+                        {cl.label}
+                      </AppText>
+                    </View>
+                    <AppText variant="caption" colorRole="secondary" style={{ marginTop: 2 }}>
+                      {cl.recommendedAction}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Card>
+        )}
 
         {/* Filter Tabs */}
         <View style={styles.filterSection}>
@@ -172,6 +258,52 @@ export default function CalendarScreen() {
             onChange={setSelectedFilter}
           />
         </View>
+
+        {/* Suggested Study Windows */}
+        {intelligence && intelligence.recommendedStudyWindows.length > 0 && (
+          <View style={{ marginBottom: spacing.md }}>
+            <View style={styles.sectionHeader}>
+              <AppText variant="caption" style={styles.sectionTitle}>
+                SUGGESTED STUDY WINDOWS
+              </AppText>
+              <AppText variant="caption" colorRole="tertiary">
+                UniMate Academic
+              </AppText>
+            </View>
+
+            {intelligence.recommendedStudyWindows.slice(0, 3).map((win) => (
+              <Card key={win.id} style={styles.studyWindowCard}>
+                <View style={styles.studyWindowRow}>
+                  <View style={{ flex: 1 }}>
+                    <AppText variant="caption" style={{ fontWeight: "700", color: colors.primary }}>
+                      ⏰ {win.startTime} – {win.endTime} ({win.durationMinutes}m)
+                    </AppText>
+                    <AppText variant="body" numberOfLines={1} style={{ fontWeight: "600", marginTop: 2 }}>
+                      {win.suggestedFocus.title}
+                    </AppText>
+                    {win.suggestedFocus.courseCode && (
+                      <AppText variant="caption" colorRole="secondary">
+                        {win.suggestedFocus.courseCode}
+                      </AppText>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleStartFocus(win)}
+                    activeOpacity={0.8}
+                    style={[styles.focusBtn, { backgroundColor: colors.primary }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Start focus session for ${win.suggestedFocus.title}`}
+                  >
+                    <Ionicons name="play" size={14} color="#FFFFFF" />
+                    <AppText variant="caption" style={{ color: "#FFFFFF", fontWeight: "700" }}>
+                      Focus
+                    </AppText>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            ))}
+          </View>
+        )}
 
         {/* Unified Events List */}
         {dateKeys.length === 0 ? (
@@ -183,38 +315,55 @@ export default function CalendarScreen() {
         ) : (
           dateKeys.map((dateKey) => {
             const dayEvents = groupedEvents[dateKey];
-            const dateObj = new Date(`${dateKey}T12:00:00`);
-            const dayName = dateObj.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+            const dateObj = new Date(dateKey + "T00:00:00");
+            const dateHeading = dateObj.toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            });
+            const isToday = dateKey === new Date().toISOString().split("T")[0];
 
             return (
               <View key={dateKey} style={styles.dayGroup}>
                 <View style={styles.dayHeader}>
-                  <AppText variant="label" style={{ color: colors.primary, fontWeight: "600" }}>
-                    {dayName}
+                  <AppText
+                    variant="caption"
+                    style={{
+                      fontWeight: isToday ? "700" : "600",
+                      color: isToday ? colors.primary : colors.textPrimary,
+                    }}
+                  >
+                    {isToday ? `Today · ${dateHeading}` : dateHeading}
                   </AppText>
                   <AppText variant="caption" colorRole="tertiary">
-                    {dayEvents.length} {dayEvents.length === 1 ? "item" : "items"}
+                    {dayEvents.length} {dayEvents.length === 1 ? "event" : "events"}
                   </AppText>
                 </View>
 
-                {dayEvents.map((ev: MobileCalendarEvent) => (
-                  <Card key={ev.id} style={styles.eventCard}>
+                {dayEvents.map((event: MobileCalendarEvent) => (
+                  <Card key={event.id} style={styles.eventCard}>
                     <View style={styles.eventRow}>
-                      <View style={[styles.courseColorIndicator, { backgroundColor: ev.courseColor || colors.primary }]} />
-                      <View style={styles.eventInfo}>
-                        <View style={styles.eventTitleRow}>
-                          <AppText variant="body" style={{ fontWeight: "600", flex: 1 }}>
-                            {ev.title}
+                      <View
+                        style={[
+                          styles.courseColorIndicator,
+                          { backgroundColor: event.courseColor || colors.primary },
+                        ]}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                          <AppText variant="body" style={{ fontWeight: "600", flex: 1, marginRight: spacing.xs }}>
+                            {event.title}
                           </AppText>
-                          {getEventBadge(ev.eventType)}
+                          {getEventBadge(event.eventType)}
                         </View>
-
-                        <View style={styles.eventMetaRow}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: 4 }}>
                           <AppText variant="caption" colorRole="secondary">
-                            ⏰ {ev.timeStr || "All Day"}
+                            ⏰ {event.timeStr}
                           </AppText>
-                          {Boolean(ev.courseCode) && (
-                            <StatusChip label={ev.courseCode} variant="neutral" size="sm" />
+                          {Boolean(event.courseCode) && (
+                            <AppText variant="caption" colorRole="tertiary">
+                              · {event.courseCode}
+                            </AppText>
                           )}
                         </View>
                       </View>
@@ -299,5 +448,52 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
     marginTop: 4,
+  },
+  intelCard: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+  },
+  intelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  clustersContainer: {
+    marginTop: spacing.sm,
+    gap: spacing.xs,
+  },
+  clusterBox: {
+    padding: spacing.sm,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    backgroundColor: "rgba(245, 158, 11, 0.05)",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  sectionTitle: {
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  studyWindowCard: {
+    marginBottom: spacing.xs,
+    padding: spacing.sm,
+  },
+  studyWindowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  focusBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.md,
   },
 });

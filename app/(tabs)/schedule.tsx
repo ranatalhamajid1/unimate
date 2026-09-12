@@ -21,6 +21,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
 import { spacing } from "@/constants/spacing";
@@ -329,135 +330,133 @@ export default function ScheduleScreen() {
 
       {/* Add / Edit Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <AppText variant="h3">
-                {editingEntry ? "Edit Class Slot" : "Add Class Slot"}
-              </AppText>
-              <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            {formError ? (
-              <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
-                {formError}
-              </AppText>
-            ) : null}
-
-            {/* Course Selector */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              COURSE
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <AppText variant="h3">
+              {editingEntry ? "Edit Class Slot" : "Add Class Slot"}
             </AppText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-              {courses.map((c: MobileCourse) => {
-                const isSelected = c.id === courseId;
-                return (
-                  <TouchableOpacity
-                    key={c.id}
-                    onPress={() => setCourseId(c.id)}
-                    style={[
-                      styles.selectableChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{
-                        color: isSelected ? "#fff" : colors.textPrimary,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {c.code}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            <TouchableOpacity onPress={closeModal}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
-            {/* Time row */}
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="Start Time (24h)"
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="09:00"
-                  autoCapitalize="none"
-                />
-              </View>
-              <View style={{ width: spacing.md }} />
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="End Time (24h)"
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="10:30"
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
-
-            {/* Room */}
-            <FormInput
-              label="Room / Hall"
-              value={room}
-              onChangeText={setRoom}
-              placeholder="e.g. Lab 2, Hall A"
-            />
-
-            {/* Class Type */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              CLASS TYPE
+          {formError ? (
+            <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
+              {formError}
             </AppText>
-            <View style={styles.typeRow}>
-              {TYPES.map((t) => {
-                const isSelected = type === t;
-                return (
-                  <TouchableOpacity
-                    key={t}
-                    onPress={() => setType(t)}
-                    style={[
-                      styles.typeChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{
-                        color: isSelected ? "#fff" : colors.textPrimary,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {t}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+          ) : null}
 
-            <View style={styles.modalActions}>
-              <View style={{ flex: 1 }}>
-                <Button title="Cancel" variant="outline" onPress={closeModal} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title={editingEntry ? "Update" : "Create"}
-                  variant="primary"
-                  onPress={handleSave}
-                  loading={createMutation.isPending || updateMutation.isPending}
-                />
-              </View>
+          {/* Course Selector */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            COURSE
+          </AppText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            {courses.map((c: MobileCourse) => {
+              const isSelected = c.id === courseId;
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  onPress={() => setCourseId(c.id)}
+                  style={[
+                    styles.selectableChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: isSelected ? "#fff" : colors.textPrimary,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {c.code}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Time row */}
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="Start Time (24h)"
+                value={startTime}
+                onChangeText={setStartTime}
+                placeholder="09:00"
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={{ width: spacing.md }} />
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="End Time (24h)"
+                value={endTime}
+                onChangeText={setEndTime}
+                placeholder="10:30"
+                autoCapitalize="none"
+              />
             </View>
           </View>
-        </View>
+
+          {/* Room */}
+          <FormInput
+            label="Room / Hall"
+            value={room}
+            onChangeText={setRoom}
+            placeholder="e.g. Lab 2, Hall A"
+          />
+
+          {/* Class Type */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            CLASS TYPE
+          </AppText>
+          <View style={styles.typeRow}>
+            {TYPES.map((t) => {
+              const isSelected = type === t;
+              return (
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => setType(t)}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: isSelected ? "#fff" : colors.textPrimary,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {t}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={styles.modalActions}>
+            <View style={{ flex: 1 }}>
+              <Button title="Cancel" variant="outline" onPress={closeModal} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                title={editingEntry ? "Update" : "Create"}
+                variant="primary"
+                onPress={handleSave}
+                loading={createMutation.isPending || updateMutation.isPending}
+              />
+            </View>
+          </View>
+        </ModalKeyboardContainer>
       </Modal>
 
       {/* Delete Confirmation */}

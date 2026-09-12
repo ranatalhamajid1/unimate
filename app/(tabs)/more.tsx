@@ -94,6 +94,14 @@ export default function MoreScreen() {
       isAvailable: true,
     },
     {
+      id: "weekly-review",
+      title: "Weekly Review",
+      description: "Performance scorecard, study volume, and weekly debrief",
+      icon: "trending-up-outline",
+      route: "/review",
+      isAvailable: true,
+    },
+    {
       id: "insights",
       title: "Smart Insights",
       description: "Academic trend warnings and performance streaks",
@@ -206,6 +214,17 @@ export default function MoreScreen() {
     </View>
   );
 
+  const networkModules: ModuleItem[] = [
+    {
+      id: "communities",
+      title: "Campus Network",
+      description: "Student communities, societies, and study groups",
+      icon: "people-outline",
+      route: "/communities",
+      isAvailable: true,
+    },
+  ];
+
   return (
     <Screen scrollable>
       <View style={styles.header}>
@@ -215,6 +234,7 @@ export default function MoreScreen() {
         </AppText>
       </View>
 
+      {renderSection("Student Network", networkModules)}
       {renderSection("Academic Hub", academicModules)}
       {renderSection("Productivity & Finance", productivityModules)}
       {renderSection("Assistant & Settings", appModules)}

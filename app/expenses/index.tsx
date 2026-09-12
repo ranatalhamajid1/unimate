@@ -21,6 +21,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
 import { spacing } from "@/constants/spacing";
@@ -191,19 +192,19 @@ export default function ExpensesScreen() {
 
         {/* Summary Row */}
         <View style={styles.statsRow}>
-          <Card style={styles.statCard}>
-            <AppText variant="caption" colorRole="secondary">
-              This Month
+          <Card variant="floating" style={styles.statCard}>
+            <AppText variant="caption" colorRole="secondary" style={{ fontWeight: "600", letterSpacing: 0.5 }}>
+              THIS MONTH
             </AppText>
-            <AppText variant="h2" style={{ marginTop: 2, color: colors.primary }}>
+            <AppText variant="h2" style={{ marginTop: 2, color: colors.primary, fontVariant: ["tabular-nums"], fontWeight: "800" }}>
               {summary?.thisMonthSpendingString || "—"}
             </AppText>
           </Card>
-          <Card style={styles.statCard}>
-            <AppText variant="caption" colorRole="secondary">
-              Total Spending
+          <Card variant="floating" style={styles.statCard}>
+            <AppText variant="caption" colorRole="secondary" style={{ fontWeight: "600", letterSpacing: 0.5 }}>
+              TOTAL SPENT
             </AppText>
-            <AppText variant="h2" style={{ marginTop: 2 }}>
+            <AppText variant="h2" style={{ marginTop: 2, fontVariant: ["tabular-nums"], fontWeight: "800" }}>
               {summary?.totalSpendingString || "—"}
             </AppText>
           </Card>
@@ -268,88 +269,86 @@ export default function ExpensesScreen() {
 
       {/* Add Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <AppText variant="h3">Add Expense</AppText>
-              <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <AppText variant="h3">Add Expense</AppText>
+            <TouchableOpacity onPress={closeModal}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
-            {formError ? (
-              <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
-                {formError}
-              </AppText>
-            ) : null}
-
-            <FormInput
-              label="Amount (PKR)"
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="e.g. 1500"
-              keyboardType="numeric"
-            />
-
-            {/* Category Selector */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              CATEGORY
+          {formError ? (
+            <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
+              {formError}
             </AppText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-              {CATEGORIES.map((cat) => {
-                const isSelected = category === cat;
-                return (
-                  <TouchableOpacity
-                    key={cat}
-                    onPress={() => setCategory(cat)}
-                    style={[
-                      styles.selectableChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
+          ) : null}
+
+          <FormInput
+            label="Amount (PKR)"
+            value={amount}
+            onChangeText={setAmount}
+            placeholder="e.g. 1500"
+            keyboardType="numeric"
+          />
+
+          {/* Category Selector */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            CATEGORY
+          </AppText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            {CATEGORIES.map((cat) => {
+              const isSelected = category === cat;
+              return (
+                <TouchableOpacity
+                  key={cat}
+                  onPress={() => setCategory(cat)}
+                  style={[
+                    styles.selectableChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
                   >
-                    <AppText
-                      variant="caption"
-                      style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
-                    >
-                      {cat}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                    {cat}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-            <FormInput
-              label="Date (YYYY-MM-DD)"
-              value={expenseDate}
-              onChangeText={setExpenseDate}
-              placeholder="2026-09-07"
-            />
+          <FormInput
+            label="Date (YYYY-MM-DD)"
+            value={expenseDate}
+            onChangeText={setExpenseDate}
+            placeholder="2026-09-07"
+          />
 
-            <FormInput
-              label="Description (Optional)"
-              value={description}
-              onChangeText={setDescription}
-              placeholder="e.g. Semester project hardware"
-            />
+          <FormInput
+            label="Description (Optional)"
+            value={description}
+            onChangeText={setDescription}
+            placeholder="e.g. Semester project hardware"
+          />
 
-            <View style={styles.modalActions}>
-              <View style={{ flex: 1 }}>
-                <Button title="Cancel" variant="outline" onPress={closeModal} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title="Add Expense"
-                  variant="primary"
-                  onPress={handleSave}
-                  loading={createMutation.isPending}
-                />
-              </View>
+          <View style={styles.modalActions}>
+            <View style={{ flex: 1 }}>
+              <Button title="Cancel" variant="outline" onPress={closeModal} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                title="Add Expense"
+                variant="primary"
+                onPress={handleSave}
+                loading={createMutation.isPending}
+              />
             </View>
           </View>
-        </View>
+        </ModalKeyboardContainer>
       </Modal>
 
       {/* Delete Confirmation */}

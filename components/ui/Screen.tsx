@@ -6,22 +6,23 @@ import React from "react";
 import {
   View,
   StyleSheet,
-  ScrollView,
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
+  StyleProp,
   ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/hooks/use-theme";
+import { KeyboardAwareScrollView } from "@/components/ui/KeyboardAwareScrollView";
 
 interface ScreenProps {
   children: React.ReactNode;
   scrollable?: boolean;
   onRefresh?: () => void;
   refreshing?: boolean;
-  style?: ViewStyle;
-  contentContainerStyle?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  contentContainerStyle?: StyleProp<ViewStyle>;
   edges?: readonly ("top" | "bottom" | "left" | "right")[];
   keyboardAvoiding?: boolean;
 }
@@ -39,7 +40,7 @@ export function Screen({
   const { colors } = useTheme();
 
   const content = scrollable ? (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, contentContainerStyle]}
       keyboardShouldPersistTaps="handled"
@@ -56,7 +57,7 @@ export function Screen({
       }
     >
       {children}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   ) : (
     <View style={[styles.container, styles.content, contentContainerStyle]}>
       {children}
@@ -68,7 +69,7 @@ export function Screen({
       edges={edges}
       style={[styles.safeArea, { backgroundColor: colors.background }, style]}
     >
-      {keyboardAvoiding ? (
+      {keyboardAvoiding && !scrollable ? (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.keyboardAvoid}

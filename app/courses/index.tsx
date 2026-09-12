@@ -20,6 +20,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
 import { spacing } from "@/constants/spacing";
@@ -307,102 +308,100 @@ export default function CoursesScreen() {
 
       {/* Course Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <AppText variant="h3">{editingCourse ? "Edit Course" : "Add Course"}</AppText>
-              <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <AppText variant="h3">{editingCourse ? "Edit Course" : "Add Course"}</AppText>
+            <TouchableOpacity onPress={closeModal}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
-            {formError ? (
-              <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
-                {formError}
-              </AppText>
-            ) : null}
-
-            <FormInput
-              label="Course Name"
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g. Data Structures & Algorithms"
-            />
-
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="Course Code"
-                  value={code}
-                  onChangeText={setCode}
-                  placeholder="e.g. CS201"
-                  autoCapitalize="characters"
-                />
-              </View>
-              <View style={{ width: spacing.md }} />
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="Credit Hours"
-                  value={creditHours}
-                  onChangeText={setCreditHours}
-                  placeholder="3"
-                  keyboardType="numeric"
-                />
-              </View>
-            </View>
-
-            <FormInput
-              label="Instructor (Optional)"
-              value={instructor}
-              onChangeText={setInstructor}
-              placeholder="e.g. Prof. Alan Turing"
-            />
-
-            <FormInput
-              label="Semester (Optional)"
-              value={semester}
-              onChangeText={setSemester}
-              placeholder="e.g. Spring 2026"
-            />
-
-            {/* Color Presets */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              COLOR ACCENT
+          {formError ? (
+            <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
+              {formError}
             </AppText>
-            <View style={styles.colorRow}>
-              {COLOR_PRESETS.map((c) => {
-                const isSelected = color === c;
-                return (
-                  <TouchableOpacity
-                    key={c}
-                    onPress={() => setColor(c)}
-                    style={[
-                      styles.colorDot,
-                      { backgroundColor: c },
-                      isSelected && styles.colorDotSelected,
-                    ]}
-                  >
-                    {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+          ) : null}
 
-            <View style={styles.modalActions}>
-              <View style={{ flex: 1 }}>
-                <Button title="Cancel" variant="outline" onPress={closeModal} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title={editingCourse ? "Update" : "Save Course"}
-                  variant="primary"
-                  onPress={handleSave}
-                  loading={createMutation.isPending || updateMutation.isPending}
-                />
-              </View>
+          <FormInput
+            label="Course Name"
+            value={name}
+            onChangeText={setName}
+            placeholder="e.g. Data Structures & Algorithms"
+          />
+
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="Course Code"
+                value={code}
+                onChangeText={setCode}
+                placeholder="e.g. CS201"
+                autoCapitalize="characters"
+              />
+            </View>
+            <View style={{ width: spacing.md }} />
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="Credit Hours"
+                value={creditHours}
+                onChangeText={setCreditHours}
+                placeholder="3"
+                keyboardType="numeric"
+              />
             </View>
           </View>
-        </View>
+
+          <FormInput
+            label="Instructor (Optional)"
+            value={instructor}
+            onChangeText={setInstructor}
+            placeholder="e.g. Prof. Alan Turing"
+          />
+
+          <FormInput
+            label="Semester (Optional)"
+            value={semester}
+            onChangeText={setSemester}
+            placeholder="e.g. Spring 2026"
+          />
+
+          {/* Color Presets */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            COLOR ACCENT
+          </AppText>
+          <View style={styles.colorRow}>
+            {COLOR_PRESETS.map((c) => {
+              const isSelected = color === c;
+              return (
+                <TouchableOpacity
+                  key={c}
+                  onPress={() => setColor(c)}
+                  style={[
+                    styles.colorDot,
+                    { backgroundColor: c },
+                    isSelected && styles.colorDotSelected,
+                  ]}
+                >
+                  {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={styles.modalActions}>
+            <View style={{ flex: 1 }}>
+              <Button title="Cancel" variant="outline" onPress={closeModal} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                title={editingCourse ? "Update" : "Save Course"}
+                variant="primary"
+                onPress={handleSave}
+                loading={createMutation.isPending || updateMutation.isPending}
+              />
+            </View>
+          </View>
+        </ModalKeyboardContainer>
       </Modal>
 
       {/* Confirm Delete */}

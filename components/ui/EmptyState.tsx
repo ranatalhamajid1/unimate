@@ -1,11 +1,14 @@
 /**
  * Empty state display with icon, title, description, and optional action.
+ * Calibrated for Milestone 16: God-Level Visual Experience 2.0.
  */
 
 import React from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
+import { useTheme } from "@/hooks/use-theme";
+import { BorderRadius } from "@/constants/layout";
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -26,10 +29,24 @@ export function EmptyState({
   onAction,
   style,
 }: EmptyStateProps) {
+  const { colors } = useTheme();
   const btnTitle = actionTitle || actionLabel;
+
   return (
     <View style={[styles.container, style]}>
-      {Boolean(icon) && <View style={styles.icon}>{icon}</View>}
+      {Boolean(icon) && (
+        <View
+          style={[
+            styles.iconWrapper,
+            {
+              backgroundColor: colors.surfaceSecondary,
+              borderColor: colors.borderSubtle,
+            },
+          ]}
+        >
+          {icon}
+        </View>
+      )}
       <AppText variant="h3" align="center" style={styles.title}>
         {title}
       </AppText>
@@ -56,16 +73,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  icon: {
+  iconWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
-    opacity: 0.85,
   },
   title: {
     marginBottom: 8,
+    fontWeight: "700",
   },
   description: {
     marginBottom: 16,
     maxWidth: 320,
+    lineHeight: 20,
   },
   button: {
     marginTop: 8,

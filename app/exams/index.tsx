@@ -22,6 +22,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
 import { spacing } from "@/constants/spacing";
@@ -412,141 +413,139 @@ export default function ExamsScreen() {
 
       {/* Add / Edit Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <AppText variant="h3">{editingExam ? "Edit Exam" : "Add Exam"}</AppText>
-              <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <AppText variant="h3">{editingExam ? "Edit Exam" : "Add Exam"}</AppText>
+            <TouchableOpacity onPress={closeModal}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
-            {formError ? (
-              <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
-                {formError}
-              </AppText>
-            ) : null}
-
-            <FormInput
-              label="Exam Title"
-              value={title}
-              onChangeText={setTitle}
-              placeholder="e.g. Midterm Examination"
-            />
-
-            {/* Course Selector */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              COURSE
+          {formError ? (
+            <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
+              {formError}
             </AppText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-              {courses.map((c: MobileCourse) => {
-                const isSelected = c.id === courseId;
-                return (
-                  <TouchableOpacity
-                    key={c.id}
-                    onPress={() => setCourseId(c.id)}
-                    style={[
-                      styles.selectableChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
+          ) : null}
+
+          <FormInput
+            label="Exam Title"
+            value={title}
+            onChangeText={setTitle}
+            placeholder="e.g. Midterm Examination"
+          />
+
+          {/* Course Selector */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            COURSE
+          </AppText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            {courses.map((c: MobileCourse) => {
+              const isSelected = c.id === courseId;
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  onPress={() => setCourseId(c.id)}
+                  style={[
+                    styles.selectableChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: isSelected ? "#fff" : colors.textPrimary,
+                      fontWeight: "600",
+                    }}
                   >
-                    <AppText
-                      variant="caption"
-                      style={{
-                        color: isSelected ? "#fff" : colors.textPrimary,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {c.code}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                    {c.code}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="Exam Date (YYYY-MM-DD)"
-                  value={examDate}
-                  onChangeText={setExamDate}
-                  placeholder="2026-09-20"
-                />
-              </View>
-              <View style={{ width: spacing.md }} />
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="Progress % (0-100)"
-                  value={progress}
-                  onChangeText={setProgress}
-                  placeholder="50"
-                  keyboardType="numeric"
-                />
-              </View>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="Exam Date (YYYY-MM-DD)"
+                value={examDate}
+                onChangeText={setExamDate}
+                placeholder="2026-09-20"
+              />
             </View>
-
-            <FormInput
-              label="Room / Location (Optional)"
-              value={room}
-              onChangeText={setRoom}
-              placeholder="e.g. Auditorium Hall B"
-            />
-
-            {/* Exam Type */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              EXAM TYPE
-            </AppText>
-            <View style={styles.chipGroup}>
-              {EXAM_TYPES.map((t) => {
-                const isSelected = type === t;
-                return (
-                  <TouchableOpacity
-                    key={t}
-                    onPress={() => setType(t)}
-                    style={[
-                      styles.typeChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
-                    >
-                      {t}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <FormInput
-              label="Notes (Optional)"
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Topics covered, syllabus..."
-            />
-
-            <View style={styles.modalActions}>
-              <View style={{ flex: 1 }}>
-                <Button title="Cancel" variant="outline" onPress={closeModal} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title={editingExam ? "Update" : "Save Exam"}
-                  variant="primary"
-                  onPress={handleSave}
-                  loading={createMutation.isPending || updateMutation.isPending}
-                />
-              </View>
+            <View style={{ width: spacing.md }} />
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="Progress % (0-100)"
+                value={progress}
+                onChangeText={setProgress}
+                placeholder="50"
+                keyboardType="numeric"
+              />
             </View>
           </View>
-        </View>
+
+          <FormInput
+            label="Room / Location (Optional)"
+            value={room}
+            onChangeText={setRoom}
+            placeholder="e.g. Auditorium Hall B"
+          />
+
+          {/* Exam Type */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            EXAM TYPE
+          </AppText>
+          <View style={styles.chipGroup}>
+            {EXAM_TYPES.map((t) => {
+              const isSelected = type === t;
+              return (
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => setType(t)}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
+                  >
+                    {t}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <FormInput
+            label="Notes (Optional)"
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Topics covered, syllabus..."
+          />
+
+          <View style={styles.modalActions}>
+            <View style={{ flex: 1 }}>
+              <Button title="Cancel" variant="outline" onPress={closeModal} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                title={editingExam ? "Update" : "Save Exam"}
+                variant="primary"
+                onPress={handleSave}
+                loading={createMutation.isPending || updateMutation.isPending}
+              />
+            </View>
+          </View>
+        </ModalKeyboardContainer>
       </Modal>
 
       {/* Delete Confirmation */}

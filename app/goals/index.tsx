@@ -21,6 +21,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
 import { spacing } from "@/constants/spacing";
@@ -353,116 +354,114 @@ export default function GoalsScreen() {
         transparent
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <AppText variant="h3">Configure Target</AppText>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={22} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Type selector */}
-            <AppText variant="caption" style={styles.modalFieldLabel}>
-              GOAL TYPE
-            </AppText>
-            <View style={styles.typeSelectorRow}>
-              {GOAL_OPTIONS.map((opt) => {
-                const isSelected = selectedType === opt.type;
-                return (
-                  <TouchableOpacity
-                    key={opt.type}
-                    onPress={() => {
-                      setSelectedType(opt.type);
-                      setTargetValue(opt.suggested);
-                      setPeriod(opt.defaultPeriod);
-                    }}
-                    style={[
-                      styles.typeChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceSecondary,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{
-                        color: isSelected ? "#FFFFFF" : colors.textPrimary,
-                        fontWeight: isSelected ? "600" : "400",
-                      }}
-                    >
-                      {opt.label}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Target Value Input */}
-            <FormInput
-              label="TARGET VALUE"
-              value={targetValue}
-              onChangeText={setTargetValue}
-              keyboardType="decimal-pad"
-              placeholder={`e.g. ${GOAL_OPTIONS.find((o) => o.type === selectedType)?.suggested}`}
-            />
-
-            {/* Period Selector */}
-            <AppText variant="caption" style={styles.modalFieldLabel}>
-              EVALUATION PERIOD
-            </AppText>
-            <View style={styles.periodRow}>
-              {["CURRENT", "WEEKLY", "MONTHLY", "SEMESTER"].map((p) => {
-                const isSelected = period === p;
-                return (
-                  <TouchableOpacity
-                    key={p}
-                    onPress={() => setPeriod(p)}
-                    style={[
-                      styles.periodChip,
-                      {
-                        backgroundColor: isSelected ? colors.accent : colors.surfaceSecondary,
-                        borderColor: isSelected ? colors.accent : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{
-                        color: isSelected ? "#FFFFFF" : colors.textPrimary,
-                        fontWeight: isSelected ? "600" : "400",
-                      }}
-                    >
-                      {p}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {Boolean(formError) && (
-              <AppText variant="caption" style={{ color: colors.danger, marginTop: spacing.sm }}>
-                {formError}
-              </AppText>
-            )}
-
-            <View style={styles.modalActions}>
-              <Button
-                title="Cancel"
-                variant="outline"
-                onPress={() => setModalVisible(false)}
-                style={{ flex: 1 }}
-              />
-              <Button
-                title="Save Target"
-                onPress={handleSaveGoal}
-                loading={upsertMutation.isPending}
-                style={{ flex: 1 }}
-              />
-            </View>
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <AppText variant="h3">Configure Target</AppText>
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Ionicons name="close" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
           </View>
-        </View>
+
+          {/* Type selector */}
+          <AppText variant="caption" style={styles.modalFieldLabel}>
+            GOAL TYPE
+          </AppText>
+          <View style={styles.typeSelectorRow}>
+            {GOAL_OPTIONS.map((opt) => {
+              const isSelected = selectedType === opt.type;
+              return (
+                <TouchableOpacity
+                  key={opt.type}
+                  onPress={() => {
+                    setSelectedType(opt.type);
+                    setTargetValue(opt.suggested);
+                    setPeriod(opt.defaultPeriod);
+                  }}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceSecondary,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: isSelected ? "#FFFFFF" : colors.textPrimary,
+                      fontWeight: isSelected ? "600" : "400",
+                    }}
+                  >
+                    {opt.label}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Target Value Input */}
+          <FormInput
+            label="TARGET VALUE"
+            value={targetValue}
+            onChangeText={setTargetValue}
+            keyboardType="decimal-pad"
+            placeholder={`e.g. ${GOAL_OPTIONS.find((o) => o.type === selectedType)?.suggested}`}
+          />
+
+          {/* Period Selector */}
+          <AppText variant="caption" style={styles.modalFieldLabel}>
+            EVALUATION PERIOD
+          </AppText>
+          <View style={styles.periodRow}>
+            {["CURRENT", "WEEKLY", "MONTHLY", "SEMESTER"].map((p) => {
+              const isSelected = period === p;
+              return (
+                <TouchableOpacity
+                  key={p}
+                  onPress={() => setPeriod(p)}
+                  style={[
+                    styles.periodChip,
+                    {
+                      backgroundColor: isSelected ? colors.accent : colors.surfaceSecondary,
+                      borderColor: isSelected ? colors.accent : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: isSelected ? "#FFFFFF" : colors.textPrimary,
+                      fontWeight: isSelected ? "600" : "400",
+                    }}
+                  >
+                    {p}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {Boolean(formError) && (
+            <AppText variant="caption" style={{ color: colors.danger, marginTop: spacing.sm }}>
+              {formError}
+            </AppText>
+          )}
+
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancel"
+              variant="outline"
+              onPress={() => setModalVisible(false)}
+              style={{ flex: 1 }}
+            />
+            <Button
+              title="Save Target"
+              onPress={handleSaveGoal}
+              loading={upsertMutation.isPending}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </ModalKeyboardContainer>
       </Modal>
 
       {/* Delete Confirmation Modal */}

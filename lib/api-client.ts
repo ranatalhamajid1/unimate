@@ -37,9 +37,11 @@ async function request<T>(
   const cleanPath = "/" + path.replace(/^\/+/, "");
   const url = path.startsWith("http") ? path : `${cleanBase}${cleanPath}`;
 
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     Accept: "application/json",
+    ...(!isFormData ? { "Content-Type": "application/json" } : {}),
     ...options.headers,
   };
 
@@ -57,7 +59,7 @@ async function request<T>(
     const response = await fetch(url, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? (body as any) : body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
       ...options,
     });
@@ -125,6 +127,8 @@ export const apiClient = {
     request<T>("PATCH", path, body, options),
   delete: <T>(path: string, options?: RequestOptions) =>
     request<T>("DELETE", path, undefined, options),
+  upload: <T>(path: string, formData: FormData, options?: RequestOptions) =>
+    request<T>("POST", path, formData, options),
 };
 
 export const apiGet = apiClient.get;
@@ -132,3 +136,4 @@ export const apiPost = apiClient.post;
 export const apiPut = apiClient.put;
 export const apiPatch = apiClient.patch;
 export const apiDelete = apiClient.delete;
+export const apiUpload = apiClient.upload;

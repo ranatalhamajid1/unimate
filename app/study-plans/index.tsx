@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Screen } from "@/components/ui/Screen";
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
@@ -21,8 +21,10 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
+import { triggerSelectionFeedback, triggerSuccessFeedback } from "@/lib/haptics";
 import { spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/layout";
 import type {
@@ -33,9 +35,11 @@ import type {
 
 export default function StudyPlansScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const [aiModalVisible, setAiModalVisible] = useState(false);
+  const [horizonDays, setHorizonDays] = useState<7 | 14>(7);
   const [availableHours, setAvailableHours] = useState("3");
   const [preferredStartTime, setPreferredStartTime] = useState("18:00");
   const [focusInstruction, setFocusInstruction] = useState("");
@@ -67,6 +71,7 @@ export default function StudyPlansScreen() {
       );
     },
     onSuccess: () => {
+      triggerSuccessFeedback();
       queryClient.invalidateQueries({ queryKey: ["study-plans"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
@@ -94,6 +99,7 @@ export default function StudyPlansScreen() {
   // AI Generation Mutation (Draft only - does not persist)
   const generateAiMutation = useMutation({
     mutationFn: async (payload: {
+      horizonDays: number;
       availableHours: number;
       preferredStartTime: string;
       focusInstruction?: string;
@@ -104,11 +110,12 @@ export default function StudyPlansScreen() {
       );
     },
     onSuccess: (res) => {
+      triggerSuccessFeedback();
       setDraftPlan(res.plan);
       setAiError("");
     },
     onError: (err: any) => {
-      setAiError(err.message || "Failed to generate AI study plan.");
+      setAiError(err.message || "Failed to generate study plan.");
     },
   });
 
@@ -126,6 +133,7 @@ export default function StudyPlansScreen() {
       );
     },
     onSuccess: () => {
+      triggerSuccessFeedback();
       queryClient.invalidateQueries({ queryKey: ["study-plans"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       closeAiModal();
@@ -150,6 +158,7 @@ export default function StudyPlansScreen() {
     }
     setAiError("");
     generateAiMutation.mutate({
+      horizonDays,
       availableHours: hrs,
       preferredStartTime,
       focusInstruction: focusInstruction.trim() || undefined,
@@ -159,18 +168,25 @@ export default function StudyPlansScreen() {
   const handleConfirmPlan = () => {
     if (!draftPlan) return;
     const now = new Date();
-    const end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const planHorizon = draftPlan.horizonDays || horizonDays || 7;
+    const end = new Date(now.getTime() + planHorizon * 24 * 60 * 60 * 1000);
 
-    const items = draftPlan.items.map((it, idx) => {
-      const [hh, mm] = (it.suggestedTime || preferredStartTime || "19:00").split(":");
-      const sched = new Date(now);
-      sched.setHours(Number(hh) || 19, Number(mm) || 0, 0, 0);
+    const items = draftPlan.items.map((it: any, idx) => {
+      let schedIso = it.scheduledAt;
+      if (!schedIso) {
+        const [hh, mm] = (it.suggestedTime || preferredStartTime || "19:00").split(":");
+        const sched = new Date(now);
+        sched.setHours(Number(hh) || 19, Number(mm) || 0, 0, 0);
+        schedIso = sched.toISOString();
+      }
 
       return {
         courseId: it.courseId || null,
+        targetType: it.targetType || (it.courseId ? "COURSE_STUDY" : "GENERAL"),
+        targetId: it.targetId || null,
         title: it.title,
         description: it.reason || "",
-        scheduledAt: sched.toISOString(),
+        scheduledAt: schedIso,
         duration: it.duration,
         order: idx,
       };
@@ -181,6 +197,23 @@ export default function StudyPlansScreen() {
       startDate: now.toISOString(),
       endDate: end.toISOString(),
       items,
+    });
+  };
+
+  const handleStartFocus = (task: MobileStudyPlanItem) => {
+    triggerSelectionFeedback();
+    router.push({
+      pathname: "/focus-session",
+      params: {
+        id: task.targetId || task.id,
+        entityType: task.targetType || (task.courseId ? "COURSE_STUDY" : "GENERAL"),
+        title: task.title,
+        courseId: task.courseId || "",
+        courseCode: task.course?.code || "",
+        courseName: task.course?.name || "",
+        courseColor: task.course?.color || "",
+        estimatedMinutes: String(task.duration),
+      },
     });
   };
 
@@ -294,7 +327,9 @@ export default function StudyPlansScreen() {
 
             {activePlan.items.map((task: MobileStudyPlanItem) => {
               const sched = new Date(task.scheduledAt);
+              const dateFormatted = sched.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
               const timeFormatted = sched.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+              const isMissed = !task.completed && sched.getTime() + task.duration * 60000 < Date.now();
 
               return (
                 <Card key={task.id} style={[styles.taskCard, task.completed && { opacity: 0.7 }]}>
@@ -352,12 +387,19 @@ export default function StudyPlansScreen() {
 
                       <View style={styles.taskMetaRow}>
                         <AppText variant="caption" colorRole="tertiary">
-                          ⏰ {timeFormatted}
+                          📅 {dateFormatted} · ⏰ {timeFormatted}
                         </AppText>
                         {task.course && (
                           <StatusChip
                             label={task.course.code}
                             variant="primary"
+                            size="sm"
+                          />
+                        )}
+                        {isMissed && (
+                          <StatusChip
+                            label="Missed"
+                            variant="danger"
                             size="sm"
                           />
                         )}
@@ -369,6 +411,22 @@ export default function StudyPlansScreen() {
                           />
                         )}
                       </View>
+
+                      {!task.completed && (
+                        <View style={{ marginTop: spacing.sm, flexDirection: "row", justifyContent: "flex-end" }}>
+                          <TouchableOpacity
+                            onPress={() => handleStartFocus(task)}
+                            style={[styles.focusActionBtn, { borderColor: colors.primary }]}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Start focus session for ${task.title}`}
+                          >
+                            <Ionicons name="play" size={14} color={colors.primary} />
+                            <AppText variant="caption" style={{ color: colors.primary, fontWeight: "600" }}>
+                              Start Focus
+                            </AppText>
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   </View>
                 </Card>
@@ -385,151 +443,235 @@ export default function StudyPlansScreen() {
         transparent
         onRequestClose={closeAiModal}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Ionicons name="sparkles" size={20} color={colors.accent} />
-                <AppText variant="h3">AI Study Plan</AppText>
-              </View>
-              <TouchableOpacity onPress={closeAiModal}>
-                <Ionicons name="close" size={22} color={colors.textPrimary} />
-              </TouchableOpacity>
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="sparkles" size={20} color={colors.accent} />
+              <AppText variant="h3">Adaptive Study Plan</AppText>
             </View>
+            <TouchableOpacity onPress={closeAiModal}>
+              <Ionicons name="close" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
 
-            {!draftPlan ? (
-              <View>
-                <AppText variant="caption" colorRole="secondary" style={{ marginBottom: spacing.md }}>
-                  UniMate analyzes your course deadlines, exams, and free time to build a customized study schedule.
-                </AppText>
+          {!draftPlan ? (
+            <View>
+              <AppText variant="caption" colorRole="secondary" style={{ marginBottom: spacing.md }}>
+                UniMate analyzes your course deadlines, exams, and free timetable gaps to build a prioritized schedule.
+              </AppText>
 
-                <AppText variant="caption" style={styles.modalFieldLabel}>
-                  AVAILABLE STUDY HOURS TODAY
-                </AppText>
-                <View style={styles.hourButtonsRow}>
-                  {["1", "2", "3", "4", "5"].map((h) => {
-                    const isSelected = availableHours === h;
-                    return (
-                      <TouchableOpacity
-                        key={h}
-                        onPress={() => setAvailableHours(h)}
-                        style={[
-                          styles.hourChip,
-                          {
-                            backgroundColor: isSelected ? colors.primary : colors.surfaceSecondary,
-                            borderColor: isSelected ? colors.primary : colors.border,
-                          },
-                        ]}
-                      >
-                        <AppText
-                          variant="caption"
-                          style={{
-                            color: isSelected ? "#FFFFFF" : colors.textPrimary,
-                            fontWeight: isSelected ? "600" : "400",
-                          }}
-                        >
-                          {h}h
-                        </AppText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <FormInput
-                  label="PREFERRED START TIME"
-                  value={preferredStartTime}
-                  onChangeText={setPreferredStartTime}
-                  placeholder="18:00"
-                />
-
-                <FormInput
-                  label="SPECIAL FOCUS OR REQUEST (OPTIONAL)"
-                  value={focusInstruction}
-                  onChangeText={setFocusInstruction}
-                  placeholder="e.g. Focus on algorithms midterm revision"
-                />
-
-                {Boolean(aiError) && (
-                  <AppText variant="caption" style={{ color: colors.danger, marginVertical: spacing.xs }}>
-                    {aiError}
+              {/* Planning Horizon Selector */}
+              <AppText variant="caption" style={styles.modalFieldLabel}>
+                PLANNING HORIZON
+              </AppText>
+              <View style={styles.hourButtonsRow}>
+                <TouchableOpacity
+                  onPress={() => setHorizonDays(7)}
+                  style={[
+                    styles.hourChip,
+                    {
+                      backgroundColor: horizonDays === 7 ? colors.primary : colors.surfaceSecondary,
+                      borderColor: horizonDays === 7 ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: horizonDays === 7 ? "#FFFFFF" : colors.textPrimary,
+                      fontWeight: horizonDays === 7 ? "600" : "400",
+                    }}
+                  >
+                    7 Days (Free)
                   </AppText>
-                )}
-
-                <View style={styles.modalActions}>
-                  <Button
-                    title="Cancel"
-                    variant="outline"
-                    onPress={closeAiModal}
-                    style={{ flex: 1 }}
-                  />
-                  <Button
-                    title="Generate Draft"
-                    onPress={handleGenerateAi}
-                    loading={generateAiMutation.isPending}
-                    style={{ flex: 1 }}
-                  />
-                </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setHorizonDays(14)}
+                  style={[
+                    styles.hourChip,
+                    {
+                      backgroundColor: horizonDays === 14 ? colors.primary : colors.surfaceSecondary,
+                      borderColor: horizonDays === 14 ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: horizonDays === 14 ? "#FFFFFF" : colors.textPrimary,
+                      fontWeight: horizonDays === 14 ? "600" : "400",
+                    }}
+                  >
+                    14 Days (Pro) ✨
+                  </AppText>
+                </TouchableOpacity>
               </View>
-            ) : (
-              // Draft preview before persistence
-              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-                <View style={[styles.draftBanner, { backgroundColor: colors.accentSubtle }]}>
+
+              <AppText variant="caption" style={styles.modalFieldLabel}>
+                TARGET DAILY STUDY HOURS
+              </AppText>
+              <View style={styles.hourButtonsRow}>
+                {["1", "2", "3", "4", "5"].map((h) => {
+                  const isSelected = availableHours === h;
+                  return (
+                    <TouchableOpacity
+                      key={h}
+                      onPress={() => setAvailableHours(h)}
+                      style={[
+                        styles.hourChip,
+                        {
+                          backgroundColor: isSelected ? colors.primary : colors.surfaceSecondary,
+                          borderColor: isSelected ? colors.primary : colors.border,
+                        },
+                      ]}
+                    >
+                      <AppText
+                        variant="caption"
+                        style={{
+                          color: isSelected ? "#FFFFFF" : colors.textPrimary,
+                          fontWeight: isSelected ? "600" : "400",
+                        }}
+                      >
+                        {h}h
+                      </AppText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <FormInput
+                label="PREFERRED START TIME"
+                value={preferredStartTime}
+                onChangeText={setPreferredStartTime}
+                placeholder="18:00"
+              />
+
+              <FormInput
+                label="SPECIAL FOCUS OR REQUEST (OPTIONAL)"
+                value={focusInstruction}
+                onChangeText={setFocusInstruction}
+                placeholder="e.g. Prioritize midterm exam revision"
+              />
+
+              {Boolean(aiError) && (
+                <AppText variant="caption" style={{ color: colors.danger, marginVertical: spacing.xs }}>
+                  {aiError}
+                </AppText>
+              )}
+
+              <View style={styles.modalActions}>
+                <Button
+                  title="Cancel"
+                  variant="outline"
+                  onPress={closeAiModal}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  title="Generate Draft"
+                  onPress={handleGenerateAi}
+                  loading={generateAiMutation.isPending}
+                  style={{ flex: 1 }}
+                />
+              </View>
+            </View>
+          ) : (
+            // Draft preview before persistence
+            <View>
+              <View style={[styles.draftBanner, { backgroundColor: colors.accentSubtle }]}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <AppText variant="h3" colorRole="accent">
                     {draftPlan.title}
                   </AppText>
-                  <AppText variant="caption" colorRole="secondary" style={{ marginTop: 4 }}>
-                    {draftPlan.summary}
-                  </AppText>
+                  {draftPlan.feasibility && (
+                    <StatusChip
+                      label={draftPlan.feasibility}
+                      variant={
+                        draftPlan.feasibility === "FEASIBLE"
+                          ? "success"
+                          : draftPlan.feasibility === "TIGHT"
+                          ? "warning"
+                          : "danger"
+                      }
+                      size="sm"
+                    />
+                  )}
                 </View>
-
-                <AppText variant="caption" style={styles.modalFieldLabel}>
-                  PROPOSED SESSIONS ({draftPlan.items.length})
+                <AppText variant="caption" colorRole="secondary" style={{ marginTop: 4 }}>
+                  {draftPlan.summary}
                 </AppText>
-
-                {draftPlan.items.map((it, idx) => (
-                  <Card key={idx} style={styles.draftItemCard}>
-                    <View style={styles.draftItemHeader}>
-                      <AppText variant="body" style={{ fontWeight: "600", flex: 1 }}>
-                        {it.title}
-                      </AppText>
-                      <StatusChip label={`${it.duration}m`} variant="neutral" size="sm" />
-                    </View>
-                    <AppText variant="caption" colorRole="secondary" style={{ marginTop: 2 }}>
-                      {it.reason}
-                    </AppText>
-                    <View style={styles.draftItemMeta}>
-                      <StatusChip label={it.courseCode || "GEN"} variant="primary" size="sm" />
-                      <AppText variant="caption" colorRole="tertiary">
-                        Suggested: {it.suggestedTime || "19:00"}
-                      </AppText>
-                    </View>
-                  </Card>
-                ))}
-
-                {Boolean(aiError) && (
-                  <AppText variant="caption" style={{ color: colors.danger, marginVertical: spacing.xs }}>
-                    {aiError}
+                {draftPlan.deficitMinutes && draftPlan.deficitMinutes > 0 ? (
+                  <AppText variant="caption" style={{ color: colors.danger, marginTop: 4, fontWeight: "600" }}>
+                    ⚠️ Workload deficit: {draftPlan.deficitMinutes} minutes unallocated due to calendar constraints.
                   </AppText>
-                )}
+                ) : null}
+              </View>
 
-                <View style={styles.modalActions}>
-                  <Button
-                    title="Back"
-                    variant="outline"
-                    onPress={() => setDraftPlan(null)}
-                    style={{ flex: 1 }}
-                  />
-                  <Button
-                    title="Save & Activate"
-                    onPress={handleConfirmPlan}
-                    loading={savePlanMutation.isPending}
-                    style={{ flex: 1 }}
-                  />
+              {/* Unallocated Backlog Alert */}
+              {draftPlan.unallocatedTasks && draftPlan.unallocatedTasks.length > 0 && (
+                <View style={[styles.backlogCard, { borderColor: colors.danger }]}>
+                  <AppText variant="caption" style={{ color: colors.danger, fontWeight: "700", marginBottom: 4 }}>
+                    ⚠️ UNALLOCATED BACKLOG ({draftPlan.unallocatedTasks.length})
+                  </AppText>
+                  {draftPlan.unallocatedTasks.slice(0, 3).map((u, uIdx) => (
+                    <View key={uIdx} style={{ marginBottom: 4 }}>
+                      <AppText variant="caption" style={{ fontWeight: "600" }}>
+                        • {u.title} ({u.remainingMinutes}m remaining)
+                      </AppText>
+                      <AppText variant="caption" colorRole="secondary">
+                        {u.reason}
+                      </AppText>
+                    </View>
+                  ))}
                 </View>
-              </ScrollView>
-            )}
-          </View>
-        </View>
+              )}
+
+              <AppText variant="caption" style={styles.modalFieldLabel}>
+                PROPOSED SESSIONS ({draftPlan.items.length})
+              </AppText>
+
+              {draftPlan.items.map((it, idx) => (
+                <Card key={idx} style={styles.draftItemCard}>
+                  <View style={styles.draftItemHeader}>
+                    <AppText variant="body" style={{ fontWeight: "600", flex: 1 }}>
+                      {it.title}
+                    </AppText>
+                    <StatusChip label={`${it.duration}m`} variant="neutral" size="sm" />
+                  </View>
+                  <AppText variant="caption" colorRole="secondary" style={{ marginTop: 2 }}>
+                    {it.reason}
+                  </AppText>
+                  <View style={styles.draftItemMeta}>
+                    <StatusChip label={it.courseCode || "GEN"} variant="primary" size="sm" />
+                    <AppText variant="caption" colorRole="tertiary">
+                      Suggested: {it.suggestedTime || "19:00"}
+                    </AppText>
+                  </View>
+                </Card>
+              ))}
+
+              {Boolean(aiError) && (
+                <AppText variant="caption" style={{ color: colors.danger, marginVertical: spacing.xs }}>
+                  {aiError}
+                </AppText>
+              )}
+
+              <View style={styles.modalActions}>
+                <Button
+                  title="Back"
+                  variant="outline"
+                  onPress={() => setDraftPlan(null)}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  title="Accept & Activate"
+                  onPress={handleConfirmPlan}
+                  loading={savePlanMutation.isPending}
+                  style={{ flex: 1 }}
+                />
+              </View>
+            </View>
+          )}
+        </ModalKeyboardContainer>
       </Modal>
 
       {/* Delete Confirmation Modal */}
@@ -696,5 +838,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
     marginTop: 4,
+  },
+  focusActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+  },
+  backlogCard: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    backgroundColor: "rgba(239, 68, 68, 0.05)",
   },
 });

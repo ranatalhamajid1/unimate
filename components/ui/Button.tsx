@@ -1,10 +1,15 @@
 /**
  * Theme-aware accessible Button component.
+ * Calibrated for Milestone 16: God-Level Visual Experience 2.0:
+ * - Restrained 8px radius (BorderRadius.md)
+ * - Fixed heights (sm: 36, md: 44, lg: 50) preventing layout shifts during loading
+ * - Tactile press feedback using transform: [{ scale: 0.98 }] and opacity: 0.85
+ * - Support for primary, secondary, outline, ghost, destructive variants
  */
 
 import React from "react";
 import {
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
@@ -15,6 +20,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { AppText } from "@/components/ui/AppText";
 import { BorderRadius, Layout } from "@/constants/layout";
 import { FontSize, FontWeight } from "@/constants/typography";
+
+import { triggerImpactFeedback, triggerSuccessFeedback } from "@/lib/haptics";
 
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -27,6 +34,7 @@ interface ButtonProps {
   isLoading?: boolean;
   loading?: boolean;
   disabled?: boolean;
+  haptic?: "light" | "medium" | "success" | "none";
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   icon?: React.ReactNode;
@@ -40,13 +48,28 @@ export function Button({
   isLoading = false,
   loading = false,
   disabled = false,
+  haptic,
   style,
   textStyle,
   icon,
 }: ButtonProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const effectiveLoading = isLoading || loading;
   const effectiveVariant = variant === "danger" ? "destructive" : variant;
+
+  const handlePress = () => {
+    if (disabled || effectiveLoading) return;
+    if (haptic === "none") {
+      // no haptic
+    } else if (haptic === "success") {
+      triggerSuccessFeedback();
+    } else if (haptic === "medium" || (!haptic && (effectiveVariant === "primary" || effectiveVariant === "destructive"))) {
+      triggerImpactFeedback("medium");
+    } else {
+      triggerImpactFeedback("light");
+    }
+    onPress();
+  };
 
   const getContainerStyle = (): ViewStyle => {
     switch (effectiveVariant) {
@@ -69,11 +92,21 @@ export function Button({
       case "destructive":
         return {
           backgroundColor: colors.destructive,
+          shadowColor: colors.destructive,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDark ? 0.35 : 0.2,
+          shadowRadius: 6,
+          elevation: 2,
         };
       case "primary":
       default:
         return {
           backgroundColor: colors.accent,
+          shadowColor: colors.accent,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: isDark ? 0.4 : 0.22,
+          shadowRadius: 8,
+          elevation: 3,
         };
     }
   };
@@ -95,27 +128,44 @@ export function Button({
   const getHeight = () => {
     switch (size) {
       case "sm":
-        return 38;
+        return 36;
       case "lg":
-        return 52;
+        return 50;
       case "md":
       default:
-        return 46;
+        return 44;
+    }
+  };
+
+  const getTextSize = () => {
+    switch (size) {
+      case "sm":
+        return FontSize.sm;
+      case "lg":
+        return FontSize.md;
+      case "md":
+      default:
+        return FontSize.base;
     }
   };
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
+    <Pressable
+      onPress={handlePress}
       disabled={disabled || effectiveLoading}
-      activeOpacity={0.8}
-      style={[
+      style={({ pressed }) => [
         styles.button,
         getContainerStyle(),
         { height: getHeight() },
+        pressed && !disabled && !effectiveLoading && {
+          transform: [{ scale: 0.98 }],
+          opacity: 0.85,
+        },
         disabled && styles.disabled,
         style,
       ]}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || effectiveLoading, busy: effectiveLoading }}
     >
       {effectiveLoading ? (
         <ActivityIndicator
@@ -128,7 +178,7 @@ export function Button({
           <AppText
             style={[
               styles.text,
-              { color: getTextColor() },
+              { color: getTextColor(), fontSize: getTextSize() },
               icon ? { marginLeft: 8 } : undefined,
               textStyle,
             ]}
@@ -137,7 +187,7 @@ export function Button({
           </AppText>
         </>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -151,7 +201,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   text: {
-    fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
   },
   disabled: {

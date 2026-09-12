@@ -2,7 +2,7 @@
  * Accessible, theme-aware FormInput component with error display and password toggling.
  */
 
-import React, { useState } from "react";
+import React, { useState, useRef, forwardRef } from "react";
 import {
   View,
   TextInput,
@@ -16,30 +16,49 @@ import { useTheme } from "@/hooks/use-theme";
 import { AppText } from "@/components/ui/AppText";
 import { BorderRadius, Layout } from "@/constants/layout";
 import { FontSize } from "@/constants/typography";
+import { useKeyboardAware } from "@/components/ui/KeyboardAwareScrollView";
 
-interface FormInputProps extends TextInputProps {
+export interface FormInputProps extends TextInputProps {
   label: string;
   error?: string;
   containerStyle?: ViewStyle;
   isPassword?: boolean;
 }
 
-export function FormInput({
-  label,
-  error,
-  containerStyle,
-  isPassword = false,
-  secureTextEntry,
-  ...rest
-}: FormInputProps) {
+export const FormInput = forwardRef<TextInput, FormInputProps>(function FormInput(
+  {
+    label,
+    error,
+    containerStyle,
+    isPassword = false,
+    secureTextEntry,
+    onFocus,
+    onBlur,
+    ...rest
+  }: FormInputProps,
+  ref
+) {
   const { colors } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const containerRef = useRef<View>(null);
+  const { scrollToFocusedInput } = useKeyboardAware();
 
   const shouldHideText = isPassword ? !isPasswordVisible : secureTextEntry;
 
+  const handleFocus: TextInputProps["onFocus"] = (e) => {
+    setIsFocused(true);
+    scrollToFocusedInput(containerRef);
+    onFocus?.(e);
+  };
+
+  const handleBlur: TextInputProps["onBlur"] = (e) => {
+    setIsFocused(false);
+    onBlur?.(e);
+  };
+
   return (
-    <View style={[styles.container, containerStyle]}>
+    <View ref={containerRef} style={[styles.container, containerStyle]}>
       <AppText variant="caption" colorRole="secondary" style={styles.label}>
         {label}
       </AppText>
@@ -48,21 +67,31 @@ export function FormInput({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: colors.surface,
+            backgroundColor: isFocused ? colors.elevated : colors.surface,
             borderColor: error
               ? colors.destructive
               : isFocused
               ? colors.accent
               : colors.border,
+            ...(isFocused
+              ? {
+                  shadowColor: colors.accent,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 5,
+                  elevation: 2,
+                }
+              : {}),
           },
         ]}
       >
         <TextInput
+          ref={ref}
           style={[styles.input, { color: colors.textPrimary }]}
           placeholderTextColor={colors.textTertiary}
           secureTextEntry={shouldHideText}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           autoCapitalize="none"
           {...rest}
         />
@@ -91,7 +120,7 @@ export function FormInput({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

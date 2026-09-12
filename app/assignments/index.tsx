@@ -23,6 +23,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
 import { apiClient } from "@/lib/api-client";
 import { spacing } from "@/constants/spacing";
@@ -407,153 +408,151 @@ export default function AssignmentsScreen() {
 
       {/* Add / Edit Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <AppText variant="h3">
-                {editingAssignment ? "Edit Assignment" : "Add Assignment"}
-              </AppText>
-              <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            {formError ? (
-              <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
-                {formError}
-              </AppText>
-            ) : null}
-
-            <FormInput
-              label="Assignment Title"
-              value={title}
-              onChangeText={setTitle}
-              placeholder="e.g. Lab Report 2"
-            />
-
-            {/* Course Selector */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              COURSE
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <AppText variant="h3">
+              {editingAssignment ? "Edit Assignment" : "Add Assignment"}
             </AppText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-              {courses.map((c) => {
-                const isSelected = c.id === courseId;
-                return (
-                  <TouchableOpacity
-                    key={c.id}
-                    onPress={() => setCourseId(c.id)}
-                    style={[
-                      styles.selectableChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{
-                        color: isSelected ? "#fff" : colors.textPrimary,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {c.code}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            <TouchableOpacity onPress={closeModal}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
-            <FormInput
-              label="Due Date (YYYY-MM-DD)"
-              value={dueDate}
-              onChangeText={setDueDate}
-              placeholder="2026-09-15"
-            />
-
-            <FormInput
-              label="Description (Optional)"
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Instructions or links..."
-              multiline
-            />
-
-            {/* Priority */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              PRIORITY
+          {formError ? (
+            <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
+              {formError}
             </AppText>
-            <View style={styles.chipGroup}>
-              {PRIORITIES.map((p) => {
-                const isSelected = priority === p;
-                return (
-                  <TouchableOpacity
-                    key={p}
-                    onPress={() => setPriority(p)}
-                    style={[
-                      styles.typeChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
-                    >
-                      {p}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+          ) : null}
 
-            {/* Status */}
-            <AppText variant="caption" style={styles.fieldLabel}>
-              STATUS
-            </AppText>
-            <View style={styles.chipGroup}>
-              {STATUSES.map((s) => {
-                const isSelected = status === s;
-                return (
-                  <TouchableOpacity
-                    key={s}
-                    onPress={() => setStatus(s)}
-                    style={[
-                      styles.typeChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="caption"
-                      style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
-                    >
-                      {s.replace("_", " ")}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+          <FormInput
+            label="Assignment Title"
+            value={title}
+            onChangeText={setTitle}
+            placeholder="e.g. Lab Report 2"
+          />
 
-            <View style={styles.modalActions}>
-              <View style={{ flex: 1 }}>
-                <Button title="Cancel" variant="outline" onPress={closeModal} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title={editingAssignment ? "Update" : "Create"}
-                  variant="primary"
-                  onPress={handleSave}
-                  loading={createMutation.isPending || updateMutation.isPending}
-                />
-              </View>
+          {/* Course Selector */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            COURSE
+          </AppText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            {courses.map((c) => {
+              const isSelected = c.id === courseId;
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  onPress={() => setCourseId(c.id)}
+                  style={[
+                    styles.selectableChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{
+                      color: isSelected ? "#fff" : colors.textPrimary,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {c.code}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <FormInput
+            label="Due Date (YYYY-MM-DD)"
+            value={dueDate}
+            onChangeText={setDueDate}
+            placeholder="2026-09-15"
+          />
+
+          <FormInput
+            label="Description (Optional)"
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Instructions or links..."
+            multiline
+          />
+
+          {/* Priority */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            PRIORITY
+          </AppText>
+          <View style={styles.chipGroup}>
+            {PRIORITIES.map((p) => {
+              const isSelected = priority === p;
+              return (
+                <TouchableOpacity
+                  key={p}
+                  onPress={() => setPriority(p)}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
+                  >
+                    {p}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Status */}
+          <AppText variant="caption" style={styles.fieldLabel}>
+            STATUS
+          </AppText>
+          <View style={styles.chipGroup}>
+            {STATUSES.map((s) => {
+              const isSelected = status === s;
+              return (
+                <TouchableOpacity
+                  key={s}
+                  onPress={() => setStatus(s)}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceHover,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    style={{ color: isSelected ? "#fff" : colors.textPrimary, fontWeight: "600" }}
+                  >
+                    {s.replace("_", " ")}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={styles.modalActions}>
+            <View style={{ flex: 1 }}>
+              <Button title="Cancel" variant="outline" onPress={closeModal} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                title={editingAssignment ? "Update" : "Create"}
+                variant="primary"
+                onPress={handleSave}
+                loading={createMutation.isPending || updateMutation.isPending}
+              />
             </View>
           </View>
-        </View>
+        </ModalKeyboardContainer>
       </Modal>
 
       {/* Delete Confirmation */}

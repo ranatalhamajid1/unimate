@@ -3,8 +3,8 @@
  * Connects directly to backend POST /api/mobile/auth/signup.
  */
 
-import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen } from "@/components/ui/Screen";
@@ -27,6 +27,10 @@ export default function SignupScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -122,9 +126,11 @@ export default function SignupScreen() {
           autoCapitalize="words"
           autoComplete="name"
           returnKeyType="next"
+          onSubmitEditing={() => emailRef.current?.focus()}
         />
 
         <FormInput
+          ref={emailRef}
           label="Email address"
           placeholder="student@university.edu"
           value={email}
@@ -136,9 +142,11 @@ export default function SignupScreen() {
           keyboardType="email-address"
           autoComplete="email"
           returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
 
         <FormInput
+          ref={passwordRef}
           label="Password (min. 8 chars, 1 letter, 1 number)"
           placeholder="••••••••"
           value={password}
@@ -149,9 +157,11 @@ export default function SignupScreen() {
           error={fieldErrors.password}
           isPassword
           returnKeyType="next"
+          onSubmitEditing={() => confirmPasswordRef.current?.focus()}
         />
 
         <FormInput
+          ref={confirmPasswordRef}
           label="Confirm Password"
           placeholder="••••••••"
           value={confirmPassword}

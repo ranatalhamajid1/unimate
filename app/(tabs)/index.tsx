@@ -1,58 +1,113 @@
-/**
- * UniMate Mobile Command Center Dashboard.
- * 100% database-backed real student intelligence layer.
- */
-
-import React from "react";
-import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
+import * as Haptics from "expo-haptics";
 import { Screen } from "@/components/ui/Screen";
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
-import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { AvatarFallback } from "@/components/ui/AvatarFallback";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { apiGet } from "@/lib/api-client";
-import { MobileDashboardData } from "@/lib/types";
 import { BorderRadius } from "@/constants/layout";
+import { MobileAttentionBanner } from "@/components/dashboard/MobileAttentionBanner";
+import { MobileTodayTimeline } from "@/components/dashboard/MobileTodayTimeline";
+import { MobileActiveFocusBar } from "@/components/focus/MobileActiveFocusBar";
+import { MobileDashboardKpiStrip } from "@/components/dashboard/MobileDashboardKpiStrip";
+import type {
+  MobileAdaptiveTodayWorkspaceData,
+  MobileTodayActionItem,
+  MobileActiveFocusSession,
+  MobileAcademicData,
+} from "@/lib/types";
+
+type TabType = "TODAY" | "NEXT" | "LATER";
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
+  const [activeTab, setActiveTab] = useState<TabType>("TODAY");
+  const [completedExpanded, setCompletedExpanded] = useState(false);
 
   const {
-    data: dashboard,
+    data: todayResponse,
     isLoading,
     isError,
     error,
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["mobile-dashboard"],
-    queryFn: () => apiGet<MobileDashboardData>("/api/mobile/dashboard"),
+    queryKey: ["mobile-today"],
+    queryFn: () => apiGet<{ success: boolean; data: MobileAdaptiveTodayWorkspaceData }>("/api/mobile/today"),
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 
+  const { data: academicsRes } = useQuery({
+    queryKey: ["mobile-dashboard-academics"],
+    queryFn: () => apiGet<{ success: boolean; academics: MobileAcademicData }>("/api/mobile/academics"),
+    staleTime: 1000 * 60 * 5,
+  });
+  const academicData = academicsRes?.academics;
+
+  const { data: profileRes } = useQuery({
+    queryKey: ["mobile-dashboard-profile"],
+    queryFn: () => apiGet<{ success: boolean; profileCompletion?: number }>("/api/mobile/user/profile"),
+    staleTime: 1000 * 60 * 5,
+  });
+  const profileCompletion = profileRes?.profileCompletion ?? 75;
+
+  const { data: activeFocusRes, refetch: refetchActiveFocus } = useQuery({
+    queryKey: ["mobile-active-focus"],
+    queryFn: () =>
+      apiGet<{ success: boolean; activeSession: MobileActiveFocusSession | null }>(
+        "/api/study-sessions/active"
+      ),
+    staleTime: 1000 * 15, // 15 seconds
+  });
+
+  const activeFocusSession = activeFocusRes?.activeSession || null;
+
+  const handleStartFocus = (task: MobileTodayActionItem) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push({
+      pathname: "/focus-session",
+      params: {
+        id: task.id,
+        title: task.title,
+        courseId: task.courseId || "",
+        courseCode: task.courseCode,
+        courseName: task.courseName,
+        courseColor: task.courseColor,
+        estimatedMinutes: task.estimatedMinutes.toString(),
+        entityType: task.entityType,
+      },
+    });
+  };
+
+  const workspace = todayResponse?.data;
+
   if (isLoading) {
     return (
-      <Screen style={styles.centerContainer}>
-        <LoadingState message="Loading your Command Center..." />
+      <Screen scrollable>
+        <DashboardSkeleton />
       </Screen>
     );
   }
 
-  if (isError || !dashboard) {
+  if (isError || !workspace) {
     return (
       <Screen style={styles.centerContainer}>
         <ErrorState
-          title="Command Center Unavailable"
+          title="Today Workspace Unavailable"
           message={
             (error as any)?.message ||
-            "Unable to connect to your UniMate academic database."
+            "Unable to connect to your UniMate academic workspace."
           }
           onRetry={() => refetch()}
         />
@@ -60,29 +115,28 @@ export default function DashboardScreen() {
     );
   }
 
-  const {
-    greeting,
-    dateString,
-    unreadNotificationCount,
-    subscription,
-    stats,
-    priorities,
-    todaySchedule,
-    upcomingAssignments,
-    nextExam,
-    activeStudyPlan,
-    academicInsights,
-    goals,
-    weeklyStudyProgress,
-  } = dashboard;
+  const { capacity, attention, today, next, later, completedToday, emptyState } = workspace;
 
-  const getSeverityBadgeColor = (severity: string) => {
-    switch (severity) {
-      case "CRITICAL":
+  const handleTabChange = (tab: TabType) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setActiveTab(tab);
+  };
+
+  const handleTaskPress = (actionHref: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (actionHref.includes("assignments")) router.push("/assignments" as any);
+    else if (actionHref.includes("exams")) router.push("/exams" as any);
+    else if (actionHref.includes("academics")) router.push("/academics" as any);
+    else if (actionHref.includes("timetable")) router.push("/calendar" as any);
+  };
+
+  const getUrgencyBadge = (tier: MobileTodayActionItem["urgencyTier"]) => {
+    switch (tier) {
+      case "OVERDUE":
         return { bg: colors.destructiveSubtle, text: colors.destructive, border: colors.destructive };
-      case "HIGH":
+      case "CRITICAL":
         return { bg: colors.warningSubtle, text: colors.warning, border: colors.warning };
-      case "MEDIUM":
+      case "HIGH":
         return { bg: colors.accentSubtle, text: colors.accent, border: colors.accent };
       default:
         return { bg: colors.surfaceSecondary, text: colors.textSecondary, border: colors.border };
@@ -96,45 +150,93 @@ export default function DashboardScreen() {
       refreshing={isRefetching}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* ── 1. Top Header ────────────────────────────────────────────── */}
+      {/* ── 1. Top Header with Student Identity ────────────────────── */}
       <View style={styles.topBar}>
         <View style={styles.headerLeft}>
-          <AppText colorRole="secondary" variant="caption">
-            {dateString}
-          </AppText>
-          <View style={styles.nameRow}>
-            <AppText variant="h2" style={styles.greetingTitle}>
-              {greeting},{" "}
-              <AppText variant="h2" colorRole="accent">
+          <TouchableOpacity
+            onPress={() => router.push("/settings")}
+            activeOpacity={0.8}
+            style={styles.avatarButton}
+            accessibilityRole="button"
+            accessibilityLabel="View profile settings"
+          >
+            {user?.avatarUrl ? (
+              <Image
+                source={{ uri: user.avatarUrl }}
+                style={styles.headerAvatar}
+                contentFit="cover"
+                transition={150}
+              />
+            ) : (
+              <AvatarFallback name={user?.name} size={42} />
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.headerTitleMeta}>
+            <AppText variant="h3" style={styles.greetingTitle}>
+              Today's Plan,{" "}
+              <AppText variant="h3" colorRole="accent">
                 {user?.name?.split(" ")[0] || "Student"}
               </AppText>
             </AppText>
+
+            {user?.university ? (
+              <View style={styles.affiliationRow}>
+                <Ionicons
+                  name={user.university.isVerified ? "checkmark-circle" : "school-outline"}
+                  size={12}
+                  color={user.university.isVerified ? colors.accent : colors.textTertiary}
+                />
+                <AppText
+                  variant="caption"
+                  numberOfLines={1}
+                  style={{ color: colors.textSecondary }}
+                >
+                  {user.university.shortName || user.university.name}
+                </AppText>
+                {user.currentSemester ? (
+                  <View
+                    style={[
+                      styles.semesterPill,
+                      { backgroundColor: colors.surfaceSecondary, borderColor: colors.borderSubtle },
+                    ]}
+                  >
+                    <AppText
+                      variant="caption"
+                      style={{ color: colors.textSecondary, fontSize: 10, fontWeight: "600" }}
+                    >
+                      {user.currentSemester}
+                    </AppText>
+                  </View>
+                ) : null}
+              </View>
+            ) : (
+              <AppText colorRole="tertiary" variant="caption">
+                {workspace.dateString}
+              </AppText>
+            )}
           </View>
         </View>
 
         <View style={styles.topActions}>
-          {/* Plan badge */}
-          <View
+          <TouchableOpacity
+            onPress={() => router.push("/settings")}
             style={[
-              styles.planBadge,
+              styles.completionPill,
               {
-                backgroundColor: subscription.isPro
-                  ? colors.accentSubtle
-                  : colors.surfaceSecondary,
-                borderColor: subscription.isPro ? colors.accent : colors.border,
+                backgroundColor: isDark ? "rgba(99, 102, 241, 0.15)" : "rgba(99, 102, 241, 0.08)",
+                borderColor: `${colors.accent}30`,
               },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={`Profile completion: ${profileCompletion}%`}
           >
-            <AppText
-              variant="label"
-              colorRole={subscription.isPro ? "accent" : "secondary"}
-              style={styles.planText}
-            >
-              {subscription.plan}
+            <Ionicons name="sparkles" size={12} color={colors.accent} />
+            <AppText style={[styles.completionText, { color: colors.accent }]}>
+              {profileCompletion}%
             </AppText>
-          </View>
+          </TouchableOpacity>
 
-          {/* Notifications Button with unread badge */}
           <TouchableOpacity
             onPress={() => router.push("/notifications")}
             style={[
@@ -142,28 +244,11 @@ export default function DashboardScreen() {
               { backgroundColor: colors.surface, borderColor: colors.border },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={`Notifications (${unreadNotificationCount} unread)`}
+            accessibilityLabel="Notifications"
           >
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={colors.textPrimary}
-            />
-            {unreadNotificationCount > 0 && (
-              <View
-                style={[
-                  styles.notificationBadge,
-                  { backgroundColor: colors.destructive },
-                ]}
-              >
-                <AppText style={styles.badgeCount}>
-                  {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
-                </AppText>
-              </View>
-            )}
+            <Ionicons name="notifications-outline" size={18} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          {/* Settings Button */}
           <TouchableOpacity
             onPress={() => router.push("/settings")}
             style={[
@@ -173,848 +258,577 @@ export default function DashboardScreen() {
             accessibilityRole="button"
             accessibilityLabel="Settings"
           >
-            <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
+            <Ionicons name="settings-outline" size={18} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── 2. Daily Priorities Section (Intelligence Layer) ──────────── */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.sectionTitleWithIcon}>
-            <Ionicons name="flash" size={18} color={colors.accent} />
-            <AppText variant="h3" style={styles.sectionTitle}>
-              Daily Priorities
+      {/* ── 2. Attention Alerts (Immediate Urgency) ────────────────── */}
+      <MobileAttentionBanner
+        items={attention.items}
+        attendanceWarning={attention.attendanceWarning}
+        timetableConflictCount={attention.timetableConflictCount}
+      />
+
+      {/* ── 2b. Fintech Academic KPI Strip ───────────────────────── */}
+      <MobileDashboardKpiStrip
+        gpa={academicData?.gpaString}
+        attendance={academicData?.attendanceString}
+        plannedMinutes={capacity.allocatedWorkMinutes}
+        tasksCount={today.allocatedTasks.length}
+        onPressGpa={() => router.push("/academics" as any)}
+        onPressAttendance={() => router.push("/academics" as any)}
+        onPressTasks={() => handleTabChange("TODAY")}
+      />
+
+      {/* ── 3. Segmented Control: Today | Next | Later ─────────────── */}
+      <View style={[styles.segmentedContainer, { backgroundColor: colors.surfaceSecondary }]}>
+        <TouchableOpacity
+          onPress={() => handleTabChange("TODAY")}
+          style={[
+            styles.segmentButton,
+            activeTab === "TODAY" && [
+              styles.segmentActive,
+              { backgroundColor: colors.surface, shadowColor: "#000" },
+            ],
+          ]}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === "TODAY" }}
+        >
+          <AppText
+            variant="label"
+            colorRole={activeTab === "TODAY" ? "accent" : "secondary"}
+            style={styles.segmentText}
+          >
+            Today ({today.allocatedTasks.length})
+          </AppText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => handleTabChange("NEXT")}
+          style={[
+            styles.segmentButton,
+            activeTab === "NEXT" && [
+              styles.segmentActive,
+              { backgroundColor: colors.surface, shadowColor: "#000" },
+            ],
+          ]}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === "NEXT" }}
+        >
+          <AppText
+            variant="label"
+            colorRole={activeTab === "NEXT" ? "accent" : "secondary"}
+            style={styles.segmentText}
+          >
+            Next ({next.length})
+          </AppText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => handleTabChange("LATER")}
+          style={[
+            styles.segmentButton,
+            activeTab === "LATER" && [
+              styles.segmentActive,
+              { backgroundColor: colors.surface, shadowColor: "#000" },
+            ],
+          ]}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === "LATER" }}
+        >
+          <AppText
+            variant="label"
+            colorRole={activeTab === "LATER" ? "accent" : "secondary"}
+            style={styles.segmentText}
+          >
+            Later ({later.length})
+          </AppText>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── TAB: TODAY ─────────────────────────────────────────────── */}
+      {activeTab === "TODAY" && (
+        <View style={styles.tabContent}>
+          {/* Capacity Guardrail Header Card */}
+          <Card
+            style={[
+              styles.capacityCard,
+              {
+                backgroundColor: capacity.isOverCapacity
+                  ? colors.warningSubtle
+                  : colors.accentSubtle,
+                borderColor: capacity.isOverCapacity ? colors.warning : colors.accent,
+              },
+            ]}
+          >
+            <View style={styles.capacityHeader}>
+              <Ionicons
+                name={capacity.isOverCapacity ? "alert-circle" : "time"}
+                size={16}
+                color={capacity.isOverCapacity ? colors.warning : colors.accent}
+              />
+              <AppText
+                variant="label"
+                style={{
+                  color: capacity.isOverCapacity ? colors.warning : colors.accent,
+                  fontWeight: "700",
+                }}
+              >
+                CAPACITY: ~{Math.round(capacity.allocatedWorkMinutes / 60)}h PLANNED / ~{(capacity.availableStudyMinutes / 60).toFixed(1)}h FREE
+              </AppText>
+            </View>
+            <AppText variant="caption" style={{ color: colors.textPrimary, marginTop: 4 }}>
+              {capacity.notice}
+            </AppText>
+          </Card>
+
+          {/* Today's Schedule & Study Gaps Timeline */}
+          <MobileTodayTimeline
+            schedule={today.schedule}
+            dayName={workspace.dayName}
+          />
+
+          {/* Allocated Focus Tasks Queue */}
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionTitleRow}>
+              <Ionicons name="flash" size={18} color={colors.accent} />
+              <AppText variant="h3">Recommended Focus Queue</AppText>
+            </View>
+            <AppText colorRole="tertiary" variant="caption">
+              {today.allocatedTasks.length} task{today.allocatedTasks.length !== 1 ? "s" : ""}
             </AppText>
           </View>
-          {priorities.criticalCount > 0 && (
-            <View
+
+          {today.allocatedTasks.length === 0 ? (
+            <Card style={styles.emptyCard}>
+              <Ionicons name="checkmark-circle" size={32} color={colors.success} />
+              <AppText variant="bodyMedium" style={{ marginTop: 6, fontWeight: "600" }}>
+                All caught up for today!
+              </AppText>
+              <AppText colorRole="secondary" variant="caption" align="center">
+                No urgent deadlines or imminent exams requiring today's focus.
+              </AppText>
+            </Card>
+          ) : (
+            <View style={styles.taskList}>
+              {today.allocatedTasks.map((task, idx) => {
+                const badge = getUrgencyBadge(task.urgencyTier);
+
+                return (
+                  <TouchableOpacity
+                    key={task.id}
+                    activeOpacity={0.8}
+                    onPress={() => handleTaskPress(task.actionHref)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View ${task.title}`}
+                  >
+                    <Card style={styles.taskCard}>
+                      <View style={styles.taskHeader}>
+                        <View style={styles.badgeRow}>
+                          <AppText colorRole="tertiary" variant="caption" style={{ fontWeight: "700" }}>
+                            #{idx + 1}
+                          </AppText>
+                          <View
+                            style={[
+                              styles.pillBadge,
+                              { backgroundColor: badge.bg, borderColor: badge.border },
+                            ]}
+                          >
+                            <AppText
+                              variant="label"
+                              style={{ color: badge.text, fontSize: 10, fontWeight: "700" }}
+                            >
+                              {task.deadlineLabel}
+                            </AppText>
+                          </View>
+                          <AppText colorRole="secondary" variant="caption" style={{ fontWeight: "600" }}>
+                            {task.courseCode}
+                          </AppText>
+                        </View>
+                        <AppText colorRole="tertiary" variant="caption">
+                          {task.estimatedLabel}
+                        </AppText>
+                      </View>
+
+                      <AppText variant="bodyMedium" numberOfLines={1} style={styles.taskTitle}>
+                        {task.title}
+                      </AppText>
+
+                      <AppText colorRole="secondary" variant="caption" numberOfLines={1}>
+                        {task.reason}
+                      </AppText>
+
+                      <View style={styles.taskActionRow}>
+                        <TouchableOpacity
+                          onPress={() => handleStartFocus(task)}
+                          activeOpacity={0.8}
+                          style={[styles.focusPillButton, { backgroundColor: `${colors.accent}15`, borderColor: `${colors.accent}40` }]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Start focus on ${task.title}`}
+                        >
+                          <Ionicons name="flash" size={12} color={colors.accent} style={{ marginRight: 4 }} />
+                          <AppText style={{ color: colors.accent, fontSize: 11, fontWeight: "700" }}>
+                            Focus
+                          </AppText>
+                        </TouchableOpacity>
+
+                        <AppText colorRole="accent" variant="caption" style={{ fontWeight: "700" }}>
+                          {task.actionLabel} →
+                        </AppText>
+                      </View>
+                    </Card>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Completed Today (Reflection Card) */}
+          {completedToday.count > 0 && (
+            <Card
               style={[
-                styles.criticalBadge,
-                { backgroundColor: colors.destructiveSubtle },
+                styles.completedCard,
+                { backgroundColor: colors.successSubtle, borderColor: colors.success },
               ]}
             >
-              <AppText variant="caption" colorRole="destructive" style={styles.boldText}>
-                {priorities.criticalCount} Critical
+              <TouchableOpacity
+                onPress={() => setCompletedExpanded(!completedExpanded)}
+                activeOpacity={0.8}
+                style={styles.completedHeader}
+              >
+                <View style={styles.completedHeaderLeft}>
+                  <Ionicons name="checkmark-done-circle" size={20} color={colors.success} />
+                  <AppText variant="bodyMedium" style={{ fontWeight: "700", color: colors.success }}>
+                    Completed Today ({completedToday.count})
+                  </AppText>
+                </View>
+                <Ionicons
+                  name={completedExpanded ? "chevron-up" : "chevron-down"}
+                  size={18}
+                  color={colors.success}
+                />
+              </TouchableOpacity>
+
+              {completedExpanded && (
+                <View style={styles.completedList}>
+                  {completedToday.items.map((c) => (
+                    <View key={c.id} style={styles.completedItemRow}>
+                      <Ionicons name="checkmark" size={14} color={colors.success} />
+                      <AppText
+                        variant="caption"
+                        style={{ textDecorationLine: "line-through", color: colors.textSecondary }}
+                      >
+                        {c.title} ({c.courseCode})
+                      </AppText>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </Card>
+          )}
+        </View>
+      )}
+
+      {/* ── TAB: NEXT ──────────────────────────────────────────────── */}
+      {activeTab === "NEXT" && (
+        <View style={styles.tabContent}>
+          <AppText colorRole="secondary" variant="caption" style={styles.tabSubtitle}>
+            Upcoming work in days 2 to 5 or deferred from today.
+          </AppText>
+
+          {next.length === 0 ? (
+            <Card style={styles.emptyCard}>
+              <Ionicons name="calendar" size={28} color={colors.textTertiary} />
+              <AppText variant="bodyMedium" style={{ marginTop: 4 }}>
+                No work upcoming in days 2–5
               </AppText>
+            </Card>
+          ) : (
+            <View style={styles.taskList}>
+              {next.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  activeOpacity={0.8}
+                  onPress={() => handleTaskPress(item.actionHref)}
+                >
+                  <Card key={item.id} style={styles.taskCard}>
+                    <View style={styles.taskHeader}>
+                      <AppText colorRole="accent" variant="label" style={{ fontWeight: "700" }}>
+                        {item.courseCode}
+                      </AppText>
+                      <AppText colorRole="tertiary" variant="caption">
+                        {item.deadlineLabel} • {item.estimatedLabel}
+                      </AppText>
+                    </View>
+                    <AppText variant="bodyMedium" numberOfLines={1} style={styles.taskTitle}>
+                      {item.title}
+                    </AppText>
+                    {item.deferredReason ? (
+                      <AppText variant="caption" style={{ color: colors.warning, marginTop: 2 }}>
+                        • {item.deferredReason}
+                      </AppText>
+                    ) : null}
+                  </Card>
+                </TouchableOpacity>
+              ))}
             </View>
           )}
         </View>
+      )}
 
-        {priorities.items.length === 0 || priorities.isCaughtUp ? (
-          <Card style={styles.caughtUpCard}>
-            <View style={styles.caughtUpContent}>
-              <View
-                style={[
-                  styles.caughtUpIcon,
-                  { backgroundColor: colors.successSubtle },
-                ]}
-              >
-                <Ionicons
-                  name="checkmark-circle"
-                  size={24}
-                  color={colors.success}
-                />
-              </View>
-              <View style={styles.caughtUpText}>
-                <AppText variant="bodyMedium">All caught up!</AppText>
-                <AppText colorRole="secondary" variant="caption">
-                  No urgent deadlines, exam alerts, or attendance warnings.
-                </AppText>
-              </View>
-            </View>
-          </Card>
-        ) : (
-          <View style={styles.priorityList}>
-            {priorities.items.map((priority) => {
-              const badge = getSeverityBadgeColor(priority.severity);
-              return (
-                <Card key={priority.id} style={styles.priorityCard}>
-                  <View style={styles.priorityHeader}>
-                    <View
-                      style={[
-                        styles.severityPill,
-                        { backgroundColor: badge.bg, borderColor: badge.border },
-                      ]}
-                    >
-                      <AppText
-                        variant="label"
-                        style={[styles.severityText, { color: badge.text }]}
-                      >
-                        {priority.severity}
-                      </AppText>
-                    </View>
-                    {Boolean(priority.courseCode) && (
-                      <AppText colorRole="secondary" variant="caption" style={styles.courseTag}>
-                        {priority.courseCode}
-                      </AppText>
-                    )}
-                  </View>
-                  <AppText variant="bodyMedium" style={styles.priorityTitle}>
-                    {priority.title}
-                  </AppText>
-                  <AppText colorRole="secondary" variant="caption">
-                    {priority.description}
-                  </AppText>
-                </Card>
-              );
-            })}
-          </View>
-        )}
-      </View>
+      {/* ── TAB: LATER ─────────────────────────────────────────────── */}
+      {activeTab === "LATER" && (
+        <View style={styles.tabContent}>
+          <AppText colorRole="secondary" variant="caption" style={styles.tabSubtitle}>
+            Future backlog tasks, exams beyond 7 days, and long-range goals.
+          </AppText>
 
-      {/* ── 3. Overview Stat Cards ───────────────────────────────────── */}
-      <View style={styles.statsGrid}>
-        {/* GPA Card */}
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="ribbon-outline" size={16} color={colors.accent} />
-            <AppText variant="label" colorRole="tertiary">
-              GPA
-            </AppText>
-          </View>
-          <AppText variant="h2" colorRole="accent" style={styles.statValue}>
-            {stats.gpa.value}
-          </AppText>
-          <AppText colorRole="secondary" variant="caption" numberOfLines={1}>
-            {stats.gpa.sub}
-          </AppText>
-        </Card>
-
-        {/* Attendance Card */}
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="checkmark-done-circle-outline" size={16} color={colors.success} />
-            <AppText variant="label" colorRole="tertiary">
-              Attendance
-            </AppText>
-          </View>
-          <AppText variant="h2" colorRole="success" style={styles.statValue}>
-            {stats.attendance.value}
-          </AppText>
-          <AppText colorRole="secondary" variant="caption" numberOfLines={1}>
-            {stats.attendance.sub}
-          </AppText>
-        </Card>
-
-        {/* Assignments Due */}
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="document-text-outline" size={16} color={colors.warning} />
-            <AppText variant="label" colorRole="tertiary">
-              Due This Week
-            </AppText>
-          </View>
-          <AppText variant="h2" style={styles.statValue}>
-            {stats.assignmentsDue.count}
-          </AppText>
-          <AppText colorRole="secondary" variant="caption" numberOfLines={1}>
-            {stats.assignmentsDue.sub}
-          </AppText>
-        </Card>
-
-        {/* Study Hours */}
-        <Card style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="time-outline" size={16} color={colors.accent} />
-            <AppText variant="label" colorRole="tertiary">
-              Study Hours
-            </AppText>
-          </View>
-          <AppText variant="h2" style={styles.statValue}>
-            {stats.studyHours.formatted}
-          </AppText>
-          <AppText colorRole="secondary" variant="caption" numberOfLines={1}>
-            {stats.studyHours.sub}
-          </AppText>
-        </Card>
-      </View>
-
-      {/* ── 4. Today's Schedule ──────────────────────────────────────── */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.sectionTitleWithIcon}>
-            <Ionicons name="calendar-outline" size={18} color={colors.accent} />
-            <AppText variant="h3" style={styles.sectionTitle}>
-              Today's Schedule
-            </AppText>
-          </View>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
-            <AppText colorRole="accent" variant="caption" style={styles.boldText}>
-              View All
-            </AppText>
-          </TouchableOpacity>
-        </View>
-
-        {todaySchedule.length === 0 ? (
-          <Card style={styles.emptyScheduleCard}>
-            <Ionicons name="sunny-outline" size={28} color={colors.textTertiary} />
-            <AppText variant="bodyMedium" style={styles.emptyTitle}>
-              No classes scheduled for today
-            </AppText>
-            <AppText colorRole="secondary" variant="caption" align="center">
-              Enjoy your free day or use this time for structured study sessions.
-            </AppText>
-          </Card>
-        ) : (
-          <View style={styles.scheduleList}>
-            {todaySchedule.map((cls) => (
-              <Card key={cls.id} style={styles.classCard}>
-                <View style={styles.classTimeBox}>
-                  <AppText variant="bodyMedium" style={styles.classTimeText}>
-                    {cls.startTime}
-                  </AppText>
-                  <AppText colorRole="secondary" variant="caption">
-                    {cls.endTime}
-                  </AppText>
-                </View>
-                <View
-                  style={[
-                    styles.classColorStrip,
-                    { backgroundColor: cls.color || colors.accent },
-                  ]}
-                />
-                <View style={styles.classDetails}>
-                  <View style={styles.classHeader}>
-                    <AppText variant="bodyMedium" numberOfLines={1} style={styles.className}>
-                      {cls.code ? `${cls.code} · ${cls.name}` : cls.name}
-                    </AppText>
-                    <View style={[styles.classTypeBadge, { backgroundColor: colors.surfaceSecondary }]}>
-                      <AppText variant="label" colorRole="secondary" style={styles.classType}>
-                        {cls.type}
-                      </AppText>
-                    </View>
-                  </View>
-                  <View style={styles.roomRow}>
-                    <Ionicons name="location-outline" size={13} color={colors.textTertiary} />
-                    <AppText colorRole="secondary" variant="caption" style={styles.roomText}>
-                      {cls.room}
-                    </AppText>
-                  </View>
-                </View>
-              </Card>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* ── 5. Active Study Plan Tasks (if present) ─────────────────── */}
-      {activeStudyPlan && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionTitleWithIcon}>
-              <Ionicons name="checkbox-outline" size={18} color={colors.accent} />
-              <AppText variant="h3" style={styles.sectionTitle}>
-                {activeStudyPlan.title}
+          {later.length === 0 ? (
+            <Card style={styles.emptyCard}>
+              <Ionicons name="albums-outline" size={28} color={colors.textTertiary} />
+              <AppText variant="bodyMedium" style={{ marginTop: 4 }}>
+                No long-range backlog tasks
               </AppText>
-            </View>
-            <AppText colorRole="secondary" variant="caption">
-              {activeStudyPlan.completedItems}/{activeStudyPlan.totalItems} done
-            </AppText>
-          </View>
-
-          <Card style={styles.planCard}>
-            {/* Progress bar */}
-            <View style={[styles.progressBarBg, { backgroundColor: colors.surfaceSecondary }]}>
-              <View
-                style={[
-                  styles.progressBarFill,
-                  {
-                    backgroundColor: colors.accent,
-                    width: `${
-                      activeStudyPlan.totalItems > 0
-                        ? (activeStudyPlan.completedItems / activeStudyPlan.totalItems) * 100
-                        : 0
-                    }%`,
-                  },
-                ]}
-              />
-            </View>
-
+            </Card>
+          ) : (
             <View style={styles.taskList}>
-              {activeStudyPlan.items.slice(0, 3).map((item) => (
-                <View key={item.id} style={styles.taskRow}>
-                  <Ionicons
-                    name={item.completed ? "checkmark-circle" : "ellipse-outline"}
-                    size={18}
-                    color={item.completed ? colors.success : colors.textTertiary}
-                  />
-                  <View style={styles.taskText}>
-                    <AppText
-                      variant="body"
-                      style={[
-                        item.completed && {
-                          textDecorationLine: "line-through",
-                          color: colors.textTertiary,
-                        },
-                      ]}
-                    >
+              {later.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  activeOpacity={0.8}
+                  onPress={() => handleTaskPress(item.actionHref)}
+                >
+                  <Card key={item.id} style={styles.taskCard}>
+                    <View style={styles.taskHeader}>
+                      <AppText colorRole="secondary" variant="label" style={{ fontWeight: "600" }}>
+                        {item.courseCode}
+                      </AppText>
+                      <AppText colorRole="tertiary" variant="caption">
+                        {item.deadlineLabel}
+                      </AppText>
+                    </View>
+                    <AppText variant="bodyMedium" numberOfLines={1} style={styles.taskTitle}>
                       {item.title}
                     </AppText>
-                    <AppText colorRole="secondary" variant="caption">
-                      {item.duration} mins {item.courseName ? `· ${item.courseName}` : ""}
-                    </AppText>
-                  </View>
-                </View>
+                  </Card>
+                </TouchableOpacity>
               ))}
             </View>
-          </Card>
+          )}
         </View>
       )}
 
-      {/* ── 6. Next Upcoming Exam Countdown ──────────────────────────── */}
-      {nextExam && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionTitleWithIcon}>
-              <Ionicons name="alarm-outline" size={18} color={colors.warning} />
-              <AppText variant="h3" style={styles.sectionTitle}>
-                Next Exam
-              </AppText>
-            </View>
-          </View>
-
-          <Card style={styles.examCard}>
-            <View style={styles.examTopRow}>
-              <View style={styles.examTitleBlock}>
-                <View
-                  style={[
-                    styles.examTypeBadge,
-                    { backgroundColor: colors.warningSubtle },
-                  ]}
-                >
-                  <AppText variant="label" colorRole="warning">
-                    {nextExam.type}
-                  </AppText>
-                </View>
-                <AppText variant="h3" style={styles.examTitle}>
-                  {nextExam.title}
-                </AppText>
-                <AppText colorRole="secondary" variant="body">
-                  {nextExam.courseCode} · {nextExam.courseName}
-                </AppText>
-              </View>
-
-              <View
-                style={[
-                  styles.countdownBadge,
-                  { backgroundColor: colors.surfaceSecondary, borderColor: colors.border },
-                ]}
-              >
-                <AppText variant="h2" colorRole="warning" style={styles.countdownDays}>
-                  {nextExam.daysRemaining}
-                </AppText>
-                <AppText variant="label" colorRole="secondary" style={styles.countdownLabel}>
-                  {nextExam.daysRemaining === 1 ? "day left" : "days left"}
-                </AppText>
-              </View>
-            </View>
-
-            <View style={styles.examDetailsRow}>
-              <View style={styles.examDetail}>
-                <Ionicons name="calendar-outline" size={14} color={colors.textTertiary} />
-                <AppText colorRole="secondary" variant="caption">
-                  {nextExam.date} at {nextExam.time}
-                </AppText>
-              </View>
-              <View style={styles.examDetail}>
-                <Ionicons name="location-outline" size={14} color={colors.textTertiary} />
-                <AppText colorRole="secondary" variant="caption">
-                  {nextExam.room}
-                </AppText>
-              </View>
-            </View>
-          </Card>
-        </View>
-      )}
-
-      {/* ── 7. Upcoming Assignments ─────────────────────────────────── */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.sectionTitleWithIcon}>
-            <Ionicons name="document-text-outline" size={18} color={colors.accent} />
-            <AppText variant="h3" style={styles.sectionTitle}>
-              Upcoming Assignments
-            </AppText>
-          </View>
-          <AppText colorRole="secondary" variant="caption">
-            {upcomingAssignments.length} pending
-          </AppText>
-        </View>
-
-        {upcomingAssignments.length === 0 ? (
-          <Card style={styles.emptyCard}>
-            <Ionicons name="checkmark-done" size={24} color={colors.success} />
-            <AppText variant="bodyMedium" style={styles.emptyTitle}>
-              No upcoming assignments
-            </AppText>
-            <AppText colorRole="secondary" variant="caption">
-              All coursework submissions are up to date.
-            </AppText>
-          </Card>
-        ) : (
-          <View style={styles.assignmentList}>
-            {upcomingAssignments.map((assignment) => (
-              <Card key={assignment.id} style={styles.assignmentCard}>
-                <View style={styles.assignmentHeader}>
-                  <AppText colorRole="secondary" variant="caption">
-                    {assignment.courseCode || assignment.courseName}
-                  </AppText>
-                  <View
-                    style={[
-                      styles.dueSoonBadge,
-                      {
-                        backgroundColor: assignment.dueSoon
-                          ? colors.destructiveSubtle
-                          : colors.surfaceSecondary,
-                      },
-                    ]}
-                  >
-                    <AppText
-                      variant="label"
-                      colorRole={assignment.dueSoon ? "destructive" : "secondary"}
-                      style={styles.dueSoonText}
-                    >
-                      {assignment.dueLabel}
-                    </AppText>
-                  </View>
-                </View>
-                <AppText variant="bodyMedium" style={styles.assignmentTitle}>
-                  {assignment.title}
-                </AppText>
-              </Card>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* ── 8. Academic Goals ─────────────────────────────────────────── */}
-      {goals.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionTitleWithIcon}>
-              <Ionicons name="flag-outline" size={18} color={colors.accent} />
-              <AppText variant="h3" style={styles.sectionTitle}>
-                Academic Goals
-              </AppText>
-            </View>
-          </View>
-
-          <Card style={styles.goalsCard}>
-            {goals.map((g, idx) => (
-              <View
-                key={g.type}
-                style={[
-                  styles.goalRow,
-                  idx !== goals.length - 1 && {
-                    borderBottomColor: colors.border,
-                    borderBottomWidth: StyleSheet.hairlineWidth,
-                    paddingBottom: 12,
-                    marginBottom: 12,
-                  },
-                ]}
-              >
-                <View style={styles.goalInfo}>
-                  <AppText variant="bodyMedium">{g.label}</AppText>
-                  <AppText colorRole="secondary" variant="caption">
-                    Current: {g.currentValue} / Target: {g.targetValue} {g.unit}
-                  </AppText>
-                </View>
-                <View style={styles.goalPercentBlock}>
-                  <AppText variant="bodyMedium" colorRole="accent" style={styles.boldText}>
-                    {Math.round(g.percentage)}%
-                  </AppText>
-                </View>
-              </View>
-            ))}
-          </Card>
-        </View>
-      )}
-
-      {/* ── 9. Academic Insights ─────────────────────────────────────── */}
-      {academicInsights.length > 0 && (
-        <View style={[styles.section, styles.lastSection]}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionTitleWithIcon}>
-              <Ionicons name="bulb-outline" size={18} color={colors.warning} />
-              <AppText variant="h3" style={styles.sectionTitle}>
-                Academic Insights
-              </AppText>
-            </View>
-          </View>
-
-          <View style={styles.insightsList}>
-            {academicInsights.map((insight) => (
-              <Card key={insight.id} style={styles.insightCard}>
-                <View style={styles.insightHeader}>
-                  <Ionicons
-                    name="information-circle"
-                    size={18}
-                    color={
-                      insight.severity === "CRITICAL" || insight.severity === "WARNING"
-                        ? colors.warning
-                        : colors.accent
-                    }
-                  />
-                  <AppText variant="bodyMedium" style={styles.insightTitle}>
-                    {insight.title}
-                  </AppText>
-                </View>
-                <AppText colorRole="secondary" variant="caption">
-                  {insight.description}
-                </AppText>
-              </Card>
-            ))}
-          </View>
-        </View>
-      )}
+      {/* ── Active Focus Session Floating Mini-Bar ── */}
+      <MobileActiveFocusBar
+        activeSession={activeFocusSession}
+        onRefresh={refetchActiveFocus}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
   centerContainer: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  scrollContent: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-  },
   topBar: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "space-between",
+    marginBottom: 16,
   },
   headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     flex: 1,
   },
-  nameRow: {
-    marginTop: 2,
+  avatarButton: {
+    borderRadius: 22,
+    overflow: "hidden",
+  },
+  headerAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+  },
+  headerTitleMeta: {
+    flex: 1,
   },
   greetingTitle: {
-    letterSpacing: -0.4,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  affiliationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  semesterPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginLeft: 4,
   },
   topActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  planBadge: {
+  completionPill: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.xs,
+    paddingVertical: 5,
+    borderRadius: 12,
     borderWidth: 1,
+    gap: 4,
   },
-  planText: {
+  completionText: {
+    fontSize: 11,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   iconButton: {
     width: 38,
     height: 38,
-    borderRadius: BorderRadius.full,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
   },
-  notificationBadge: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeCount: {
-    color: "#FFFFFF",
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  section: {
-    marginBottom: 24,
-  },
-  lastSection: {
-    marginBottom: 40,
-  },
-  sectionHeaderRow: {
+  segmentedContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    borderRadius: BorderRadius.lg,
+    padding: 4,
+    marginBottom: 16,
   },
-  sectionTitleWithIcon: {
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderRadius: BorderRadius.md,
+  },
+  segmentActive: {
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  segmentText: {
+    fontWeight: "600",
+  },
+  tabContent: {
+    gap: 12,
+  },
+  tabSubtitle: {
+    marginBottom: 4,
+  },
+  capacityCard: {
+    padding: 12,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  capacityHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
-  sectionTitle: {
-    letterSpacing: -0.3,
-  },
-  boldText: {
-    fontWeight: "600",
-  },
-  criticalBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.xs,
-  },
-  caughtUpCard: {
-    padding: 16,
-  },
-  caughtUpContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  caughtUpIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  caughtUpText: {
-    flex: 1,
-  },
-  priorityList: {
-    gap: 10,
-  },
-  priorityCard: {
-    padding: 14,
-  },
-  priorityHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  severityPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-    borderWidth: 1,
-  },
-  severityText: {
-    fontWeight: "700",
-  },
-  courseTag: {
-    fontWeight: "500",
-  },
-  priorityTitle: {
-    marginBottom: 4,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 24,
-  },
-  statCard: {
-    width: "48.5%",
-    padding: 14,
-  },
-  statHeader: {
+  sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  statValue: {
-    marginBottom: 4,
-    letterSpacing: -0.5,
-  },
-  emptyScheduleCard: {
-    padding: 24,
-    alignItems: "center",
-    gap: 8,
-  },
-  emptyTitle: {
-    marginTop: 4,
-    fontWeight: "600",
-  },
-  scheduleList: {
-    gap: 10,
-  },
-  classCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-  },
-  classTimeBox: {
-    width: 58,
-    alignItems: "flex-start",
-  },
-  classTimeText: {
-    fontWeight: "600",
-  },
-  classColorStrip: {
-    width: 3.5,
-    height: "100%",
-    borderRadius: 2,
-    marginHorizontal: 12,
-  },
-  classDetails: {
-    flex: 1,
-  },
-  classHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    marginTop: 8,
     marginBottom: 4,
   },
-  className: {
-    flex: 1,
-    marginRight: 8,
-  },
-  classTypeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-  },
-  classType: {
-    fontSize: 9,
-    textTransform: "capitalize",
-  },
-  roomRow: {
+  sectionTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-  },
-  roomText: {
-    fontSize: 12,
-  },
-  planCard: {
-    padding: 16,
-  },
-  progressBarBg: {
-    height: 6,
-    borderRadius: 3,
-    overflow: "hidden",
-    marginBottom: 14,
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 3,
+    gap: 6,
   },
   taskList: {
     gap: 10,
   },
-  taskRow: {
+  taskCard: {
+    padding: 14,
+    borderRadius: BorderRadius.lg,
+    gap: 4,
+  },
+  taskHeader: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  taskText: {
-    flex: 1,
-  },
-  examCard: {
-    padding: 16,
-  },
-  examTopRow: {
-    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 14,
   },
-  examTitleBlock: {
-    flex: 1,
-    paddingRight: 12,
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  examTypeBadge: {
-    alignSelf: "flex-start",
+  pillBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-    marginBottom: 6,
-  },
-  examTitle: {
-    marginBottom: 2,
-  },
-  countdownBadge: {
+    borderRadius: 6,
     borderWidth: 1,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    alignItems: "center",
-    minWidth: 64,
   },
-  countdownDays: {
-    lineHeight: 28,
+  taskTitle: {
+    fontWeight: "700",
+    marginTop: 2,
   },
-  countdownLabel: {
-    fontSize: 9,
-  },
-  examDetailsRow: {
-    flexDirection: "row",
-    gap: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(128,128,128,0.2)",
-    paddingTop: 10,
-  },
-  examDetail: {
+  taskActionRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  focusPillButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   emptyCard: {
-    padding: 20,
+    padding: 24,
     alignItems: "center",
-    gap: 4,
+    gap: 6,
   },
-  assignmentList: {
-    gap: 10,
+  completedCard: {
+    padding: 12,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    marginTop: 12,
   },
-  assignmentCard: {
-    padding: 14,
-  },
-  assignmentHeader: {
+  completedHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
-  },
-  dueSoonBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-  },
-  dueSoonText: {
-    fontSize: 9,
-  },
-  assignmentTitle: {
-    fontWeight: "500",
-  },
-  goalsCard: {
-    padding: 16,
-  },
-  goalRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
   },
-  goalInfo: {
-    flex: 1,
-  },
-  goalPercentBlock: {
-    marginLeft: 12,
-  },
-  insightsList: {
-    gap: 10,
-  },
-  insightCard: {
-    padding: 14,
-  },
-  insightHeader: {
+  completedHeaderLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 4,
   },
-  insightTitle: {
-    fontWeight: "600",
+  completedList: {
+    marginTop: 10,
+    gap: 6,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
+  },
+  completedItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 });

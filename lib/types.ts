@@ -2,11 +2,50 @@
  * Type definitions for UniMate Mobile.
  */
 
+export interface UniversityAffiliation {
+  id: string;
+  name: string;
+  shortName?: string | null;
+  country: string;
+  isVerified: boolean;
+}
+
+export interface CampusAffiliation {
+  id: string;
+  name: string;
+  city?: string | null;
+  isMain: boolean;
+}
+
+export interface DepartmentAffiliation {
+  id: string;
+  name: string;
+  faculty?: string | null;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   createdAt?: string;
+  avatarUrl?: string | null;
+  username?: string | null;
+  bio?: string | null;
+  country?: string | null;
+  city?: string | null;
+  degreeProgram?: string | null;
+  currentSemester?: string | null;
+  graduationYear?: number | null;
+  skills?: string[];
+  interests?: string[];
+  languages?: string[];
+  socialLinks?: Record<string, string> | null;
+  profileCompletionPercentage?: number;
+  onboardingCompleted?: boolean;
+  isPublicProfile?: boolean;
+  university?: UniversityAffiliation | null;
+  campus?: CampusAffiliation | null;
+  department?: DepartmentAffiliation | null;
 }
 
 export interface Subscription {
@@ -331,6 +370,8 @@ export interface MobileStudyPlanItem {
   id: string;
   studyPlanId: string;
   courseId: string | null;
+  targetType?: string | null;
+  targetId?: string | null;
   title: string;
   description: string;
   scheduledAt: string;
@@ -375,6 +416,22 @@ export interface MobileDraftStudyPlan {
   targetDate: string;
   items: MobileDraftPlanItem[];
   isLocalFallback?: boolean;
+  horizonDays?: number;
+  feasibility?: "FEASIBLE" | "TIGHT" | "OVERLOADED";
+  totalRequiredMinutes?: number;
+  totalAvailableMinutes?: number;
+  deficitMinutes?: number;
+  unallocatedTasks?: Array<{
+    targetType: string;
+    targetId: string;
+    title: string;
+    courseCode?: string;
+    deadline?: string;
+    remainingMinutes: number;
+    reason: string;
+    urgencyTier?: string;
+    recommendedAction?: string;
+  }>;
 }
 
 export interface MobileCalendarEvent {
@@ -397,6 +454,76 @@ export interface MobileCalendarData {
   monthLabel: string;
   events: MobileCalendarEvent[];
   eventsByDate: Record<string, MobileCalendarEvent[]>;
+}
+
+export interface MobileCalendarDayWorkload {
+  dateKey: string;
+  dayOfWeek: number;
+  dayLabel: string;
+  isToday: boolean;
+  tier: "LIGHT" | "BALANCED" | "BUSY" | "OVERLOADED";
+  classCount: number;
+  classMinutes: number;
+  deadlinesCount: number;
+  examsCount: number;
+  studyPlanMinutes: number;
+  availableGapMinutes: number;
+  reason: string;
+}
+
+export interface MobileDeadlineCluster {
+  id: string;
+  startDateKey: string;
+  endDateKey: string;
+  label: string;
+  affectedCourses: Array<{ id: string; code: string; name: string; color: string }>;
+  itemCount: number;
+  totalEstimatedMinutes: number;
+  reason: string;
+  recommendedAction: string;
+}
+
+export interface MobileRecommendedStudyWindow {
+  id: string;
+  dateKey: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  label: string;
+  suggestedFocus: {
+    targetType: "ASSIGNMENT" | "EXAM" | "GENERAL";
+    targetId: string | null;
+    title: string;
+    courseCode?: string;
+    courseName?: string;
+    courseColor?: string;
+    urgencyTier?: string;
+  };
+  disclaimer: string;
+}
+
+export interface MobileCalendarIntelligenceData {
+  timestamp: string;
+  referenceDateKey: string;
+  horizonDays: number;
+  weekWorkload: {
+    overallTier: "LIGHT" | "BALANCED" | "BUSY" | "OVERLOADED";
+    totalClassMinutes: number;
+    totalDeadlines: number;
+    totalExams: number;
+    totalStudyPlanMinutes: number;
+    totalAvailableGapMinutes: number;
+    summary: string;
+  };
+  dailyWorkloads: MobileCalendarDayWorkload[];
+  deadlineClusters: MobileDeadlineCluster[];
+  recommendedStudyWindows: MobileRecommendedStudyWindow[];
+  googleCalendar: {
+    connected: boolean;
+    status: "CONNECTED" | "DISCONNECTED" | "NEEDS_REAUTH" | "ERROR";
+    email: string | null;
+    lastSyncAt: string | null;
+  };
 }
 
 export interface MobileAiQuota {
@@ -426,5 +553,269 @@ export interface MobileBillingData {
     pro: string[];
   };
   notice: string;
+}
+
+export interface UniversityCampusItem {
+  id: string;
+  name: string;
+  city?: string | null;
+  isMain: boolean;
+}
+
+export interface UniversityDepartmentItem {
+  id: string;
+  name: string;
+  faculty?: string | null;
+}
+
+export interface UniversityItem {
+  id: string;
+  name: string;
+  shortName?: string | null;
+  country: string;
+  countryCode?: string | null;
+  city?: string | null;
+  state?: string | null;
+  website?: string | null;
+  isVerified: boolean;
+  campuses?: UniversityCampusItem[];
+  departments?: UniversityDepartmentItem[];
+}
+
+export interface UniversityListResponse {
+  success: boolean;
+  universities: UniversityItem[];
+  total: number;
+}
+
+export interface MobileProfileResponse {
+  success: boolean;
+  user: User;
+  profileCompletion: {
+    percentage: number;
+    missingFields: string[];
+    nextAction: string | null;
+  };
+}
+
+export interface MobileGoogleCalendarStatusResponse {
+  connected: boolean;
+  status: "CONNECTED" | "DISCONNECTED" | "NEEDS_REAUTH" | "ERROR";
+  email: string | null;
+  calendarId: string | null;
+  lastSyncAt: string | null;
+  lastSyncStatus: string | null;
+  lastError: string | null;
+}
+
+export interface MobileSyncResultResponse {
+  success: boolean;
+  result?: {
+    examsSynced: number;
+    assignmentsSynced: number;
+    timetableSynced: number;
+    skippedUnchanged: number;
+    errors: string[];
+  };
+  error?: string;
+  code?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 15.1: Adaptive Today Workspace Types
+// ---------------------------------------------------------------------------
+
+export type MobileUrgencyTier = "OVERDUE" | "CRITICAL" | "HIGH" | "MEDIUM" | "NORMAL";
+
+export interface MobileTodayActionItem {
+  id: string;
+  entityType: "ASSIGNMENT" | "EXAM" | "STUDY_PLAN_ITEM" | "ATTENDANCE_RECOVERY";
+  title: string;
+  courseId?: string;
+  courseCode: string;
+  courseName: string;
+  courseColor: string;
+  urgencyScore: number;
+  urgencyTier: MobileUrgencyTier;
+  deadlineLabel: string;
+  dueDateStr?: string;
+  estimatedMinutes: number;
+  estimatedLabel: string;
+  reason: string;
+  actionLabel: string;
+  actionHref: string;
+  isAttentionItem: boolean;
+  completed: boolean;
+  deferredReason?: string;
+}
+
+export interface MobileTodayTimelineSlot {
+  id: string;
+  type: "CLASS" | "STUDY_GAP";
+  title: string;
+  subtitle?: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  room?: string;
+  color?: string;
+  hasConflict?: boolean;
+  suggestedAction?: string;
+}
+
+export interface MobileCompletedTodayItem {
+  id: string;
+  title: string;
+  courseCode: string;
+  completedAtStr: string;
+}
+
+export interface MobileAdaptiveTodayWorkspaceData {
+  timestamp: string;
+  dateString: string;
+  dayName: string;
+  capacity: {
+    availableStudyMinutes: number;
+    allocatedWorkMinutes: number;
+    isOverCapacity: boolean;
+    notice: string;
+  };
+  attention: {
+    items: MobileTodayActionItem[];
+    criticalCount: number;
+    attendanceWarning: {
+      courseId: string;
+      courseCode: string;
+      courseName: string;
+      percentageString: string;
+      thresholdPercentage: number;
+      recoveryClassesRequired: number;
+      recommendation: string;
+    } | null;
+    timetableConflictCount: number;
+  };
+  today: {
+    schedule: MobileTodayTimelineSlot[];
+    allocatedTasks: MobileTodayActionItem[];
+  };
+  next: MobileTodayActionItem[];
+  later: MobileTodayActionItem[];
+  completedToday: {
+    items: MobileCompletedTodayItem[];
+    count: number;
+  };
+  calendarSync: {
+    status: "CONNECTED" | "NEEDS_REAUTH" | "DISCONNECTED" | "NOT_CONFIGURED";
+    lastSyncAt: string | null;
+    accountEmail: string | null;
+  };
+  emptyState: {
+    isNewStudent: boolean;
+    missingSections: ("COURSES" | "TIMETABLE" | "ASSIGNMENTS" | "EXAMS")[];
+    hasNoClassesToday: boolean;
+    isAllCaughtUp: boolean;
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 15.2: Focus Session Types
+// ---------------------------------------------------------------------------
+
+export type MobileFocusSessionStatus = "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED";
+
+export type MobileFocusTargetType =
+  | "ASSIGNMENT"
+  | "EXAM"
+  | "STUDY_PLAN_ITEM"
+  | "COURSE_STUDY"
+  | "GENERAL";
+
+export interface MobileActiveFocusSession {
+  id: string;
+  userId: string;
+  courseId: string | null;
+  courseName?: string;
+  courseCode?: string;
+  courseColor?: string;
+  title: string;
+  duration: number;
+  plannedDuration: number;
+  sessionDate: string;
+  status: MobileFocusSessionStatus;
+  targetType: MobileFocusTargetType | null;
+  targetId: string | null;
+  pausedAt: string | null;
+  totalPausedSeconds: number;
+  serverNow: string;
+  elapsedSeconds: number;
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 15.5: Weekly Review Types
+// ---------------------------------------------------------------------------
+
+export type MobileScorecardRating = "STRONG" | "ON_TRACK" | "NEEDS_ATTENTION" | "INSUFFICIENT_DATA";
+
+export interface MobileScorecardDimension {
+  rating: MobileScorecardRating;
+  scorePercentage: number;
+  label: string;
+  summary: string;
+}
+
+export interface MobileWeeklyScorecard {
+  execution: MobileScorecardDimension;
+  planning: MobileScorecardDimension;
+  focus: MobileScorecardDimension;
+  academicHealth: MobileScorecardDimension;
+  overallGrade: "A" | "B" | "C" | "D" | "INCOMPLETE";
+}
+
+export interface MobileCourseWeeklySummary {
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  courseColor: string;
+  attendance: {
+    attended: number;
+    scheduled: number;
+    percentage: number;
+  };
+  assignments: {
+    completed: number;
+    due: number;
+    overdue: number;
+  };
+  focusMinutes: number;
+  grade: {
+    letter: string | null;
+    points: number | null;
+  } | null;
+}
+
+export interface MobileWeeklyReviewData {
+  userId: string;
+  weekStartKey: string;
+  weekEndKey: string;
+  weekLabel: string;
+  isCurrentWeek: boolean;
+  scorecard: MobileWeeklyScorecard;
+  metrics: {
+    totalClassesScheduled: number;
+    totalClassesAttended: number;
+    attendanceRate: number;
+    totalFocusMinutes: number;
+    totalSessionsCount: number;
+    assignmentsCompleted: number;
+    assignmentsDue: number;
+    assignmentsOverdue: number;
+    studyPlanItemsCompleted: number;
+    studyPlanItemsTotal: number;
+  };
+  courseSummaries: MobileCourseWeeklySummary[];
+  highlights: string[];
+  recommendations: string[];
+  aiExecutiveSummary: string | null;
+  generatedAt: string;
 }
 

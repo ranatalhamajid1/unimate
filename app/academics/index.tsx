@@ -18,11 +18,14 @@ import { Button } from "@/components/ui/Button";
 import { FormInput } from "@/components/ui/FormInput";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { ModalKeyboardContainer } from "@/components/ui/ModalKeyboardContainer";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/contexts/auth-context";
 import { apiClient } from "@/lib/api-client";
 import { spacing } from "@/constants/spacing";
+import { GpaWhatIfModal } from "@/components/GpaWhatIfModal";
 import type { MobileAcademicData, MobileCourseAcademicItem } from "@/lib/types";
 
 const GRADE_LIST = [
@@ -42,11 +45,13 @@ const GRADE_LIST = [
 
 export default function AcademicsScreen() {
   const { colors } = useTheme();
+  const { subscription } = useAuth();
   const queryClient = useQueryClient();
 
   // Modals
   const [gradeModalVisible, setGradeModalVisible] = useState(false);
   const [attendanceModalVisible, setAttendanceModalVisible] = useState(false);
+  const [whatIfModalVisible, setWhatIfModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<MobileCourseAcademicItem | null>(null);
 
   // Form states
@@ -216,7 +221,7 @@ export default function AcademicsScreen() {
 
         {/* Overview Stats (2 cards) */}
         <View style={styles.statsRow}>
-          <Card style={styles.statCard}>
+          <Card variant="floating" style={styles.statCard}>
             <View style={styles.statIconWrapper}>
               <Ionicons name="trophy-outline" size={20} color={colors.primary} />
             </View>
@@ -231,7 +236,7 @@ export default function AcademicsScreen() {
             </AppText>
           </Card>
 
-          <Card style={styles.statCard}>
+          <Card variant="floating" style={styles.statCard}>
             <View style={styles.statIconWrapper}>
               <Ionicons name="school-outline" size={20} color={colors.success} />
             </View>
@@ -254,6 +259,34 @@ export default function AcademicsScreen() {
             />
           </Card>
         </View>
+
+        {/* GPA What-If Simulation Trigger */}
+        <TouchableOpacity
+          style={[
+            styles.whatIfBanner,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+          onPress={() => setWhatIfModalVisible(true)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.whatIfIconWrapper, { backgroundColor: colors.primary + "15" }]}>
+            <Ionicons name="calculator-outline" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <AppText variant="body" style={{ fontWeight: "600" }}>
+                GPA What-If Simulator
+              </AppText>
+              {!subscription?.isPro && (
+                <StatusChip label="PRO" variant="accent" size="sm" />
+              )}
+            </View>
+            <AppText variant="caption" colorRole="secondary">
+              Simulate prospective grades non-destructively
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+        </TouchableOpacity>
 
         {/* Course Performance List */}
         <AppText variant="h3" style={styles.sectionTitle}>
@@ -428,67 +461,81 @@ export default function AcademicsScreen() {
         animationType="slide"
         onRequestClose={() => setAttendanceModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHeader}>
-              <AppText variant="h3">Update Attendance: {selectedCourse?.courseCode}</AppText>
-              <TouchableOpacity onPress={() => setAttendanceModalVisible(false)}>
-                <Ionicons name="close" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+        <ModalKeyboardContainer>
+          <View style={styles.modalHeader}>
+            <AppText variant="h3">Update Attendance: {selectedCourse?.courseCode}</AppText>
+            <TouchableOpacity onPress={() => setAttendanceModalVisible(false)}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
-            {formError ? (
-              <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
-                {formError}
-              </AppText>
-            ) : null}
-
-            <AppText variant="caption" colorRole="secondary" style={{ marginBottom: spacing.md }}>
-              Record total lectures conducted and how many you attended:
+          {formError ? (
+            <AppText variant="caption" style={{ color: colors.danger, marginBottom: spacing.sm }}>
+              {formError}
             </AppText>
+          ) : null}
 
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="Total Classes"
-                  value={totalClasses}
-                  onChangeText={setTotalClasses}
-                  placeholder="e.g. 24"
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={{ width: spacing.md }} />
-              <View style={{ flex: 1 }}>
-                <FormInput
-                  label="Attended Classes"
-                  value={attendedClasses}
-                  onChangeText={setAttendedClasses}
-                  placeholder="e.g. 21"
-                  keyboardType="numeric"
-                />
-              </View>
+          <AppText variant="caption" colorRole="secondary" style={{ marginBottom: spacing.md }}>
+            Record total lectures conducted and how many you attended:
+          </AppText>
+
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="Total Classes"
+                value={totalClasses}
+                onChangeText={setTotalClasses}
+                placeholder="e.g. 24"
+                keyboardType="numeric"
+              />
             </View>
-
-            <View style={styles.modalActions}>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title="Cancel"
-                  variant="outline"
-                  onPress={() => setAttendanceModalVisible(false)}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title="Save Attendance"
-                  variant="primary"
-                  onPress={handleSaveAttendance}
-                  loading={updateAttendanceMutation.isPending}
-                />
-              </View>
+            <View style={{ width: spacing.md }} />
+            <View style={{ flex: 1 }}>
+              <FormInput
+                label="Attended Classes"
+                value={attendedClasses}
+                onChangeText={setAttendedClasses}
+                placeholder="e.g. 21"
+                keyboardType="numeric"
+              />
             </View>
           </View>
-        </View>
+
+          <View style={styles.modalActions}>
+            <View style={{ flex: 1 }}>
+              <Button
+                title="Cancel"
+                variant="outline"
+                onPress={() => setAttendanceModalVisible(false)}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                title="Save Attendance"
+                variant="primary"
+                onPress={handleSaveAttendance}
+                loading={updateAttendanceMutation.isPending}
+              />
+            </View>
+          </View>
+        </ModalKeyboardContainer>
       </Modal>
+
+      {/* GPA What-If Scenario Simulator Modal */}
+      <GpaWhatIfModal
+        visible={whatIfModalVisible}
+        onClose={() => setWhatIfModalVisible(false)}
+        courses={courses.map((c) => ({
+          courseId: c.courseId,
+          courseCode: c.courseCode,
+          courseName: c.courseName,
+          creditHours: c.creditHours,
+          currentGrade: c.grade || null,
+        }))}
+        currentGpa={academicData?.gpaString ?? null}
+        targetGpa={null}
+        isPro={!!subscription?.isPro}
+      />
     </Screen>
   );
 }
@@ -509,7 +556,23 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: "row",
     gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  whatIfBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
     marginBottom: spacing.lg,
+  },
+  whatIfIconWrapper: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   statCard: {
     flex: 1,
@@ -522,6 +585,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "800",
     marginBottom: 2,
+    fontVariant: ["tabular-nums"],
   },
   sectionTitle: {
     marginBottom: spacing.md,

@@ -114,7 +114,7 @@ export default function AiBuddyScreen() {
   const quota = quotaData?.quota;
 
   return (
-    <Screen style={styles.container}>
+    <Screen style={styles.container} keyboardAvoiding={false}>
       <Stack.Screen options={{ title: "AI Study Buddy", headerBackTitle: "More" }} />
 
       <KeyboardAvoidingView
@@ -267,6 +267,11 @@ export default function AiBuddyScreen() {
             placeholderTextColor={colors.textTertiary}
             value={inputMessage}
             onChangeText={setInputMessage}
+            onFocus={() => {
+              setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 150);
+            }}
             onSubmitEditing={() => handleSendMessage()}
             returnKeyType="send"
             multiline={false}

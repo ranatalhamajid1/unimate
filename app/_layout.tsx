@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 function RootNavigation() {
   const { isDark, colors } = useTheme();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -27,9 +27,13 @@ function RootNavigation() {
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/login");
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)");
+      if (user && user.onboardingCompleted === false) {
+        router.replace("/onboarding");
+      } else {
+        router.replace("/(tabs)");
+      }
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, user, segments, router]);
 
   return (
     <>
@@ -44,6 +48,7 @@ function RootNavigation() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen name="courses/index" options={{ headerShown: false }} />
@@ -57,6 +62,7 @@ function RootNavigation() {
         <Stack.Screen name="ai-buddy/index" options={{ headerShown: false }} />
         <Stack.Screen name="insights/index" options={{ headerShown: false }} />
         <Stack.Screen name="billing/index" options={{ headerShown: false }} />
+        <Stack.Screen name="integrations" options={{ headerShown: false }} />
       </Stack>
     </>
   );

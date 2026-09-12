@@ -3,8 +3,8 @@
  * Connects directly to backend POST /api/mobile/auth/login.
  */
 
-import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen } from "@/components/ui/Screen";
@@ -24,6 +24,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const passwordRef = useRef<TextInput>(null);
 
   const handleLogin = async () => {
     setErrorMessage(null);
@@ -91,9 +93,11 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoComplete="email"
           returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
 
         <FormInput
+          ref={passwordRef}
           label="Password"
           placeholder="••••••••"
           value={password}

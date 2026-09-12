@@ -59,16 +59,16 @@ describe("Phase 15 Step 2: Mobile Foundation Tests", () => {
   // ── 5. Theme Semantic Tokens & Resolution ────────────────────────────────
   test("5. Light and Dark theme tokens adhere to UniMate design principles", () => {
     // Light
-    assert.equal(LightColors.background, "#FCFCFB");
+    assert.equal(LightColors.background, "#FCFCFD");
     assert.equal(LightColors.surface, "#FFFFFF");
     assert.equal(LightColors.textPrimary, "#0F172A");
     assert.equal(LightColors.accent, "#2563EB");
 
     // Dark
-    assert.equal(DarkColors.background, "#0E1117");
-    assert.equal(DarkColors.surface, "#161B22");
-    assert.equal(DarkColors.textPrimary, "#E6EDF3");
-    assert.equal(DarkColors.accent, "#2563EB");
+    assert.equal(DarkColors.background, "#0B0E14");
+    assert.equal(DarkColors.surface, "#121721");
+    assert.equal(DarkColors.textPrimary, "#F1F5F9");
+    assert.equal(DarkColors.accent, "#3B82F6");
 
     // Neither uses pure black background
     assert.notEqual(DarkColors.background, "#000000");
@@ -86,11 +86,11 @@ describe("Phase 15 Step 2: Mobile Foundation Tests", () => {
 
     const lightRes = resolveTheme("light", "dark");
     assert.equal(lightRes.isDark, false);
-    assert.equal(lightRes.colors.background, "#FCFCFB");
+    assert.equal(lightRes.colors.background, "#FCFCFD");
 
     const darkRes = resolveTheme("dark", "light");
     assert.equal(darkRes.isDark, true);
-    assert.equal(darkRes.colors.background, "#0E1117");
+    assert.equal(darkRes.colors.background, "#0B0E14");
 
     const systemLightRes = resolveTheme("system", "light");
     assert.equal(systemLightRes.isDark, false);
