@@ -206,8 +206,9 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    justifyContent: "center",
-    paddingVertical: 32,
+    justifyContent: "flex-start",
+    paddingTop: 24,
+    paddingBottom: 40,
   },
   header: {
     alignItems: "center",

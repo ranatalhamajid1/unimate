@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   TextInputProps,
   ViewStyle,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/use-theme";
@@ -79,7 +80,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(function FormInpu
                   shadowOffset: { width: 0, height: 0 },
                   shadowOpacity: 0.25,
                   shadowRadius: 5,
-                  elevation: 2,
+                  ...(Platform.OS === "ios" ? { elevation: 2 } : {}),
                 }
               : {}),
           },

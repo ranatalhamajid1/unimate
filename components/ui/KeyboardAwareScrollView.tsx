@@ -81,6 +81,14 @@ export const KeyboardAwareScrollView = React.forwardRef<
       if (!inputRef?.current) return;
       lastFocusedRef.current = inputRef;
 
+      // On Android, windowSoftInputMode="adjustResize" (configured via softwareKeyboardLayoutMode: "resize")
+      // natively resizes the window and scrolls the focused EditText into view.
+      // Calling programmatic scrollTo on Android interrupts the EditText focus pass and causes
+      // the soft keyboard to immediately dismiss (regression).
+      if (Platform.OS === "android") {
+        return;
+      }
+
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
@@ -91,15 +99,11 @@ export const KeyboardAwareScrollView = React.forwardRef<
 
         inputRef.current.measureInWindow(
           (x: number, y: number, width: number, height: number) => {
-            if (typeof y !== "number") return;
+            if (typeof y !== "number" || typeof height !== "number") return;
 
             const windowHeight = Dimensions.get("window").height;
             const currentKbHeight = keyboardHeightRef.current;
-            // On Android with resize, windowHeight shrinks, so keyboardTop is the visible bottom
-            const effectiveKeyboardTop =
-              Platform.OS === "android"
-                ? windowHeight
-                : windowHeight - currentKbHeight;
+            const effectiveKeyboardTop = windowHeight - currentKbHeight;
 
             const inputBottom = y + height + extraOffset;
             const diff = inputBottom - effectiveKeyboardTop;
@@ -110,7 +114,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
                 y: scrollYRef.current + diff,
                 animated: true,
               });
-            } else if (y < 60) {
+            } else if (y < 60 && scrollYRef.current > 0) {
               // Input is scrolled too far above top / under header
               scrollRef.current?.scrollTo({
                 y: Math.max(0, scrollYRef.current + y - 60),
@@ -119,7 +123,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
             }
           }
         );
-      }, Platform.OS === "ios" ? 100 : 150);
+      }, 100);
     },
     [extraScrollHeight, scrollRef]
   );
@@ -136,8 +140,8 @@ export const KeyboardAwareScrollView = React.forwardRef<
       keyboardHeightRef.current = kh;
       setKeyboardHeight(kh);
 
-      // If an input was already focused when keyboard opened, ensure it is scrolled into view
-      if (lastFocusedRef.current) {
+      // If an input was already focused when keyboard opened, ensure it is scrolled into view (iOS only)
+      if (Platform.OS === "ios" && lastFocusedRef.current) {
         scrollToFocusedInput(lastFocusedRef.current);
       }
     });

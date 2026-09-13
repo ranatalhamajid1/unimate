@@ -271,7 +271,7 @@ export default function WeeklyReviewScreen() {
                     </View>
                   ))}
                   <TouchableOpacity
-                    onPress={() => router.push("/study-planner")}
+                    onPress={() => router.push("/study-plans")}
                     activeOpacity={0.8}
                     style={[styles.actionBtn, { backgroundColor: colors.primary }]}
                     accessibilityRole="button"
