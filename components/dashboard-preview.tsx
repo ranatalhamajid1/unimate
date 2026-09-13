@@ -14,6 +14,7 @@ import {
   Settings,
   Sparkles,
 } from "lucide-react";
+import { BrandLogo } from "@/components/ui/brand-logo";
 
 const SIDEBAR_ITEMS = [
   { icon: LayoutDashboard, label: "Overview", active: true },
@@ -77,13 +78,8 @@ export function DashboardPreview() {
             <aside className="hidden w-52 shrink-0 flex-col justify-between border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-2)]/50 p-4 sm:flex">
               <div>
                 {/* Brand */}
-                <div className="mb-6 flex items-center gap-2.5 px-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm">
-                    <GraduationCap className="h-3.5 w-3.5 text-white" strokeWidth={2.25} />
-                  </span>
-                  <span className="text-[13.5px] font-semibold tracking-tight text-[var(--color-text)]">
-                    UniMate
-                  </span>
+                <div className="mb-6 flex items-center px-2">
+                  <BrandLogo variant="horizontal" size="xs" alt="UniMate" />
                 </div>
 
                 {/* Navigation Items */}

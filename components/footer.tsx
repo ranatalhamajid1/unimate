@@ -1,4 +1,5 @@
-import { GraduationCap } from "lucide-react";
+import Link from "next/link";
+import { BrandLogo } from "@/components/ui/brand-logo";
 
 const COLUMNS = [
   {
@@ -45,14 +46,9 @@ export function Footer() {
         <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
           {/* Brand */}
           <div className="max-w-xs">
-            <a href="#" className="group flex items-center gap-2.5">
-              <span className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm transition-transform group-hover:scale-105">
-                <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
-              </span>
-              <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
-                UniMate
-              </span>
-            </a>
+            <Link href="/" className="group flex items-center transition-opacity hover:opacity-95" aria-label="UniMate Home">
+              <BrandLogo variant="horizontal" size="md" alt="UniMate" />
+            </Link>
             <p className="mt-3 text-[13.5px] leading-relaxed text-[var(--color-text-3)]">
               Your university life, organized. The unified academic operating system built for students.
             </p>

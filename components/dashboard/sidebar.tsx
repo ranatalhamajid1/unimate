@@ -10,8 +10,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import {
-  GraduationCap,
   LayoutDashboard,
   BookOpen,
   Calendar,
@@ -134,14 +134,14 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       {/* Logo & Brand Header */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--color-glass-border)] px-5">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 shadow-[0_2px_10px_rgba(99,102,241,0.35)]">
-            <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
-            UniMate
-          </span>
-        </div>
+        <Link
+          href="/dashboard"
+          onClick={onClose}
+          className="flex items-center transition-opacity hover:opacity-95"
+          aria-label="UniMate Dashboard"
+        >
+          <BrandLogo variant="horizontal" size="sm" alt="UniMate" priority />
+        </Link>
 
         <Link
           href="/dashboard/notifications"

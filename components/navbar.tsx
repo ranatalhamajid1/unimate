@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, X, GraduationCap, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { BrandLogo } from "@/components/ui/brand-logo";
 
 const NAV_LINKS = [
   { label: "Features", href: "/#features" },
@@ -23,12 +25,13 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-3.5 sm:pt-4">
+    <header className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-3 sm:px-6">
       <nav
-        className={`flex w-full max-w-5xl items-center justify-between rounded-2xl px-4 py-2.5 transition-all duration-300 sm:px-5 ${
+        aria-label="Main Navigation"
+        className={`relative flex w-full max-w-6xl items-center justify-between rounded-2xl border px-4 py-2.5 transition-all duration-300 ${
           scrolled
-            ? "border border-slate-200/80 dark:border-slate-800/90 shadow-[0_8px_32px_-8px_rgba(15,23,42,0.12),0_1px_2px_rgba(15,23,42,0.04)] dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6),0_1px_0_rgba(255,255,255,0.06)_inset] backdrop-blur-xl"
-            : "border border-slate-200/50 dark:border-slate-800/50 shadow-[0_2px_12px_rgba(0,0,0,0.03)] backdrop-blur-md"
+            ? "border-slate-200/80 dark:border-slate-800/80 shadow-[0_8px_32px_rgba(15,23,42,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl"
+            : "border-transparent"
         }`}
         style={{
           backgroundColor: scrolled
@@ -37,15 +40,9 @@ export function Navbar() {
         }}
       >
         {/* Logo */}
-        <a href="#" className="group flex shrink-0 items-center gap-2.5">
-          <span className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-600 shadow-[0_2px_8px_rgba(37,99,235,0.35)] transition-transform duration-200 group-hover:scale-105">
-            <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
-            <span className="absolute inset-0 rounded-lg ring-1 ring-inset ring-white/25" />
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
-            UniMate
-          </span>
-        </a>
+        <Link href="/" className="group flex shrink-0 items-center transition-opacity hover:opacity-95" aria-label="UniMate Home">
+          <BrandLogo variant="horizontal" size="sm" priority alt="UniMate" />
+        </Link>
 
         {/* Center nav — desktop */}
         <ul className="hidden items-center gap-1 md:flex">

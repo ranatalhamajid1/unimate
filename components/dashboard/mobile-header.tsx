@@ -6,8 +6,9 @@
  */
 
 import Link from "next/link";
-import { Menu, GraduationCap, Bell } from "lucide-react";
+import { Menu, Bell } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { BrandLogo } from "@/components/ui/brand-logo";
 
 type MobileHeaderProps = {
   name: string;
@@ -29,14 +30,13 @@ export function MobileHeader({ name, onMenuOpen }: MobileHeaderProps) {
       </button>
 
       {/* Center — logo */}
-      <div className="flex items-center gap-2">
-        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 shadow-[0_2px_8px_rgba(99,102,241,0.3)]">
-          <GraduationCap className="h-3.5 w-3.5 text-white" strokeWidth={2.25} />
-        </span>
-        <span className="text-[14px] font-semibold tracking-tight text-[var(--color-text)]">
-          UniMate
-        </span>
-      </div>
+      <Link
+        href="/dashboard"
+        className="flex items-center transition-opacity hover:opacity-95"
+        aria-label="UniMate Dashboard"
+      >
+        <BrandLogo variant="horizontal" size="xs" alt="UniMate" priority />
+      </Link>
 
       {/* Right — theme toggle + notifications + avatar */}
       <div className="flex items-center gap-1.5">

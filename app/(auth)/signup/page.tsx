@@ -9,8 +9,8 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import {
-  GraduationCap,
   User,
   Mail,
   Lock,
@@ -37,13 +37,8 @@ export default function SignupPage() {
 
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <header className="flex items-center justify-between px-5 py-4 sm:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
-            <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.25} />
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight text-[var(--color-text)]">
-            UniMate
-          </span>
+        <Link href="/" className="flex items-center transition-opacity hover:opacity-95" aria-label="UniMate Home">
+          <BrandLogo variant="horizontal" size="sm" alt="UniMate" priority />
         </Link>
         <p className="text-[13.5px] text-[var(--color-text-2)]">
           Already have an account?{" "}
@@ -61,6 +56,11 @@ export default function SignupPage() {
         <div className="w-full max-w-[420px] animate-scale-in">
           {/* Card */}
           <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7 shadow-[var(--shadow-lg)] sm:p-8">
+            {/* Brand Anchor */}
+            <div className="mb-5 flex justify-center">
+              <BrandLogo variant="icon" size="lg" alt="UniMate" priority />
+            </div>
+
             {/* Heading */}
             <div className="mb-7 text-center">
               <h1 className="text-[1.6rem] font-semibold tracking-tight text-[var(--color-text)]">
