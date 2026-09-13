@@ -101,12 +101,29 @@ export function MobileTodayTimeline({ schedule, dayName }: Props) {
                           {slot.title}
                         </AppText>
                       </View>
-                      <AppText
-                        variant="caption"
-                        style={{ color: colors.accent, fontWeight: "600" }}
+                      <View
+                        style={[
+                          styles.gapTimeBadge,
+                          {
+                            backgroundColor: isDark
+                              ? "rgba(99, 102, 241, 0.15)"
+                              : "rgba(99, 102, 241, 0.08)",
+                          },
+                        ]}
                       >
-                        {slot.startTime} - {slot.endTime} ({slot.durationMinutes}m)
-                      </AppText>
+                        <Ionicons
+                          name="time-outline"
+                          size={11}
+                          color={colors.accent}
+                          style={{ marginRight: 3 }}
+                        />
+                        <AppText
+                          variant="caption"
+                          style={[styles.gapTimeText, { color: colors.accent }]}
+                        >
+                          {slot.startTime} - {slot.endTime} ({slot.durationMinutes}m)
+                        </AppText>
+                      </View>
                     </View>
                     {slot.suggestedAction && (
                       <AppText
@@ -232,19 +249,37 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderStyle: "dashed",
+    gap: 6,
   },
   gapHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 6,
   },
   gapTitleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flex: 1,
+    minWidth: 140,
   },
   gapTitle: {
     fontWeight: "700",
+    flexShrink: 1,
+  },
+  gapTimeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  gapTimeText: {
+    fontWeight: "600",
+    fontSize: 11,
   },
   classCard: {
     padding: 14,
@@ -268,6 +303,8 @@ const styles = StyleSheet.create({
   },
   timeDetails: {
     alignItems: "flex-end",
+    flexShrink: 0,
+    marginLeft: 8,
   },
   roomRow: {
     flexDirection: "row",

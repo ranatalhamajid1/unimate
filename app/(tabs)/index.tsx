@@ -393,11 +393,27 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionTitleRow}>
               <Ionicons name="flash" size={18} color={colors.accent} />
-              <AppText variant="h3">Recommended Focus Queue</AppText>
+              <AppText variant="h3" numberOfLines={1} style={styles.sectionTitleText}>
+                Recommended Focus Queue
+              </AppText>
             </View>
-            <AppText colorRole="tertiary" variant="caption">
-              {today.allocatedTasks.length} task{today.allocatedTasks.length !== 1 ? "s" : ""}
-            </AppText>
+            <View
+              style={[
+                styles.taskCountBadge,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(99, 102, 241, 0.15)"
+                    : "rgba(99, 102, 241, 0.08)",
+                },
+              ]}
+            >
+              <AppText
+                variant="caption"
+                style={{ color: colors.accent, fontWeight: "600", fontSize: 11 }}
+              >
+                {today.allocatedTasks.length} task{today.allocatedTasks.length !== 1 ? "s" : ""}
+              </AppText>
+            </View>
           </View>
 
           {today.allocatedTasks.length === 0 ? (
@@ -748,13 +764,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 10,
+    marginBottom: 6,
+    gap: 8,
   },
   sectionTitleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flex: 1,
+    flexShrink: 1,
+  },
+  sectionTitleText: {
+    flexShrink: 1,
+  },
+  taskCountBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    flexShrink: 0,
   },
   taskList: {
     gap: 10,
