@@ -220,6 +220,21 @@ describe("Mobile Keyboard Awareness & Input Visibility Suite", () => {
         "ModalKeyboardContainer must have keyboardShouldPersistTaps='handled'"
       );
     });
+
+    test("KeyboardAwareScrollView maintains layout stability without dynamic justifyContent flipping", () => {
+      const kasvPath = path.join(
+        mobileRoot,
+        "components",
+        "ui",
+        "KeyboardAwareScrollView.tsx"
+      );
+      const content = fs.readFileSync(kasvPath, "utf8");
+
+      assert.ok(
+        !content.includes('justifyContent === "center"'),
+        "KeyboardAwareScrollView must NOT dynamically flip justifyContent to prevent Android clearChildFocus regression"
+      );
+    });
   });
 
   // 4. Verification of All Form Screens & Modals
