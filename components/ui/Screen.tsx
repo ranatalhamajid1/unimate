@@ -39,10 +39,15 @@ export function Screen({
 }: ScreenProps) {
   const { colors } = useTheme();
 
+  const combinedContentStyle = React.useMemo(
+    () => [styles.content, contentContainerStyle],
+    [contentContainerStyle]
+  );
+
   const content = scrollable ? (
     <KeyboardAwareScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, contentContainerStyle]}
+      contentContainerStyle={combinedContentStyle}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -59,7 +64,7 @@ export function Screen({
       {children}
     </KeyboardAwareScrollView>
   ) : (
-    <View style={[styles.container, styles.content, contentContainerStyle]}>
+    <View style={[styles.container, combinedContentStyle]}>
       {children}
     </View>
   );

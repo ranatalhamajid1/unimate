@@ -47,13 +47,28 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(function FormInpu
 
   const shouldHideText = isPassword ? !isPasswordVisible : secureTextEntry;
 
+  React.useEffect(() => {
+    if (__DEV__) {
+      console.log(`[FormInput:${label}] MOUNTED`);
+      return () => {
+        console.log(`[FormInput:${label}] UNMOUNTED`);
+      };
+    }
+  }, [label]);
+
   const handleFocus: TextInputProps["onFocus"] = (e) => {
+    if (__DEV__) {
+      console.log(`[FormInput:${label}] onFocus`);
+    }
     setIsFocused(true);
     scrollToFocusedInput(containerRef);
     onFocus?.(e);
   };
 
   const handleBlur: TextInputProps["onBlur"] = (e) => {
+    if (__DEV__) {
+      console.log(`[FormInput:${label}] onBlur`);
+    }
     setIsFocused(false);
     onBlur?.(e);
   };
@@ -68,21 +83,12 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(function FormInpu
         style={[
           styles.inputContainer,
           {
-            backgroundColor: isFocused ? colors.elevated : colors.surface,
+            backgroundColor: colors.surface,
             borderColor: error
               ? colors.destructive
               : isFocused
               ? colors.accent
               : colors.border,
-            ...(isFocused
-              ? {
-                  shadowColor: colors.accent,
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 5,
-                  ...(Platform.OS === "ios" ? { elevation: 2 } : {}),
-                }
-              : {}),
           },
         ]}
       >
@@ -143,7 +149,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: FontSize.base,
     paddingVertical: 10,
-    minHeight: Layout.minTouchTarget,
   },
   eyeIcon: {
     padding: 6,
