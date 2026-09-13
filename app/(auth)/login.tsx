@@ -25,6 +25,7 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
 
   const handleLogin = async () => {
@@ -83,6 +84,7 @@ export default function LoginScreen() {
       {/* Form Fields */}
       <View style={styles.form}>
         <FormInput
+          ref={emailRef}
           label="Email address"
           placeholder="student@university.edu"
           value={email}

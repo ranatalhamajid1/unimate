@@ -43,17 +43,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(function FormInpu
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const containerRef = useRef<View>(null);
-  const localInputRef = useRef<TextInput | null>(null);
   const { scrollToFocusedInput } = useKeyboardAware();
-
-  const setCombinedRef = (element: TextInput | null) => {
-    localInputRef.current = element;
-    if (typeof ref === "function") {
-      ref(element);
-    } else if (ref && "current" in ref) {
-      (ref as React.MutableRefObject<TextInput | null>).current = element;
-    }
-  };
 
   const shouldHideText = isPassword ? !isPasswordVisible : secureTextEntry;
 
@@ -75,9 +65,6 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(function FormInpu
       </AppText>
 
       <View
-        onTouchStart={() => {
-          localInputRef.current?.focus();
-        }}
         style={[
           styles.inputContainer,
           {
@@ -100,7 +87,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(function FormInpu
         ]}
       >
         <TextInput
-          ref={setCombinedRef}
+          ref={ref}
           style={[styles.input, { color: colors.textPrimary }]}
           placeholderTextColor={colors.textTertiary}
           secureTextEntry={shouldHideText}
