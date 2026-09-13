@@ -11,6 +11,7 @@ import { Screen } from "@/components/ui/Screen";
 import { AppText } from "@/components/ui/AppText";
 import { FormInput } from "@/components/ui/FormInput";
 import { Button } from "@/components/ui/Button";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { BorderRadius } from "@/constants/layout";
@@ -60,8 +61,8 @@ export default function LoginScreen() {
     <Screen scrollable contentContainerStyle={styles.container}>
       {/* Brand Header */}
       <View style={styles.header}>
-        <View style={[styles.logoContainer, { backgroundColor: colors.accentSubtle }]}>
-          <Ionicons name="school" size={32} color={colors.accent} />
+        <View style={styles.logoContainer}>
+          <BrandLogo variant="icon" size="xl" />
         </View>
         <AppText variant="h1" align="center" style={styles.brandTitle}>
           UniMate

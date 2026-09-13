@@ -11,6 +11,8 @@ import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 import { useTheme } from "@/hooks/use-theme";
 import { BorderRadius } from "@/constants/layout";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import appConfig from "@/app.json";
 
 interface ModuleItem {
   id: string;
@@ -238,6 +240,14 @@ export default function MoreScreen() {
       {renderSection("Academic Hub", academicModules)}
       {renderSection("Productivity & Finance", productivityModules)}
       {renderSection("Assistant & Settings", appModules)}
+
+      {/* Brand Identity Footer */}
+      <View style={styles.brandFooter}>
+        <BrandLogo variant="horizontal" size="sm" />
+        <AppText colorRole="tertiary" variant="caption" style={styles.brandFooterText}>
+          Version {appConfig.expo.version} • Plan • Focus • Achieve
+        </AppText>
+      </View>
     </Screen>
   );
 }
@@ -291,5 +301,14 @@ const styles = StyleSheet.create({
   },
   upcomingText: {
     fontSize: 9,
+  },
+  brandFooter: {
+    alignItems: "center",
+    paddingVertical: 24,
+    gap: 6,
+  },
+  brandFooterText: {
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
 });

@@ -20,6 +20,8 @@ import { Screen } from "@/components/ui/Screen";
 import { AppText } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import appConfig from "@/app.json";
 import { FormInput } from "@/components/ui/FormInput";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { UniversityPickerModal } from "@/components/UniversityPickerModal";
@@ -737,6 +739,14 @@ export default function SettingsScreen() {
         />
       </View>
 
+      {/* Brand Identity Footer */}
+      <View style={styles.brandFooter}>
+        <BrandLogo variant="horizontal" size="sm" />
+        <AppText colorRole="tertiary" variant="caption" style={styles.brandFooterText}>
+          Version {appConfig.expo.version} • Plan • Focus • Achieve
+        </AppText>
+      </View>
+
       {/* University Picker Modal */}
       <UniversityPickerModal
         visible={isUniModalOpen}
@@ -933,9 +943,18 @@ const styles = StyleSheet.create({
   },
   logoutSection: {
     marginTop: 12,
-    marginBottom: 40,
+    marginBottom: 16,
   },
   logoutButton: {
     backgroundColor: "transparent",
+  },
+  brandFooter: {
+    alignItems: "center",
+    paddingBottom: 40,
+    gap: 6,
+  },
+  brandFooterText: {
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
 });
