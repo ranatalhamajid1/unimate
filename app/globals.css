@@ -5,123 +5,152 @@
   --font-heading: var(--font-manrope), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ─── Design tokens — Light mode ────────────────────────────────────── */
+/* ─── Design tokens — Light mode (Premium Color System 2.0) ─────────── */
 :root {
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-heading: var(--font-manrope), var(--font-inter), system-ui, sans-serif;
 
-  /* Page background — soft off-white canvas with spatial depth */
+  /* ── Spatial Elevation (Level 0–5, Light) ──────────────────────────── */
+  /* Level 0 — Canvas */
   --color-bg: #f7f8fc;
-
-  /* Primary surface (solid cards) */
+  /* Level 1 — Primary surface */
   --color-surface: #ffffff;
+  /* Level 2 — Secondary surface (sidebar, alternate areas) */
+  --color-surface-2: #f3f4f8;
+  /* Level 3 — Tertiary surface (nested panels, pill backgrounds) */
+  --color-surface-3: #eaecf2;
+  /* Level 4 — Floating surface (dropdowns, tooltips, popovers) */
+  --color-surface-floating: #ffffff;
+  /* Legacy warm surface alias — kept for component compat */
+  --color-surface-warm: #f5f3ff;
 
-  /* Secondary surface (sidebar, subtle areas, warm secondary) */
-  --color-surface-2: #f8f9fc;
-  --color-surface-3: #edf0f7;
-  --color-surface-warm: #f4f1ff;
+  /* ── Borders ───────────────────────────────────────────────────────── */
+  --color-border: #e2e5ec;
+  --color-border-strong: #d5d9e2;
+  /* subtle alias kept for backwards compat */
+  --color-border-subtle: #eef0f5;
 
-  /* Borders — hairline crispness */
-  --color-border: #e2e8f0;
-  --color-border-subtle: #f1f5f9;
+  /* ── Text Hierarchy ────────────────────────────────────────────────── */
+  --color-text: #111827;
+  --color-text-2: #475569;
+  --color-text-3: #64748b;
+  --color-text-disabled: #94a3b8;
 
-  /* Text */
-  --color-text: #0f172a;
-  --color-text-2: #64748b;
-  --color-text-3: #94a3b8;
-
-  /* Primary Accent: Electric Indigo (replacing generic blue) */
-  --color-accent: #6366f1;
-  --color-accent-hover: #4f46e5;
+  /* ── Primary Brand — Indigo ────────────────────────────────────────── */
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
   --color-accent-soft: #eef2ff;
 
-  /* Supporting Spatial Accents */
-  --color-accent-violet: #8b5cf6;
+  /* ── Secondary Brand — Violet ──────────────────────────────────────── */
+  --color-accent-violet: #7c3aed;
   --color-accent-violet-soft: #f5f3ff;
-  --color-accent-cyan: #22d3ee;
+
+  /* ── Tertiary Brand — Cyan ──────────────────────────────────────────── */
+  --color-accent-cyan: #06b6d4;
   --color-accent-cyan-soft: #ecfeff;
 
-  /* Semantic status tokens */
+  /* ── Semantic Status ────────────────────────────────────────────────── */
   --color-success: #10b981;
   --color-success-soft: #ecfdf5;
   --color-warning: #f59e0b;
   --color-warning-soft: #fffbeb;
-  --color-danger: #f43f5e;
-  --color-danger-soft: #fff1f2;
+  --color-danger: #ef4444;
+  --color-danger-soft: #fef2f2;
   --color-info: #0284c7;
   --color-info-soft: #f0f9ff;
 
-  /* AI / Intelligence layer token */
-  --color-ai: #8b5cf6;
+  /* ── AI / Intelligence layer ────────────────────────────────────────── */
+  --color-ai: #7c3aed;
   --color-ai-soft: #f5f3ff;
 
-  /* Layered spatial shadows */
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
-  --shadow-md: 0 4px 16px -4px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 16px 48px -16px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.04);
-  --shadow-xl: 0 32px 64px -24px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.06);
-
-  /* Glass surface tokens — light mode spatial glass */
-  --color-glass-bg: rgba(255, 255, 255, 0.68);
-  --color-glass-floating: rgba(255, 255, 255, 0.82);
-  --color-glass-border: rgba(226, 232, 240, 0.75);
-  --color-glass-border-strong: rgba(203, 213, 225, 0.85);
+  /* ── Glass System — Light ───────────────────────────────────────────── */
+  --color-glass-bg: rgba(255, 255, 255, 0.62);
+  --color-glass-floating: rgba(255, 255, 255, 0.78);
+  --color-glass-border: rgba(255, 255, 255, 0.70);
+  --color-glass-border-strong: rgba(213, 217, 226, 0.80);
   --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
 
-  /* Spatial floating shadow — physical separation */
-  --shadow-spatial: 0 0 0 1px rgba(15, 23, 42, 0.04), 0 10px 30px -6px rgba(99, 102, 241, 0.08), 0 4px 12px rgba(15, 23, 42, 0.05);
+  /* ── Spatial Shadows — Light ────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --shadow-sm: 0 1px 3px rgba(17, 24, 39, 0.06), 0 1px 2px rgba(17, 24, 39, 0.03);
+  --shadow-md: 0 4px 16px -4px rgba(17, 24, 39, 0.09), 0 1px 3px rgba(17, 24, 39, 0.05);
+  --shadow-lg: 0 16px 48px -16px rgba(17, 24, 39, 0.12), 0 2px 8px rgba(17, 24, 39, 0.05);
+  --shadow-xl: 0 32px 64px -24px rgba(17, 24, 39, 0.16), 0 4px 12px rgba(17, 24, 39, 0.06);
+  --shadow-spatial: 0 0 0 1px rgba(17, 24, 39, 0.04), 0 10px 30px -6px rgba(79, 70, 229, 0.08), 0 4px 12px rgba(17, 24, 39, 0.05);
 
-  /* Motion easing — Apple/Linear spring curve */
+  /* ── Motion easing ──────────────────────────────────────────────────── */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ─── Design tokens — Dark mode (true premium spatial midnight) ───── */
+/* ─── Design tokens — Dark mode (Premium Color System 2.0) ─────────── */
 .dark {
-  --color-bg: #080b12; /* legacy reference: #0e1117 */
+  /* ── Spatial Elevation (Level 0–5, Dark) ────────────────────────────── */
+  /* Level 0 — Canvas (legacy reference: #0e1117) */
+  --color-bg: #080b12;
+  /* Level 1 — Primary surface */
   --color-surface: #101522;
-  --color-surface-2: #171e2e;
-  --color-surface-3: #202a3d;
-  --color-surface-warm: #131b2e;
-  --color-border: rgba(255, 255, 255, 0.08);
+  /* Level 2 — Secondary surface */
+  --color-surface-2: #151c29;
+  /* Level 3 — Tertiary surface */
+  --color-surface-3: #1c2534;
+  /* Level 4 — Floating (dropdowns, cards) */
+  --color-surface-floating: #222d40;
+  /* Legacy warm alias — kept for component compat */
+  --color-surface-warm: #1e1b4b;
+
+  /* ── Borders ─────────────────────────────────────────────────────────── */
+  --color-border: #273244;
+  --color-border-strong: #344158;
+  /* subtle alias kept for backwards compat */
   --color-border-subtle: rgba(255, 255, 255, 0.04);
-  --color-text: #f1f5f9;
-  --color-text-2: #94a3b8;
-  --color-text-3: #64748b;
+
+  /* ── Text Hierarchy ──────────────────────────────────────────────────── */
+  --color-text: #f8fafc;
+  --color-text-2: #cbd5e1;
+  --color-text-3: #94a3b8;
+  --color-text-disabled: #64748b;
+
+  /* ── Primary Brand — Indigo (lighter for dark bg) ───────────────────── */
   --color-accent: #6366f1;
   --color-accent-hover: #818cf8;
-  --color-accent-soft: rgba(99, 102, 241, 0.14);
+  --color-accent-soft: #1e1b4b;
 
-  --color-accent-violet: #a78bfa;
-  --color-accent-violet-soft: rgba(167, 139, 250, 0.12);
+  /* ── Secondary Brand — Violet ────────────────────────────────────────── */
+  --color-accent-violet: #8b5cf6;
+  --color-accent-violet-soft: #2e1065;
+
+  /* ── Tertiary Brand — Cyan ───────────────────────────────────────────── */
   --color-accent-cyan: #22d3ee;
-  --color-accent-cyan-soft: rgba(34, 211, 238, 0.12);
+  --color-accent-cyan-soft: #083344;
 
-  --color-success: #10b981;
-  --color-success-soft: rgba(16, 185, 129, 0.12);
-  --color-warning: #f59e0b;
-  --color-warning-soft: rgba(245, 158, 11, 0.12);
-  --color-danger: #f43f5e;
-  --color-danger-soft: rgba(244, 63, 94, 0.12);
+  /* ── Semantic Status ─────────────────────────────────────────────────── */
+  --color-success: #34d399;
+  --color-success-soft: #052e25;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #3b2a05;
+  --color-danger: #fb7185;
+  --color-danger-soft: #3b1118;
   --color-info: #38bdf8;
   --color-info-soft: rgba(56, 189, 248, 0.12);
 
-  --color-ai: #a78bfa;
-  --color-ai-soft: rgba(167, 139, 250, 0.14);
+  /* ── AI / Intelligence layer ─────────────────────────────────────────── */
+  --color-ai: #8b5cf6;
+  --color-ai-soft: #2e1065;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 16px -4px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 16px 48px -16px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 32px 64px -24px rgba(0, 0, 0, 0.75), 0 4px 12px rgba(0, 0, 0, 0.4);
+  /* ── Glass System — Dark ─────────────────────────────────────────────── */
+  --color-glass-bg: rgba(16, 21, 34, 0.68);
+  --color-glass-floating: rgba(22, 29, 43, 0.82);
+  --color-glass-border: rgba(148, 163, 184, 0.12);
+  --color-glass-border-strong: rgba(148, 163, 184, 0.20);
+  --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 
-  /* Glass surface tokens — dark theme spatial glass */
-  --color-glass-bg: rgba(16, 21, 34, 0.72);
-  --color-glass-floating: rgba(23, 30, 46, 0.82);
-  --color-glass-border: rgba(255, 255, 255, 0.08);
-  --color-glass-border-strong: rgba(255, 255, 255, 0.14);
-  --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
-  --shadow-spatial: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 36px -8px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.4);
+  /* ── Spatial Shadows — Dark ──────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px -4px rgba(0, 0, 0, 0.60), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 48px -16px rgba(0, 0, 0, 0.70), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 32px 64px -24px rgba(0, 0, 0, 0.80), 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-spatial: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 36px -8px rgba(0, 0, 0, 0.70), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────── */
@@ -147,12 +176,12 @@ h4 {
 }
 
 ::selection {
-  background-color: #2563eb22;
-  color: #1e293b;
+  background-color: rgba(79, 70, 229, 0.13);
+  color: #111827;
 }
 .dark ::selection {
-  background-color: #4493f833;
-  color: #e6edf3;
+  background-color: rgba(99, 102, 241, 0.20);
+  color: #f8fafc;
 }
 
 /* ─── Markdown Renderer — Dark mode code blocks ─────────────────────── */
@@ -297,11 +326,11 @@ h4 {
 }
 @media (hover: hover) {
   .card-hover:hover {
-    border-color: rgba(37, 99, 235, 0.25);
+    border-color: rgba(79, 70, 229, 0.22);
     box-shadow: var(--shadow-sm);
   }
   .dark .card-hover:hover {
-    border-color: rgba(59, 130, 246, 0.3);
+    border-color: rgba(99, 102, 241, 0.28);
     box-shadow: var(--shadow-sm);
   }
 }
@@ -309,11 +338,11 @@ h4 {
 /* AI Intelligence badge/card styling */
 .ai-surface {
   background-color: var(--color-ai-soft);
-  border-color: rgba(139, 92, 246, 0.2);
+  border-color: rgba(124, 58, 237, 0.20);
 }
 .dark .ai-surface {
-  background-color: rgba(139, 92, 246, 0.08);
-  border-color: rgba(167, 139, 250, 0.25);
+  background-color: rgba(139, 92, 246, 0.10);
+  border-color: rgba(139, 92, 246, 0.28);
 }
 
 /* ─── Interactive lift — only on truly interactive cards, pointer-safe ─ */
