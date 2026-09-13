@@ -126,6 +126,7 @@ export default function SignupScreen() {
           autoCapitalize="words"
           autoComplete="name"
           returnKeyType="next"
+          blurOnSubmit={false}
           onSubmitEditing={() => emailRef.current?.focus()}
         />
 
@@ -142,6 +143,7 @@ export default function SignupScreen() {
           keyboardType="email-address"
           autoComplete="email"
           returnKeyType="next"
+          blurOnSubmit={false}
           onSubmitEditing={() => passwordRef.current?.focus()}
         />
 
@@ -157,6 +159,7 @@ export default function SignupScreen() {
           error={fieldErrors.password}
           isPassword
           returnKeyType="next"
+          blurOnSubmit={false}
           onSubmitEditing={() => confirmPasswordRef.current?.focus()}
         />
 

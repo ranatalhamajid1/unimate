@@ -93,6 +93,7 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoComplete="email"
           returnKeyType="next"
+          blurOnSubmit={false}
           onSubmitEditing={() => passwordRef.current?.focus()}
         />
 

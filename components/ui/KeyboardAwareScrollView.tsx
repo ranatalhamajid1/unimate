@@ -62,8 +62,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
   const innerRef = useRef<ScrollView>(null);
   const scrollRef = (forwardedRef as React.RefObject<ScrollView>) || innerRef;
   const scrollYRef = useRef(0);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const isKeyboardVisibleRef = useRef(false);
   const keyboardHeightRef = useRef(0);
   const lastFocusedRef = useRef<React.RefObject<any> | null>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -129,27 +128,27 @@ export const KeyboardAwareScrollView = React.forwardRef<
   );
 
   useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    // Only subscribe to keyboard events on iOS where programmatic adjustment is needed.
+    // On Android, windowSoftInputMode="adjustResize" handles layout natively.
+    // Setting state or re-rendering on Android during keyboard display causes ReactScrollView
+    // to call requestLayout(), which clears child focus and bounces focus between inputs.
+    if (Platform.OS !== "ios") {
+      return;
+    }
 
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      setIsKeyboardVisible(true);
+    const showSub = Keyboard.addListener("keyboardWillShow", (e) => {
+      isKeyboardVisibleRef.current = true;
       const kh = e.endCoordinates?.height || 0;
       keyboardHeightRef.current = kh;
-      setKeyboardHeight(kh);
 
-      // If an input was already focused when keyboard opened, ensure it is scrolled into view (iOS only)
-      if (Platform.OS === "ios" && lastFocusedRef.current) {
+      if (lastFocusedRef.current) {
         scrollToFocusedInput(lastFocusedRef.current);
       }
     });
 
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setIsKeyboardVisible(false);
+    const hideSub = Keyboard.addListener("keyboardWillHide", () => {
+      isKeyboardVisibleRef.current = false;
       keyboardHeightRef.current = 0;
-      setKeyboardHeight(0);
       lastFocusedRef.current = null;
     });
 
@@ -162,24 +161,33 @@ export const KeyboardAwareScrollView = React.forwardRef<
     };
   }, [scrollToFocusedInput]);
 
-  // Keep contentContainerStyle structurally stable.
+  // Keep contentContainerStyle structurally stable with useMemo.
   // Never flip layout properties (e.g. justifyContent) conditionally based on keyboard visibility,
   // as dynamic layout flips trigger Android clearChildFocus and immediately collapse the keyboard.
-  const flattenedStyle = StyleSheet.flatten(contentContainerStyle) || {};
-  const adjustedContentContainerStyle: ViewStyle = {
-    ...flattenedStyle,
-    // Provide stable, comfortable bottom padding so bottom-most fields can always be scrolled into view
-    paddingBottom: Math.max(
-      typeof flattenedStyle.paddingBottom === "number"
-        ? flattenedStyle.paddingBottom
-        : 0,
-      Platform.OS === "ios" ? 40 : 48
-    ),
-  };
+  const adjustedContentContainerStyle: ViewStyle = React.useMemo(() => {
+    const flattenedStyle = StyleSheet.flatten(contentContainerStyle) || {};
+    return {
+      ...flattenedStyle,
+      paddingBottom: Math.max(
+        typeof flattenedStyle.paddingBottom === "number"
+          ? flattenedStyle.paddingBottom
+          : 0,
+        Platform.OS === "ios" ? 40 : 48
+      ),
+    };
+  }, [contentContainerStyle]);
 
   const contextValue = React.useMemo(
-    () => ({ isKeyboardVisible, keyboardHeight, scrollToFocusedInput }),
-    [isKeyboardVisible, keyboardHeight, scrollToFocusedInput]
+    () => ({
+      get isKeyboardVisible() {
+        return isKeyboardVisibleRef.current;
+      },
+      get keyboardHeight() {
+        return keyboardHeightRef.current;
+      },
+      scrollToFocusedInput,
+    }),
+    [scrollToFocusedInput]
   );
 
   return (
