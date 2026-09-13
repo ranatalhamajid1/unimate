@@ -20,6 +20,87 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
   skipAuth?: boolean;
 }
 
+function uploadWithXHR<T>(
+  method: string,
+  url: string,
+  formData: FormData,
+  headers: Record<string, string>,
+  timeoutMs: number,
+  signal?: AbortSignal | null
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.timeout = timeoutMs;
+
+    // Set headers (excluding Content-Type to allow React Native OkHttp to set multipart boundary)
+    for (const [key, value] of Object.entries(headers)) {
+      if (key.toLowerCase() !== "content-type") {
+        xhr.setRequestHeader(key, value);
+      }
+    }
+
+    if (signal) {
+      if (signal.aborted) {
+        xhr.abort();
+        return reject({
+          message: "Request timed out. Please check your connection and try again.",
+          status: 408,
+        } as ApiError);
+      }
+      signal.addEventListener("abort", () => {
+        xhr.abort();
+        reject({
+          message: "Request timed out. Please check your connection and try again.",
+          status: 408,
+        } as ApiError);
+      });
+    }
+
+    xhr.onload = () => {
+      let responseData: any;
+      try {
+        responseData = JSON.parse(xhr.responseText);
+      } catch {
+        responseData = xhr.responseText;
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(responseData as T);
+      } else {
+        if (xhr.status === 401 && onUnauthorizedCallback) {
+          onUnauthorizedCallback();
+        }
+        reject({
+          message:
+            responseData?.error ||
+            responseData?.message ||
+            `Request failed with status ${xhr.status}`,
+          code: responseData?.code,
+          status: xhr.status,
+          errors: responseData?.errors,
+        } as ApiError);
+      }
+    };
+
+    xhr.onerror = () => {
+      reject({
+        message: "Network connection error. Please verify server is reachable.",
+        status: 0,
+      } as ApiError);
+    };
+
+    xhr.ontimeout = () => {
+      reject({
+        message: "Request timed out. Please check your connection and try again.",
+        status: 408,
+      } as ApiError);
+    };
+
+    xhr.send(formData);
+  });
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -54,6 +135,24 @@ async function request<T>(
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), APP_CONFIG.apiTimeoutMs);
+
+  if (isFormData && typeof XMLHttpRequest !== "undefined") {
+    try {
+      const data = await uploadWithXHR<T>(
+        method,
+        url,
+        body as FormData,
+        headers,
+        APP_CONFIG.apiTimeoutMs,
+        controller.signal
+      );
+      clearTimeout(timeoutId);
+      return data;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  }
 
   try {
     const response = await fetch(url, {

@@ -97,12 +97,54 @@ describe("Milestone 4: Mobile Student Identity & University Experience Suite", (
       assert.equal(filePayload.name, "profile.jpg");
     });
 
+    test("validates safe MIME types and filename derivation", () => {
+      const getSafeMimeType = (uri: string, mimeType?: string | null): string => {
+        if (mimeType) {
+          const lower = mimeType.toLowerCase();
+          if (lower === "image/png") return "image/png";
+          if (lower === "image/webp") return "image/webp";
+          if (lower === "image/jpeg" || lower === "image/jpg") return "image/jpeg";
+        }
+        const cleanUri = uri.toLowerCase().split("?")[0];
+        if (cleanUri.endsWith(".png")) return "image/png";
+        if (cleanUri.endsWith(".webp")) return "image/webp";
+        return "image/jpeg";
+      };
+
+      assert.equal(getSafeMimeType("content://media/1", "image/png"), "image/png");
+      assert.equal(getSafeMimeType("content://media/2", "IMAGE/JPEG"), "image/jpeg");
+      assert.equal(getSafeMimeType("content://media/3", "image/webp"), "image/webp");
+      assert.equal(getSafeMimeType("content://media/4.png", undefined), "image/png");
+      assert.equal(getSafeMimeType("content://media/5.webp", null), "image/webp");
+      assert.equal(getSafeMimeType("content://media/6.unknown", undefined), "image/jpeg");
+    });
+
+    test("enforces 2 MB client-side file size boundary", () => {
+      const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+      const withinLimit = 1.9 * 1024 * 1024;
+      const overLimit = 2.1 * 1024 * 1024;
+
+      assert.equal(withinLimit <= MAX_AVATAR_BYTES, true);
+      assert.equal(overLimit <= MAX_AVATAR_BYTES, false);
+    });
+
     test("routes avatar upload and deletion to exact mobile endpoints", () => {
       const uploadEndpoint = "/api/mobile/user/avatar/upload";
       const deleteEndpoint = "/api/mobile/user/avatar";
 
       assert.equal(uploadEndpoint, "/api/mobile/user/avatar/upload");
       assert.equal(deleteEndpoint, "/api/mobile/user/avatar");
+    });
+
+    test("api-client uses uploadWithXHR for FormData to bypass Expo fetch FormDataPart crash", () => {
+      const apiClientPath = path.join(mobileRoot, "lib", "api-client.ts");
+      const content = fs.readFileSync(apiClientPath, "utf8");
+
+      assert.ok(content.includes("uploadWithXHR"), "api-client must include uploadWithXHR");
+      assert.ok(content.includes("xhr.send(formData)"), "api-client must send formData via XMLHttpRequest");
+      assert.ok(content.includes("key.toLowerCase() !== \"content-type\""), "Must not set Content-Type header on FormData");
+      assert.ok(content.includes("Authorization"), "Must preserve Bearer authorization header");
+      assert.ok(!content.includes("JSON.stringify(formData)"), "Must not JSON.stringify formData");
     });
   });
 

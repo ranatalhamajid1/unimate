@@ -121,6 +121,38 @@ describe("Milestone 14 Phase 14.3 — Mobile Integrations Screen & UI Invariants
       assert.ok(integrationsSource.includes("UniMate Academic"));
       assert.ok(integrationsSource.includes("Dedicated Calendar Isolation"));
       assert.ok(integrationsSource.includes("Local Data Preservation"));
+      assert.ok(integrationsSource.includes("Encrypted at Rest"));
+    });
+  });
+
+  describe("6. React Native Hierarchy & Zero HTML Invariants", () => {
+    it("contains zero invalid web HTML tags in React Native tree", () => {
+      const invalidHtmlTags = ["<strong", "</strong", "<b", "</b>", "<span", "</span>", "<div", "</div>", "<p>", "</p>", "<br"];
+      for (const tag of invalidHtmlTags) {
+        assert.ok(
+          !integrationsSource.includes(tag),
+          `IntegrationsScreen must not contain web HTML element "${tag}", which crashes React Native View config getter`
+        );
+      }
+    });
+
+    it("renders privacy bullet lead-ins with native Text and bold weight styling", () => {
+      assert.ok(
+        integrationsSource.includes("privacyBulletBold"),
+        "Must define and use privacyBulletBold style for emphasis"
+      );
+      assert.ok(
+        integrationsSource.includes("Dedicated Calendar Isolation: "),
+        "Must render isolation bullet lead-in"
+      );
+      assert.ok(
+        integrationsSource.includes("Local Data Preservation: "),
+        "Must render local data bullet lead-in"
+      );
+      assert.ok(
+        integrationsSource.includes("Encrypted at Rest: "),
+        "Must render encrypted at rest bullet lead-in"
+      );
     });
   });
 });

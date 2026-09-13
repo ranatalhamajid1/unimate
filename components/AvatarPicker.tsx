@@ -25,6 +25,29 @@ interface AvatarPickerProps {
   editable?: boolean;
 }
 
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
+
+export function getSafeMimeType(uri: string, mimeType?: string | null): string {
+  if (mimeType) {
+    const lower = mimeType.toLowerCase();
+    if (lower === "image/png") return "image/png";
+    if (lower === "image/webp") return "image/webp";
+    if (lower === "image/jpeg" || lower === "image/jpg") return "image/jpeg";
+  }
+  const cleanUri = uri.toLowerCase().split("?")[0];
+  if (cleanUri.endsWith(".png")) return "image/png";
+  if (cleanUri.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
+export function getSafeFilename(uri: string, fileName?: string | null, mimeType?: string): string {
+  if (fileName && fileName.trim().length > 0) {
+    return fileName.trim();
+  }
+  const ext = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+  return `avatar-${Date.now()}.${ext}`;
+}
+
 export function AvatarPicker({
   avatarUrl,
   name,
@@ -43,17 +66,19 @@ export function AvatarPicker({
     setCurrentUrl(avatarUrl || null);
   }, [avatarUrl]);
 
-  const handleUploadUri = async (uri: string, mimeType?: string, fileName?: string) => {
+  const handleUploadUri = async (uri: string, mimeType?: string | null, fileName?: string | null) => {
+    if (isUploading || isDeleting) return;
     setIsUploading(true);
     setErrorMessage(null);
 
     try {
-      const formData = new FormData();
-      const detectedName = fileName || `avatar-${Date.now()}.jpg`;
-      const detectedType = mimeType || "image/jpeg";
+      const detectedType = getSafeMimeType(uri, mimeType);
+      const detectedName = getSafeFilename(uri, fileName, detectedType);
+      const cleanUri = Platform.OS === "ios" ? uri.replace("file://", "") : uri;
 
+      const formData = new FormData();
       formData.append("file", {
-        uri: Platform.OS === "ios" ? uri.replace("file://", "") : uri,
+        uri: cleanUri,
         name: detectedName,
         type: detectedType,
       } as any);
@@ -73,7 +98,12 @@ export function AvatarPicker({
         setErrorMessage(res?.error || "Failed to upload avatar.");
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "Failed to upload avatar. Please try again.");
+      const rawMessage = err?.message || "";
+      if (rawMessage.includes("FormDataPart")) {
+        setErrorMessage("Upload failed due to an unsupported format. Please try another image.");
+      } else {
+        setErrorMessage(rawMessage || "Failed to upload avatar. Please try again.");
+      }
     } finally {
       setIsUploading(false);
     }
@@ -99,6 +129,10 @@ export function AvatarPicker({
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
+        if (asset.fileSize && asset.fileSize > MAX_AVATAR_BYTES) {
+          setErrorMessage("Avatar image must be under 2 MB.");
+          return;
+        }
         await handleUploadUri(asset.uri, asset.mimeType, asset.fileName || undefined);
       }
     } catch (err: any) {
@@ -125,6 +159,10 @@ export function AvatarPicker({
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
+        if (asset.fileSize && asset.fileSize > MAX_AVATAR_BYTES) {
+          setErrorMessage("Avatar image must be under 2 MB.");
+          return;
+        }
         await handleUploadUri(asset.uri, asset.mimeType, asset.fileName || undefined);
       }
     } catch (err: any) {

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   View,
+  Text,
   StyleSheet,
   ScrollView,
   RefreshControl,
@@ -456,19 +457,22 @@ export default function IntegrationsScreen() {
           <View style={styles.privacyBullet}>
             <Ionicons name="checkmark-circle-outline" size={16} color={colors.success} style={{ marginTop: 2 }} />
             <AppText colorRole="secondary" variant="caption" style={styles.privacyBulletText}>
-              <strong>Dedicated Calendar Isolation:</strong> UniMate creates and accesses ONLY the "UniMate Academic" secondary calendar. Your personal events are never read or modified.
+              <Text style={[styles.privacyBulletBold, { color: colors.textPrimary }]}>Dedicated Calendar Isolation: </Text>
+              UniMate creates and accesses ONLY the "UniMate Academic" secondary calendar. Your personal events are never read or modified.
             </AppText>
           </View>
           <View style={styles.privacyBullet}>
             <Ionicons name="checkmark-circle-outline" size={16} color={colors.success} style={{ marginTop: 2 }} />
             <AppText colorRole="secondary" variant="caption" style={styles.privacyBulletText}>
-              <strong>Local Data Preservation:</strong> Disconnecting or provider errors never delete your internal UniMate courses, grades, notes, or timetables.
+              <Text style={[styles.privacyBulletBold, { color: colors.textPrimary }]}>Local Data Preservation: </Text>
+              Disconnecting or provider errors never delete your internal UniMate courses, grades, notes, or timetables.
             </AppText>
           </View>
           <View style={styles.privacyBullet}>
             <Ionicons name="checkmark-circle-outline" size={16} color={colors.success} style={{ marginTop: 2 }} />
             <AppText colorRole="secondary" variant="caption" style={styles.privacyBulletText}>
-              <strong>Encrypted at Rest:</strong> OAuth tokens are encrypted with versioned AES-256-GCM. Client apps never receive or store raw tokens.
+              <Text style={[styles.privacyBulletBold, { color: colors.textPrimary }]}>Encrypted at Rest: </Text>
+              OAuth tokens are encrypted with versioned AES-256-GCM. Client apps never receive or store raw tokens.
             </AppText>
           </View>
         </Card>
@@ -748,6 +752,9 @@ const styles = StyleSheet.create({
   privacyBulletText: {
     flex: 1,
     lineHeight: 17,
+  },
+  privacyBulletBold: {
+    fontWeight: "600",
   },
   comingSoonSection: {
     marginTop: spacing.sm,
