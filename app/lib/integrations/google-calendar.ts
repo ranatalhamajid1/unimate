@@ -120,7 +120,15 @@ export async function initiateGoogleCalendarOAuth(params: {
     codeVerifier,
   });
 
-  const clientId = process.env.GOOGLE_CLIENT_ID || "test-google-client-id.apps.googleusercontent.com";
+  const isProduction = process.env.NODE_ENV === "production";
+  const clientId = process.env.GOOGLE_CLIENT_ID || (!isProduction ? "test-google-client-id.apps.googleusercontent.com" : "");
+  if (!clientId) {
+    throw new Error(
+      "Missing required GOOGLE_CLIENT_ID in environment. " +
+      "Configure GOOGLE_CLIENT_ID in server environment variables with a valid Google Cloud OAuth 2.0 Web Client ID."
+    );
+  }
+
   const redirectUri = resolveGoogleRedirectUri(params.baseOrigin);
 
   const url = new URL(GOOGLE_OAUTH_AUTH_URL);
@@ -172,8 +180,19 @@ export async function handleGoogleCalendarCallback(params: {
     };
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID || "test-google-client-id.apps.googleusercontent.com";
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "test-google-client-secret";
+  const isProduction = process.env.NODE_ENV === "production";
+  const clientId = process.env.GOOGLE_CLIENT_ID || (!isProduction ? "test-google-client-id.apps.googleusercontent.com" : "");
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || (!isProduction ? "test-google-client-secret" : "");
+
+  if (!clientId || !clientSecret) {
+    return {
+      success: false,
+      userId: transaction.userId,
+      clientType: transaction.clientType,
+      error: "Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in server environment.",
+    };
+  }
+
   const redirectUri = resolveGoogleRedirectUri(params.baseOrigin);
 
   // 2. Exchange authorization code + PKCE code_verifier for tokens
@@ -287,8 +306,13 @@ export async function getOrRefreshGoogleAccessToken(
   }
 
   const rawRefreshToken = decryptToken(integration.encryptedRefreshToken);
-  const clientId = process.env.GOOGLE_CLIENT_ID || "test-google-client-id.apps.googleusercontent.com";
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "test-google-client-secret";
+  const isProduction = process.env.NODE_ENV === "production";
+  const clientId = process.env.GOOGLE_CLIENT_ID || (!isProduction ? "test-google-client-id.apps.googleusercontent.com" : "");
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || (!isProduction ? "test-google-client-secret" : "");
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in server environment.");
+  }
 
   const refreshResponse = await fetch(GOOGLE_OAUTH_TOKEN_URL, {
     method: "POST",

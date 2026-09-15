@@ -51,7 +51,11 @@ class CloudflareR2StorageProvider implements StorageProvider {
       );
     }
 
-    this.endpoint = endpoint.replace(/\/+$/, "");
+    let ep = endpoint.replace(/\/+$/, "");
+    if (ep.endsWith(`/${bucket}`)) {
+      ep = ep.slice(0, -(bucket.length + 1));
+    }
+    this.endpoint = ep;
     this.bucket = bucket;
     this.accessKeyId = accessKeyId;
     this.secretAccessKey = secretAccessKey;
